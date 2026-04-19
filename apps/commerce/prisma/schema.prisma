@@ -73,6 +73,12 @@ model Product {
   status       ProductStatus @default(draft)
   category_id  String
 
+  // Pricing for storefront display. App must keep this in sync with variant prices.
+  // - For direct_purchase: price_cents_min is the only variant price
+  // - For configurable: price_cents_min is the cheapest configuration
+  // - For inquiry_only: price_cents_display is optional, indicative only ("ab €" hint)
+  price_cents_min_display Int? // nullable; app computes from variants
+
   // Relations
   category   Category @relation(fields: [category_id], references: [id], onDelete: Restrict)
   variants   ProductVariant[]
