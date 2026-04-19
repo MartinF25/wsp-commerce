@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────────────────────────────────────
+
+enum ProductType {
+  direct_purchase
+  configurable
+  inquiry_only
+}
+
+enum ProductStatus {
+  draft
+  active
+  archived
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Category Model
+// ──────────────────────────────────────────────────────────────────────────────
+// Hierarchical categories for organizing products.
+// parent_id allows self-referencing for subcategories.
+// Example tree: Solarzaun → Zubehör / Montage → Kabel
+
+model Category {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  name      String
+  parent_id String?
+
+  // Self-reference for parent category
+  parent    Category?  @relation("CategoryParent", fields: [parent_id], references: [id], onDelete: SetNull)
+  children  Category[] @relation("CategoryParent")
+
+  // Products in this category
+  products  Product[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([parent_id])
+  @@map("categories")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Product Model
+// ──────────────────────────────────────────────────────────────────────────────
+// Central product entity. product_type determines:
+// - Storefront CTA („In den Warenkorb" vs. „Projekt anfragen")
+// - Cart eligibility (direct_purchase/configurable OK, inquiry_only forbidden)
+// - Lead integration requirement (inquiry_only always, others conditional)
+//
+// Important: No direct_purchase = no direct checkout eligibility
+//            No inquiry_only = must be purchasable (via Cart + Checkout)
+
+model Product {
+  id           String      @id @default(uuid())
+  slug         String      @unique
+  name         String
+  description  String?
+  product_type ProductType
+  status       ProductStatus @default(draft)
+  category_id  String
+
+  // Relations
+  category   Category @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  variants   ProductVariant[]
+  images     ProductImage[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([category_id])
+  @@index([product_type])
+  @@map("products")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ProductVariant Model
+// ──────────────────────────────────────────────────────────────────────────────
+// Variants are the purchasable units. Every product has at least one variant.
+// - price_cents: stored as integer to avoid float precision issues (€1.99 = 199 cents)
+// - stock_quantity: null for inquiry_only products (stock is not tracked)
+// - attributes: JSONB for flexible variant metadata
+//   Example for Solarzaun: { "color": "Anthrazit", "length_m": 3, "power_w": 400 }
+//   Example for Kabel: { "gauge_mm": 2.5, "length_m": 50 }
+
+model ProductVariant {
+  id            String  @id @default(uuid())
+  product_id    String
+  sku           String  @unique
+  name          String
+  price_cents   Int?    // nullable for inquiry_only; required for direct_purchase/configurable
+  currency      String  @default("EUR")
+  stock_quantity Int?   // nullable for inquiry_only; required for direct_purchase/configurable
+  attributes    Json?   // optional flexible metadata (JSONB in PostgreSQL)
+
+  // Relations
+  product       Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([product_id])
+  @@map("product_variants")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ProductImage Model
+// ──────────────────────────────────────────────────────────────────────────────
+// Catalog images for products. Stored as references (URLs), not blobs.
+// Actual image files are managed by Firebase Storage or CDN.
+// sort_order allows explicit image ordering in storefront.
+
+model ProductImage {
+  id         String @id @default(uuid())
+  product_id String
+  url        String // URL to image (CDN or Firebase Storage)
+  alt        String // alt text for accessibility
+  sort_order Int    @default(0)
+
+  // Relations
+  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@index([product_id])
+  @@map("product_images")
+}
