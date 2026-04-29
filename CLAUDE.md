@@ -36,10 +36,14 @@ Webshop + Lead-App für die Solarwind-Produktlinie (Solarzaun, SkyWind, Kombilö
 ## Key Docs
 - [Architecture](./docs/architecture.md)
 - [Product Model](./docs/product-model.md)
+- [Commerce Core](./docs/commerce-core.md) — API-Referenz, Service-Layer, Contracts
+- [Phase-2-Status](./docs/phase-2-status.md) — Abschluss-Check + offene Punkte
 - [Lead Flow](./docs/lead-flow.md)
 - [Checkout Flow](./docs/checkout-flow.md)
 - [Payments](./docs/payments.md)
 - [Deployment](./docs/deployment.md)
+- [Vercel Staging](./docs/vercel-staging.md) — Staging-Deploy-Guide, Blocker, Smoke-Test
+- [Railway Staging](./docs/railway-staging.md) — Commerce API auf Railway, Env-Vars, Seed
 
 ## Skills
 - `.claude/skills/hybrid-architecture/` — Architektur-Entscheidungen
@@ -49,8 +53,11 @@ Webshop + Lead-App für die Solarwind-Produktlinie (Solarzaun, SkyWind, Kombilö
 ## Development
 ```bash
 pnpm install
-docker-compose up -d   # starts PostgreSQL + n8n
-pnpm dev               # starts all apps
+docker-compose up -d                    # PostgreSQL (5432) + n8n (5678)
+pnpm --filter commerce db:generate     # Prisma-Client generieren (nach Schema-Änderungen)
+pnpm --filter commerce db:migrate      # DB-Schema anlegen (erster Start)
+pnpm --filter commerce db:seed         # Testdaten einspielen (idempotent)
+pnpm --filter commerce dev             # Commerce API auf :3001
 ```
 
 ## Rules
