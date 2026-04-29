@@ -1,0 +1,182 @@
+// Prisma Schema – wsp-commerce / Commerce Core
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+/// Steuert Kauf- vs. Anfragelogik an der Domain-Grenze.
+/// direct_purchase  → Warenkorb + Checkout möglich
+/// configurable     → Variantenauswahl, dann Warenkorb
+/// inquiry_only     → kein Warenkorb, nur Lead-Formular
+enum ProductType {
+  direct_purchase
+  configurable
+  inquiry_only
+}
+
+enum ProductStatus {
+  draft
+  active
+  archived
+}
+
+enum BlogStatus {
+  draft
+  published
+  archived
+}
+
+/// Unterstützte Inhaltssprachen. DE ist Pflicht (Source of Truth).
+/// Fehlende Übersetzungen fallen auf DE zurück (Service-Layer).
+enum Locale {
+  de
+  en
+  es
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String  @id @default(uuid())
+  slug        String  @unique
+  name        String
+  description String?
+  is_active   Boolean @default(true)
+  parent_id   String?
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parent_id], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id           String        @id @default(uuid())
+  slug         String        @unique
+  product_type ProductType   @default(inquiry_only)
+  status       ProductStatus @default(draft)
+  category_id  String?
+
+  category     Category?            @relation(fields: [category_id], references: [id])
+  translations ProductTranslation[]
+  variants     ProductVariant[]
+  images       ProductImage[]
+  documents    ProductDocument[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("products")
+}
+
+/// Sprachabhängige Texte eines Produkts. DE ist immer Pflicht.
+/// Fehlende EN/ES-Einträge → Fallback auf DE im Service-Layer.
+model ProductTranslation {
+  id                String @id @default(uuid())
+  product_id        String
+  locale            Locale
+
+  name              String
+  short_description String?
+  description       String?
+  delivery_note     String?
+  /// Redaktionelle Bullet Points für Produktdetailseiten.
+  features          Json   @default("[]")
+  meta_title        String?
+  meta_description  String?
+  mounting_note     String?
+  project_note      String?
+
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@unique([product_id, locale])
+  @@map("product_translations")
+}
+
+model ProductVariant {
+  id             String  @id @default(uuid())
+  product_id     String
+  sku            String  @unique
+  is_active      Boolean @default(true)
+  /// Preis in Cent (integer). Null erlaubt bei inquiry_only ohne Richtpreis.
+  price_cents    Int?
+  currency       String  @default("EUR")
+  stock_quantity Int     @default(0)
+  /// Flexible Produkt-Attribute (Farbe, Länge, Leistung …) als JSONB.
+  attributes     Json    @default("{}")
+  weight_kg      Float?
+  dimensions     Json?
+
+  product      Product                    @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  translations ProductVariantTranslation[]
+
+  created_at DateTime @default(now())
+
+  @@map("product_variants")
+}
+
+/// Sprachabhängiger Name einer Produktvariante.
+model ProductVariantTranslation {
+  id         String @id @default(uuid())
+  variant_id String
+  locale     Locale
+  name       String
+
+  variant ProductVariant @relation(fields: [variant_id], references: [id], onDelete: Cascade)
+
+  @@unique([variant_id, locale])
+  @@map("product_variant_translations")
+}
+
+model ProductImage {
+  id         String  @id @default(uuid())
+  product_id String
+  url        String
+  alt        String?
+  sort_order Int     @default(0)
+
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model ProductDocument {
+  id         String @id @default(uuid())
+  product_id String
+  name       String
+  url        String
+  /// datasheet | manual | certificate | other
+  type       String @default("datasheet")
+  sort_order Int    @default(0)
+
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@map("product_documents")
+}
+
+model BlogPost {
+  id           String     @id @default(uuid())
+  slug         String     @unique
+  title        String
+  excerpt      String?
+  content      String
+  cover_image  String?
+  author       String?
+  tags         String[]
+  status       BlogStatus @default(draft)
+  published_at DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("blog_posts")
+}

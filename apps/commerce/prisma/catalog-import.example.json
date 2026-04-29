@@ -1,0 +1,141 @@
+{
+  "categories": [
+    {
+      "slug": "solarzaun",
+      "name": "Solarzaun",
+      "description": "Solarzaun-Systeme fuer Einfriedung und Stromerzeugung.",
+      "is_active": true
+    },
+    {
+      "slug": "skywind",
+      "name": "SkyWind",
+      "description": "Kleinwindanlagen fuer private und gewerbliche Standorte.",
+      "is_active": true
+    }
+  ],
+  "products": [
+    {
+      "slug": "solarzaun-demo",
+      "category_slug": "solarzaun",
+      "product_type": "configurable",
+      "status": "draft",
+      "translations": {
+        "de": {
+          "title": "Solarzaun Demo",
+          "short_description": "Demo-Produkt fuer den Katalogimport. Kombiniert Einfriedung und Stromerzeugung.",
+          "description": "Ausfuehrliche Beschreibung des Demo-Produkts. Zeigt den mehrsprachigen Import mit DE als Pflicht und EN/ES als optionalen Sprachen.",
+          "features": [
+            "Modular erweiterbar",
+            "Varianten mit unterschiedlichen Laengen",
+            "Geeignet fuer spaetere Detailseiten"
+          ],
+          "meta_title": "Solarzaun Demo – Photovoltaik und Einfriedung",
+          "meta_description": "Demo-Produkt fuer den Import von Solarzaun-Katalogdaten."
+        },
+        "en": {
+          "title": "Solar Fence Demo",
+          "short_description": "Demo product for catalog import. Combines fencing and power generation.",
+          "description": "Detailed description of the demo product. Shows multilingual import with DE as required and EN/ES as optional.",
+          "features": [
+            "Modularly expandable",
+            "Variants with different lengths",
+            "Suitable for product detail pages"
+          ],
+          "meta_title": "Solar Fence Demo – Photovoltaics and Fencing",
+          "meta_description": "Demo product for importing solar fence catalog data."
+        },
+        "es": {
+          "title": "Valla Solar Demo",
+          "short_description": "Producto de demostración para importación de catálogo.",
+          "features": [
+            "Ampliable modularmente",
+            "Variantes con diferentes longitudes"
+          ],
+          "meta_title": "Valla Solar Demo",
+          "meta_description": "Producto de demostración para importar datos del catálogo."
+        }
+      },
+      "variants": [
+        {
+          "sku": "SZ-DEMO-3M",
+          "price_cents": 129900,
+          "currency": "EUR",
+          "stock_quantity": 0,
+          "attributes": {
+            "laenge_m": 3,
+            "farbe": "Anthrazit"
+          },
+          "weight_kg": 42.5,
+          "dimensions": {
+            "length_cm": 300,
+            "height_cm": 120
+          },
+          "translations": {
+            "de": { "name": "3 m, Anthrazit" },
+            "en": { "name": "3 m, Anthracite" },
+            "es": { "name": "3 m, Antracita" }
+          }
+        },
+        {
+          "sku": "SZ-DEMO-6M",
+          "price": "2499.00",
+          "currency": "EUR",
+          "stock_quantity": 0,
+          "attributes": {
+            "laenge_m": 6,
+            "farbe": "Anthrazit"
+          },
+          "translations": {
+            "de": { "name": "6 m, Anthrazit" },
+            "en": { "name": "6 m, Anthracite" }
+          }
+        }
+      ],
+      "images": [
+        {
+          "url": "/images/solarzaun-house.png",
+          "alt": "Solarzaun am modernen Wohnhaus",
+          "sort_order": 0
+        },
+        {
+          "url": "/images/solarzaun-detail.png",
+          "alt": "Solarzaun Detailansicht",
+          "sort_order": 1
+        }
+      ]
+    },
+    {
+      "slug": "skywind-demo",
+      "category_slug": "skywind",
+      "product_type": "inquiry_only",
+      "status": "draft",
+      "translations": {
+        "de": {
+          "title": "SkyWind Demo",
+          "short_description": "Demo fuer ein Anfrageprodukt ohne Kaufpreis.",
+          "description": "Dieses Produkt zeigt einen Import ohne festen Kaufpreis (inquiry_only). EN und ES sind nicht angegeben – der Import laeuft trotzdem durch.",
+          "features": [
+            "Geraeuscharm im Betrieb",
+            "Wartungsarm",
+            "Geeignet ab 500 m² Grundstueck"
+          ],
+          "meta_title": "SkyWind Demo – Kleinwindanlage",
+          "meta_description": "Demo-Produkt fuer Anfrageprodukte ohne festen Kaufpreis."
+        }
+      },
+      "variants": [
+        {
+          "sku": "SW-DEMO-STD",
+          "currency": "EUR",
+          "attributes": {
+            "leistung_kw": 1,
+            "zielgruppe": "Privatgrundstuck"
+          },
+          "translations": {
+            "de": { "name": "1 kW – Standardmontage (Richtpreis auf Anfrage)" }
+          }
+        }
+      ]
+    }
+  ]
+}
