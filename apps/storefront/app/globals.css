@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /*
+   * Tailwinds Preflight setzt bereits alle margin/padding auf 0 zurück.
+   * Hier nur projektspezifische Basis-Overrides.
+   */
+
+  body {
+    /* Schriftglättung – wirkt vor allem auf macOS/Retina-Displays */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #1c1c1e;
+    background-color: #ffffff;
+  }
+
+  /* Alle Headings nutzen die Display-Schrift (Sora) */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+  }
+
+  /* Fokus-Ringe für Tastaturnutzer – sichtbar, aber dezent */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-accent;
+  }
+
+  /*
+   * Anchor-Scroll-Offset für sticky Header
+   *
+   * Der Header ist h-16 (4rem / 64px) und sticky.
+   * Ohne scroll-margin-top landen Hash-Ziele (#section-id) exakt
+   * unter der Oberkante des Headers und werden verdeckt.
+   *
+   * 5rem = 4rem Header + 1rem Atemraum
+   *
+   * Betrifft alle Elemente mit id-Attribut:
+   *   - FAQ-Themenblöcke auf /faq (#allgemein, #solarzaun, …)
+   *   - Beliebige zukünftige Anchor-Ziele auf anderen Seiten
+   */
+  [id] {
+    scroll-margin-top: 5rem;
+  }
+}
