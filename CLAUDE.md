@@ -45,6 +45,7 @@ Webshop + Lead-App für die Solarwind-Produktlinie (Solarzaun, SkyWind, Kombilö
 - [Vercel Staging](./docs/vercel-staging.md) — Staging-Deploy-Guide, Blocker, Smoke-Test
 - [Railway Staging](./docs/railway-staging.md) — Commerce API auf Railway, Env-Vars, Seed
 - [Firebase Staging](./docs/firebase-staging.md) — onLeadSubmit deployen, Firestore, Smoke-Test
+- [Smoke-Test](./docs/smoke-test.md) — End-to-End Checkliste für alle drei Services
 
 ## Skills
 - `.claude/skills/hybrid-architecture/` — Architektur-Entscheidungen
