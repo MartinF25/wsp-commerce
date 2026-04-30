@@ -20,7 +20,7 @@ export default async function SolarzaunPage({ params }: { params: { locale: stri
   let products: ProductSummary[] = [];
 
   try {
-    products = (await fetchProducts({ category: "solarzaun", limit: 6 })).items;
+    products = (await fetchProducts({ locale: params.locale as "de" | "en" | "es", category: "solarzaun", limit: 6 })).items;
   } catch {
     products = [];
   }

@@ -53,7 +53,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const [product, relatedResult] = await Promise.allSettled([
     fetchProduct(params.slug),
-    fetchProducts({ limit: 4 }),
+    fetchProducts({ locale: params.locale as "de" | "en" | "es", limit: 4 }),
   ]);
 
   if (product.status === "rejected" || !product.value) notFound();

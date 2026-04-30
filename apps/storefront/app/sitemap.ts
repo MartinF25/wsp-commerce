@@ -6,7 +6,7 @@ const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localho
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [productsResult, categoriesResult, blogResult] = await Promise.allSettled([
-    fetchProducts({ limit: 100 }),
+    fetchProducts({ locale: "de", limit: 100 }),
     fetchCategories(),
     fetchBlogPosts({ limit: 200 }),
   ]);

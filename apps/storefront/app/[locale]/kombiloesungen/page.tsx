@@ -22,7 +22,7 @@ export default async function KombilösungenPage({ params }: Props) {
   let products: ProductSummary[] = [];
 
   try {
-    products = (await fetchProducts({ category: "kombiloesung", limit: 6 })).items;
+    products = (await fetchProducts({ locale: params.locale as "de" | "en" | "es", category: "kombiloesung", limit: 6 })).items;
   } catch {
     products = [];
   }

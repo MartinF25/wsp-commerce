@@ -20,7 +20,7 @@ export default async function SkyWindPage({ params }: { params: { locale: string
   let products: ProductSummary[] = [];
 
   try {
-    products = (await fetchProducts({ category: "skywind", limit: 6 })).items;
+    products = (await fetchProducts({ locale: params.locale as "de" | "en" | "es", category: "skywind", limit: 6 })).items;
   } catch {
     products = [];
   }

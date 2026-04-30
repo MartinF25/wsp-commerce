@@ -58,7 +58,7 @@ export async function subscribeNewsletter(
   };
 
   try {
-    const newsletterFunctionUrl = env.FIREBASE_NEWSLETTER_FUNCTION_URL;
+    const newsletterFunctionUrl = env.FIREBASE_LEAD_FUNCTION_URL;
     const n8nUrl = env.N8N_WEBHOOK_URL;
 
     if (newsletterFunctionUrl) {
