@@ -20,12 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -33,14 +32,4 @@ jobs:
           context: .
           file: apps/commerce/Dockerfile
           push: true
-          tags: ghcr.io/martinf25/wsp-commerce-api:latest
-
-      - name: Make package public
-        run: |
-          curl -s -X PATCH \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            -H "Content-Type: application/json" \
-            -d '{"visibility":"public"}' \
-            https://api.github.com/user/packages/container/wsp-commerce-api || true
+          tags: marfauer2026/wsp-commerce-api:latest
