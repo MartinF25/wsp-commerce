@@ -3,20 +3,27 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "type-check": "tsc --noEmit",
+    "build": "tsc && prisma generate",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "ts-node prisma/seed.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "1.19.14",
+    "@prisma/client": "5.22.0",
+    "hono": "4.12.14"
   },
   "devDependencies": {
-    "@prisma/client": "^5.9.1",
-    "prisma": "^5.9.1",
+    "@types/node": "^20.0.0",
+    "prisma": "^5.22.0",
     "ts-node": "^10.9.0",
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "typescript": "^5.0.0"
   },
   "prisma": {
+    "schema": "prisma/schema.prisma",
     "seed": "ts-node prisma/seed.ts"
   }
 }
