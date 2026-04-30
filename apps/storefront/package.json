@@ -3,6 +3,28 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@wsp/contracts": "file:../../packages/contracts/wsp-contracts-0.0.1.tgz",
+    "@wsp/types": "file:../../packages/types/wsp-types-0.0.1.tgz",
+    "next": "14.2.3",
+    "next-intl": "4.9.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "^20.19.39",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3"
   }
 }
