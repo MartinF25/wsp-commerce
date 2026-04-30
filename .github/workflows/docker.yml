@@ -8,6 +8,7 @@ on:
       - packages/contracts/**
       - packages/types/**
       - pnpm-lock.yaml
+  workflow_dispatch:
 
 jobs:
   build-push:
