@@ -17,6 +17,19 @@
 | `/account` | Customer account (orders, profile) |
 | `/kontakt` | Lead / consultation form |
 
+## Produkt-CTA-Logik auf Produktdetailseiten
+
+Der angezeigte CTA und der erlaubte Nutzerfluss hängen ausschließlich von `product_type` ab.
+Kein Mischen von Cart-Logik und Lead-Logik auf derselben Seite.
+
+| `product_type` | Primärer CTA | Sekundärer CTA | Checkout möglich |
+|---|---|---|---|
+| `direct_purchase` | „In den Warenkorb" | — | Ja |
+| `configurable` | „Konfigurieren" | „Angebot anfordern" (nach Konfig) | Ja, wenn Preis berechenbar |
+| `inquiry_only` | „Projekt anfragen" | „Rückruf anfordern" | Nein |
+
+Vollständige Routing-Logik: siehe [Product Model — Routing- und Entscheidungslogik](./product-model.md#routing--und-entscheidungslogik)
+
 ## Component Library
 - Shared components in `packages/ui`
 - Tailwind CSS for styling

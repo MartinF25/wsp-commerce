@@ -7,18 +7,19 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-test:
+  ci:
     runs-on: ubuntu-latest
+    env:
+      TURBO_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build

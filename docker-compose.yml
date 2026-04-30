@@ -11,23 +11,30 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   n8n:
-    image: n8nio/n8n:latest
+    # Pin to a specific version — do not use latest.
+    # Verify current stable at: https://github.com/n8n-io/n8n/releases
+    image: n8nio/n8n:1.88.0
     restart: unless-stopped
     ports:
       - "5678:5678"
     environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=changeme
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
       - DB_POSTGRESDB_DATABASE=n8n
       - DB_POSTGRESDB_USER=postgres
       - DB_POSTGRESDB_PASSWORD=postgres
+      # Disable login prompt for local development only
+      - N8N_USER_MANAGEMENT_DISABLED=true
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - n8n_data:/home/node/.n8n
 
