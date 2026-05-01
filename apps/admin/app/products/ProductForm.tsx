@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ProductDetail, Locale, ProductType, ProductStatus, Variant, ProductImage } from "@/lib/api";
+import type { ProductDetail, Locale, ProductType, ProductStatus, Variant, ProductImage, ProductDocument } from "@/lib/api";
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
@@ -81,6 +81,10 @@ export default function ProductForm({ product, categories }: Props) {
   // ── Bilder
   const [images, setImages] = useState<ProductImage[]>(product?.images ?? []);
   const [newImage, setNewImage] = useState({ url: "", alt: "", sort_order: "0" });
+
+  // ── Dokumente
+  const [documents, setDocuments] = useState<ProductDocument[]>(product?.documents ?? []);
+  const [newDocument, setNewDocument] = useState({ name: "", url: "", type: "datasheet", sort_order: "0" });
 
   // ── UI-State
   const [saving, setSaving] = useState(false);
@@ -274,6 +278,48 @@ export default function ProductForm({ product, categories }: Props) {
         throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       }
       setImages((prev) => prev.filter((i) => i.id !== imgId));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  // ─── Dokument hinzufügen ──────────────────────────────────────────────────────
+
+  async function handleAddDocument() {
+    if (!product || !newDocument.name.trim() || !newDocument.url.trim()) return;
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/admin-proxy/products/${product.id}/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newDocument.name.trim(),
+          url: newDocument.url.trim(),
+          type: newDocument.type,
+          sort_order: parseInt(newDocument.sort_order, 10) || 0,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
+
+      setDocuments((prev) => [...prev, json.data]);
+      setNewDocument({ name: "", url: "", type: "datasheet", sort_order: "0" });
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleDeleteDocument(docId: string) {
+    if (!confirm("Dokument entfernen?")) return;
+    try {
+      const res = await fetch(`/api/admin-proxy/documents/${docId}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 204) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
+      }
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
     } catch (e) {
       setError((e as Error).message);
     }
@@ -474,89 +520,104 @@ export default function ProductForm({ product, categories }: Props) {
       </div>
 
       {/* ── Bilder ── */}
-      {!isNew && (
-        <div className="form-card" style={{ marginBottom: 16 }}>
-          <div className="section-title" style={{ marginTop: 0 }}>Bilder</div>
+      <div className="form-card" style={{ marginBottom: 16 }}>
+        <div className="section-title" style={{ marginTop: 0 }}>Bilder</div>
 
-          {images.length > 0 && (
-            <div className="sub-table-wrapper" style={{ marginBottom: 12 }}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>URL</th>
-                    <th>Alt-Text</th>
-                    <th>Reihenfolge</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {images.map((img) => (
-                    <tr key={img.id}>
-                      <td>
-                        <a href={img.url} target="_blank" rel="noreferrer"
-                           style={{ fontFamily: "monospace", fontSize: 12 }}>
-                          {img.url.length > 60 ? img.url.slice(0, 60) + "…" : img.url}
-                        </a>
-                      </td>
-                      <td>{img.alt ?? <span style={{ color: "#9ca3af" }}>—</span>}</td>
-                      <td>{img.sort_order}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDeleteImage(img.id)}
-                        >
-                          Entfernen
-                        </button>
-                      </td>
+        {isNew ? (
+          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
+            Bilder können erst nach dem Anlegen des Produkts hinzugefügt werden.
+          </p>
+        ) : (
+          <>
+            {images.length > 0 && (
+              <div className="sub-table-wrapper" style={{ marginBottom: 12 }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 56 }}>Vorschau</th>
+                      <th>URL</th>
+                      <th>Alt-Text</th>
+                      <th>Reihenfolge</th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {images.map((img) => (
+                      <tr key={img.id}>
+                        <td>
+                          <img
+                            src={img.url}
+                            alt={img.alt ?? ""}
+                            style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4, background: "#f1f5f9" }}
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          />
+                        </td>
+                        <td>
+                          <a href={img.url} target="_blank" rel="noreferrer"
+                             style={{ fontFamily: "monospace", fontSize: 12 }}>
+                            {img.url.length > 55 ? img.url.slice(0, 55) + "…" : img.url}
+                          </a>
+                        </td>
+                        <td>{img.alt ?? <span style={{ color: "#9ca3af" }}>—</span>}</td>
+                        <td>{img.sort_order}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDeleteImage(img.id)}
+                          >
+                            Entfernen
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 80px auto", gap: 8, alignItems: "end" }}>
-            <div>
-              <label>URL</label>
-              <input
-                type="url"
-                value={newImage.url}
-                onChange={(e) => setNewImage({ ...newImage, url: e.target.value })}
-                placeholder="https://…"
-              />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 80px auto", gap: 8, alignItems: "end" }}>
+              <div>
+                <label>Bild-URL <span className="req">*</span></label>
+                <input
+                  type="url"
+                  value={newImage.url}
+                  onChange={(e) => setNewImage({ ...newImage, url: e.target.value })}
+                  placeholder="https://…/bild.jpg"
+                />
+              </div>
+              <div>
+                <label>Alt-Text</label>
+                <input
+                  type="text"
+                  value={newImage.alt}
+                  onChange={(e) => setNewImage({ ...newImage, alt: e.target.value })}
+                  placeholder="Bildbeschreibung"
+                />
+              </div>
+              <div>
+                <label>Reihenfolge</label>
+                <input
+                  type="number"
+                  value={newImage.sort_order}
+                  onChange={(e) => setNewImage({ ...newImage, sort_order: e.target.value })}
+                />
+              </div>
+              <div>
+                <label>&nbsp;</label>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleAddImage}
+                  disabled={!newImage.url.trim()}
+                >
+                  + Bild
+                </button>
+              </div>
             </div>
-            <div>
-              <label>Alt-Text</label>
-              <input
-                type="text"
-                value={newImage.alt}
-                onChange={(e) => setNewImage({ ...newImage, alt: e.target.value })}
-                placeholder="Beschreibung"
-              />
-            </div>
-            <div>
-              <label>Reihenfolge</label>
-              <input
-                type="number"
-                value={newImage.sort_order}
-                onChange={(e) => setNewImage({ ...newImage, sort_order: e.target.value })}
-              />
-            </div>
-            <div>
-              <label>&nbsp;</label>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleAddImage}
-                disabled={!newImage.url.trim()}
-              >
-                + Bild
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
 
       {/* ── Varianten ── */}
       {!isNew && (
@@ -667,6 +728,107 @@ export default function ProductForm({ product, categories }: Props) {
               Varianten können erst nach dem Anlegen des Produkts hinzugefügt werden.
             </p>
           )}
+        </div>
+      )}
+
+      {/* ── Dokumente ── */}
+      {!isNew && (
+        <div className="form-card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ marginTop: 0 }}>Dokumente</div>
+
+          {documents.length > 0 && (
+            <div className="sub-table-wrapper" style={{ marginBottom: 12 }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Typ</th>
+                    <th>URL</th>
+                    <th>Reihenfolge</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documents.map((doc) => (
+                    <tr key={doc.id}>
+                      <td>{doc.name}</td>
+                      <td>
+                        <span className="badge badge-type">{doc.type}</span>
+                      </td>
+                      <td>
+                        <a href={doc.url} target="_blank" rel="noreferrer"
+                           style={{ fontFamily: "monospace", fontSize: 12 }}>
+                          {doc.url.length > 50 ? doc.url.slice(0, 50) + "…" : doc.url}
+                        </a>
+                      </td>
+                      <td>{doc.sort_order}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDeleteDocument(doc.id)}
+                        >
+                          Entfernen
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr 80px auto", gap: 8, alignItems: "end" }}>
+            <div>
+              <label>Name <span className="req">*</span></label>
+              <input
+                type="text"
+                value={newDocument.name}
+                onChange={(e) => setNewDocument({ ...newDocument, name: e.target.value })}
+                placeholder="z.B. Datenblatt, Montageanleitung"
+              />
+            </div>
+            <div>
+              <label>Typ</label>
+              <select
+                value={newDocument.type}
+                onChange={(e) => setNewDocument({ ...newDocument, type: e.target.value })}
+              >
+                <option value="datasheet">Datenblatt</option>
+                <option value="manual">Anleitung</option>
+                <option value="certificate">Zertifikat</option>
+                <option value="other">Sonstiges</option>
+              </select>
+            </div>
+            <div>
+              <label>URL <span className="req">*</span></label>
+              <input
+                type="url"
+                value={newDocument.url}
+                onChange={(e) => setNewDocument({ ...newDocument, url: e.target.value })}
+                placeholder="https://…/dokument.pdf"
+              />
+            </div>
+            <div>
+              <label>Reihenfolge</label>
+              <input
+                type="number"
+                value={newDocument.sort_order}
+                onChange={(e) => setNewDocument({ ...newDocument, sort_order: e.target.value })}
+              />
+            </div>
+            <div>
+              <label>&nbsp;</label>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleAddDocument}
+                disabled={!newDocument.name.trim() || !newDocument.url.trim()}
+              >
+                + Dokument
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
