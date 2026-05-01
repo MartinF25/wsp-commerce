@@ -74,6 +74,10 @@ export default function ProductForm({ product, categories }: Props) {
     es: translationFromApi(product?.translations.find((t) => t.locale === "es")),
   });
 
+  // ── Startpreis (nur beim Anlegen)
+  const [initSku, setInitSku] = useState("");
+  const [initPrice, setInitPrice] = useState("");
+
   // ── Varianten (lokaler State)
   const [variants, setVariants] = useState<Variant[]>(product?.variants ?? []);
   const [newVariant, setNewVariant] = useState({
@@ -163,7 +167,22 @@ export default function ProductForm({ product, categories }: Props) {
       if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
 
       if (isNew) {
-        router.push(`/products/${json.id ?? json.data?.id}`);
+        const productId = json.id ?? json.data?.id;
+
+        // Startvariante anlegen falls Preis oder SKU angegeben
+        if (initPrice.trim() || initSku.trim()) {
+          const priceCents = initPrice.trim()
+            ? Math.round(parseFloat(initPrice.replace(",", ".")) * 100)
+            : null;
+          const sku = initSku.trim() || `${(json.data?.slug ?? productId).slice(0, 40)}-001`;
+          await fetch(`/api/admin-proxy/products/${productId}/variants`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sku, price_cents: priceCents, currency: "EUR", stock_quantity: 0, is_active: true }),
+          });
+        }
+
+        router.push(`/products/${productId}`);
         router.refresh();
       } else {
         setSuccess("Gespeichert.");
@@ -411,6 +430,36 @@ export default function ProductForm({ product, categories }: Props) {
           </div>
         </div>
       </div>
+
+      {/* ── Startpreis (nur beim Anlegen) ── */}
+      {isNew && (
+        <div className="form-card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ marginTop: 0 }}>Preis</div>
+          <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+            Optionaler Startpreis. Nach dem Anlegen können weitere Varianten hinzugefügt werden.
+          </p>
+          <div className="form-row form-row-2">
+            <div>
+              <label>Preis in € <span className="opt">(z.B. 299,00)</span></label>
+              <input
+                type="text"
+                value={initPrice}
+                onChange={(e) => setInitPrice(e.target.value)}
+                placeholder="0,00"
+              />
+            </div>
+            <div>
+              <label>SKU <span className="opt">(optional, wird automatisch generiert)</span></label>
+              <input
+                type="text"
+                value={initSku}
+                onChange={(e) => setInitSku(e.target.value)}
+                placeholder="SKU-001"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Übersetzungen ── */}
       <div className="form-card" style={{ marginBottom: 16 }}>
@@ -663,7 +712,7 @@ export default function ProductForm({ product, categories }: Props) {
                 <thead>
                   <tr>
                     <th>SKU</th>
-                    <th>Preis (Cent)</th>
+                    <th>Preis</th>
                     <th>Währung</th>
                     <th>Lagerbestand</th>
                     <th>Aktiv</th>
@@ -674,7 +723,7 @@ export default function ProductForm({ product, categories }: Props) {
                   {variants.map((v) => (
                     <tr key={v.id}>
                       <td style={{ fontFamily: "monospace" }}>{v.sku}</td>
-                      <td>{v.price_cents != null ? v.price_cents : <span style={{ color: "#9ca3af" }}>—</span>}</td>
+                      <td>{v.price_cents != null ? `${(v.price_cents / 100).toFixed(2).replace(".", ",")} €` : <span style={{ color: "#9ca3af" }}>—</span>}</td>
                       <td>{v.currency}</td>
                       <td>{v.stock_quantity}</td>
                       <td>
