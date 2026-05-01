@@ -40,7 +40,8 @@ COPY packages/contracts/wsp-contracts-0.0.1.tgz packages/contracts/
 RUN pnpm install --frozen-lockfile --prod
 COPY --from=builder /app/apps/commerce/dist apps/commerce/dist
 COPY apps/commerce/prisma apps/commerce/prisma
-RUN cd apps/commerce && npx prisma generate --schema=prisma/schema.prisma
+# Use the Prisma client generated in builder (has linux-musl-openssl-3.0.x binary)
+COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
 
 ENV NODE_ENV=production
 ENV PORT=3000
