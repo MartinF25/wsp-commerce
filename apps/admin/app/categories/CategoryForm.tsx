@@ -46,7 +46,7 @@ export default function CategoryForm({ category, parentOptions }: Props) {
       );
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+      if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
 
       router.push("/categories");
       router.refresh();
@@ -67,7 +67,7 @@ export default function CategoryForm({ category, parentOptions }: Props) {
       const res = await fetch(`/api/admin-proxy/categories/${category.id}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(json.error ?? `HTTP ${res.status}`);
+        throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       }
       router.push("/categories");
       router.refresh();

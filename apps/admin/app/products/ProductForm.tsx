@@ -152,7 +152,7 @@ export default function ProductForm({ product, categories }: Props) {
       );
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+      if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
 
       if (isNew) {
         router.push(`/products/${json.id ?? json.data?.id}`);
@@ -180,7 +180,7 @@ export default function ProductForm({ product, categories }: Props) {
       const res = await fetch(`/api/admin-proxy/products/${product.id}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(json.error ?? `HTTP ${res.status}`);
+        throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       }
       router.push("/products");
       router.refresh();
@@ -215,7 +215,7 @@ export default function ProductForm({ product, categories }: Props) {
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+      if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
 
       setVariants((prev) => [...prev, json.data]);
       setNewVariant({ sku: "", price_cents: "", currency: "EUR", stock_quantity: "0", is_active: true });
@@ -230,7 +230,7 @@ export default function ProductForm({ product, categories }: Props) {
       const res = await fetch(`/api/admin-proxy/variants/${varId}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(json.error ?? `HTTP ${res.status}`);
+        throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       }
       setVariants((prev) => prev.filter((v) => v.id !== varId));
     } catch (e) {
@@ -256,7 +256,7 @@ export default function ProductForm({ product, categories }: Props) {
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+      if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
 
       setImages((prev) => [...prev, json.data]);
       setNewImage({ url: "", alt: "", sort_order: "0" });
@@ -271,7 +271,7 @@ export default function ProductForm({ product, categories }: Props) {
       const res = await fetch(`/api/admin-proxy/images/${imgId}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(json.error ?? `HTTP ${res.status}`);
+        throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       }
       setImages((prev) => prev.filter((i) => i.id !== imgId));
     } catch (e) {
