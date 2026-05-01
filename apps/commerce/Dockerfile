@@ -24,6 +24,7 @@ COPY packages/types/ packages/types/
 RUN pnpm --filter commerce run build
 
 FROM node:20-alpine AS runner
+RUN apk add --no-cache openssl
 RUN npm install -g pnpm@9.15.9
 WORKDIR /app
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc ./
@@ -45,6 +46,7 @@ COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node
 EXPOSE 3000
 
 CMD ["node", "apps/commerce/dist/server.js"]
