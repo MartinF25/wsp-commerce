@@ -43,10 +43,12 @@ COPY --from=builder /app/apps/commerce/dist apps/commerce/dist
 COPY apps/commerce/prisma apps/commerce/prisma
 # Use the Prisma client generated in builder (has linux-musl-openssl-3.0.x binary)
 COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
+# Copy Prisma CLI from builder for migrations
+COPY --from=builder /app/node_modules/prisma /app/node_modules/prisma
 
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node
 EXPOSE 3000
 
-CMD ["node", "apps/commerce/dist/server.js"]
+CMD ["sh", "-c", "node /app/node_modules/prisma/build/index.js migrate deploy --schema=/app/apps/commerce/prisma/schema.prisma && node /app/apps/commerce/dist/server.js"]
