@@ -321,7 +321,7 @@ adminRoutes.post("/products", async (c) => {
   }
 
   const b = body as Record<string, unknown>;
-  const { slug, product_type, status, category_id, translations } = b;
+  const { slug, product_type, status, category_id, translations, paypal_url, stripe_url } = b;
 
   // DE-Übersetzung ist Pflicht
   const deTranslation = (translations as Record<LocaleValue, Record<string, unknown>> | undefined)?.de;
@@ -345,6 +345,8 @@ adminRoutes.post("/products", async (c) => {
       product_type: isValidProductType(product_type) ? product_type : "inquiry_only",
       status: isValidStatus(status) ? status : "draft",
       category_id: typeof category_id === "string" && category_id ? category_id : null,
+      paypal_url: typeof paypal_url === "string" ? paypal_url.trim() || null : null,
+      stripe_url: typeof stripe_url === "string" ? stripe_url.trim() || null : null,
       translations: {
         create: buildTranslationCreates(translations as Record<string, unknown> | undefined),
       },
@@ -397,7 +399,7 @@ adminRoutes.put("/products/:id", async (c) => {
   }
 
   const b = body as Record<string, unknown>;
-  const { slug, product_type, status, category_id, translations } = b;
+  const { slug, product_type, status, category_id, translations, paypal_url, stripe_url } = b;
 
   const productData: Record<string, unknown> = {};
   if (typeof slug === "string" && slug.trim() && slug.trim() !== existing.slug) {
@@ -409,6 +411,12 @@ adminRoutes.put("/products/:id", async (c) => {
   if (isValidStatus(status)) productData.status = status;
   if (category_id === null || (typeof category_id === "string")) {
     productData.category_id = category_id || null;
+  }
+  if ("paypal_url" in b) {
+    productData.paypal_url = typeof paypal_url === "string" ? paypal_url.trim() || null : null;
+  }
+  if ("stripe_url" in b) {
+    productData.stripe_url = typeof stripe_url === "string" ? stripe_url.trim() || null : null;
   }
 
   // Translations upsert

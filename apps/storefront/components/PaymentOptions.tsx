@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 
 type Props = {
   paypalUrl: string | null;
+  stripeUrl: string | null;
 };
 
 function PayPalLogo() {
@@ -13,6 +14,14 @@ function PayPalLogo() {
     <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
       <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.217a.78.78 0 0 1 .771-.645h6.923c2.356 0 4.03.535 4.972 1.59.905 1.016 1.18 2.47.82 4.33-.013.073-.028.146-.044.22-.63 3.23-2.772 4.87-6.37 4.87h-1.61a.78.78 0 0 0-.77.658l-.61 3.869-.174 1.1-.012.088-.738.04z" opacity=".7"/>
       <path d="M20.31 8.41c-.7 3.57-3.1 5.37-7.17 5.37h-1.82l-1.1 6.97H7.08l.74-4.69.61-3.87a.78.78 0 0 1 .77-.658h1.61c3.6 0 5.74-1.64 6.37-4.87.016-.074.03-.147.044-.22.54.38.93.87 1.08 1.97z"/>
+    </svg>
+  );
+}
+
+function StripeLogo() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+      <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
     </svg>
   );
 }
@@ -25,17 +34,7 @@ function BankIcon() {
   );
 }
 
-function CardIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-      <rect x="2" y="5" width="20" height="14" rx="2" />
-      <path strokeLinecap="round" d="M2 10h20" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 15h4" />
-    </svg>
-  );
-}
-
-export function PaymentOptions({ paypalUrl }: Props) {
+export function PaymentOptions({ paypalUrl, stripeUrl }: Props) {
   const t = useTranslations("product");
   const [showBank, setShowBank] = useState(false);
 
@@ -59,6 +58,23 @@ export function PaymentOptions({ paypalUrl }: Props) {
         <div className="flex items-center gap-3 w-full bg-gray-100 text-brand-muted font-semibold py-3 px-5 rounded-lg cursor-not-allowed opacity-60">
           <PayPalLogo />
           <span className="flex-1 text-center text-sm">{t("paypal_not_configured")}</span>
+        </div>
+      )}
+
+      {stripeUrl ? (
+        <a
+          href={stripeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 w-full bg-[#635bff] text-white font-semibold py-3 px-5 rounded-lg shadow-sm hover:bg-[#4f46e5] transition-colors duration-150"
+        >
+          <StripeLogo />
+          <span className="flex-1 text-center text-sm">{t("stripe_pay")}</span>
+        </a>
+      ) : (
+        <div className="flex items-center gap-3 w-full bg-gray-100 text-brand-muted font-semibold py-3 px-5 rounded-lg cursor-not-allowed opacity-60">
+          <StripeLogo />
+          <span className="flex-1 text-center text-sm">{t("stripe_not_configured")}</span>
         </div>
       )}
 
@@ -93,14 +109,6 @@ export function PaymentOptions({ paypalUrl }: Props) {
             </Link>
           </div>
         )}
-      </div>
-
-      <div className="flex items-center gap-3 w-full border border-dashed border-gray-300 text-brand-muted py-3 px-5 rounded-lg cursor-not-allowed select-none bg-white">
-        <CardIcon />
-        <span className="flex-1 text-center text-sm">{t("credit_card")}</span>
-        <span className="text-xs bg-gray-100 text-brand-muted font-medium px-2 py-0.5 rounded-full">
-          {t("coming_soon")}
-        </span>
       </div>
     </div>
   );

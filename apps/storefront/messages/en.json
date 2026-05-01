@@ -163,6 +163,8 @@
     "configure": "Request configuration",
     "paypal_pay": "Pay with PayPal",
     "paypal_not_configured": "PayPal not configured",
+    "stripe_pay": "Pay with credit card / Stripe",
+    "stripe_not_configured": "Stripe not configured",
     "bank_request": "Bank details on request",
     "bank_info": "For security reasons, we share bank details only through direct contact.",
     "bank_cta": "Request now →",

@@ -95,6 +95,8 @@ export interface ProductDetail {
   status: ProductStatus;
   category_id: string | null;
   category: Category | null;
+  paypal_url: string | null;
+  stripe_url: string | null;
   translations: Translation[];
   variants: Variant[];
   images: ProductImage[];

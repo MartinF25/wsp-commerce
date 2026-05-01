@@ -63,6 +63,8 @@ export default function ProductForm({ product, categories }: Props) {
   const [productType, setProductType] = useState<ProductType>(product?.product_type ?? "inquiry_only");
   const [status, setStatus] = useState<ProductStatus>(product?.status ?? "draft");
   const [categoryId, setCategoryId] = useState(product?.category_id ?? "");
+  const [paypalUrl, setPaypalUrl] = useState(product?.paypal_url ?? "");
+  const [stripeUrl, setStripeUrl] = useState(product?.stripe_url ?? "");
 
   // ── Übersetzungen
   const [activeLocale, setActiveLocale] = useState<Locale>("de");
@@ -143,6 +145,8 @@ export default function ProductForm({ product, categories }: Props) {
         product_type: productType,
         status,
         category_id: categoryId || null,
+        paypal_url: paypalUrl.trim() || null,
+        stripe_url: stripeUrl.trim() || null,
         translations: buildTranslationsPayload(),
       };
 
@@ -374,6 +378,35 @@ export default function ProductForm({ product, categories }: Props) {
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               placeholder="wird-generiert"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Zahlung ── */}
+      <div className="form-card" style={{ marginBottom: 16 }}>
+        <div className="section-title" style={{ marginTop: 0 }}>Zahlungslinks</div>
+        <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+          Hinterlege direkte Zahlungslinks für PayPal und Stripe. Diese werden auf der Produktdetailseite als Kauf-Buttons angezeigt.
+        </p>
+
+        <div className="form-row form-row-2">
+          <div>
+            <label>PayPal-Link <span className="opt">(optional)</span></label>
+            <input
+              type="url"
+              value={paypalUrl}
+              onChange={(e) => setPaypalUrl(e.target.value)}
+              placeholder="https://www.paypal.com/paypalme/... oder https://www.paypal.com/checkout/..."
+            />
+          </div>
+          <div>
+            <label>Stripe-Link <span className="opt">(optional)</span></label>
+            <input
+              type="url"
+              value={stripeUrl}
+              onChange={(e) => setStripeUrl(e.target.value)}
+              placeholder="https://buy.stripe.com/..."
             />
           </div>
         </div>

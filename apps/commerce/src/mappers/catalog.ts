@@ -84,6 +84,8 @@ export function toProductDetail(product: ProductWithVariants, locale = "de"): Pr
     purchasable:
       isDirectlyPurchasable(product.product_type) ||
       isConfigurable(product.product_type),
+    paypal_url: product.paypal_url ?? null,
+    stripe_url: product.stripe_url ?? null,
     category: product.category
       ? {
           id: product.category.id,

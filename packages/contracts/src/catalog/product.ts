@@ -110,6 +110,8 @@ export const ProductDetailSchema = z.object({
   project_note: z.string().nullable(),
   product_type: ProductTypeSchema,
   purchasable: z.boolean(),
+  paypal_url: z.string().nullable(),
+  stripe_url: z.string().nullable(),
   category: z
     .object({
       id: z.string().uuid(),

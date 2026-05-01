@@ -66,6 +66,10 @@ model Product {
   product_type ProductType   @default(inquiry_only)
   status       ProductStatus @default(draft)
   category_id  String?
+  /// PayPal Payment Link (z.B. https://www.paypal.com/paypalme/... oder https://www.paypal.com/checkout/...)
+  paypal_url   String?
+  /// Stripe Payment Link (z.B. https://buy.stripe.com/...)
+  stripe_url   String?
 
   category     Category?            @relation(fields: [category_id], references: [id])
   translations ProductTranslation[]

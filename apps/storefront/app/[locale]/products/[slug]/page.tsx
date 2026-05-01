@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { fetchProduct, fetchProducts } from "@/lib/catalog";
 import { VariantSelector } from "@/components/VariantSelector";
+import { PaymentOptions } from "@/components/PaymentOptions";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductImageGallery } from "@/components/ProductImageGallery";
 import { ShareButtons } from "@/components/ShareButtons";
@@ -162,6 +163,15 @@ export default async function ProductDetailPage({ params }: Props) {
               productType={p.product_type}
               productPriceDisplay={p.priceDisplay}
             />
+
+            {p.purchasable && (
+              <div className="mb-6">
+                <PaymentOptions
+                  paypalUrl={p.paypal_url}
+                  stripeUrl={p.stripe_url}
+                />
+              </div>
+            )}
 
             {deliveryHint && (
               <p className="text-xs text-brand-muted mb-6">{deliveryHint}</p>
