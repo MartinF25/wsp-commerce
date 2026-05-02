@@ -43,15 +43,21 @@ export function calculatePriceDisplay(
   const currency = (variants[0]?.currency as string) || "EUR";
 
   if (isDirectlyPurchasable(product.product_type)) {
-    const priceCents = variants[0]?.price_cents;
-    if (priceCents === null || priceCents === undefined) {
+    const pricesInCents: number[] = variants
+      .map((v: any) => v.price_cents)
+      .filter((p: number | null) => p !== null) as number[];
+
+    if (pricesInCents.length === 0) {
       return { currencyCode: currency, displayText: "Preis auf Anfrage" };
     }
-    return {
-      minCents: priceCents,
-      currencyCode: currency,
-      displayText: formatCurrency(priceCents, currency),
-    };
+
+    const minCents = Math.min(...pricesInCents);
+    const displayText =
+      pricesInCents.length === 1
+        ? formatCurrency(minCents, currency)
+        : `ab ${formatCurrency(minCents, currency)}`;
+
+    return { minCents, currencyCode: currency, displayText };
   }
 
   if (isConfigurable(product.product_type)) {
