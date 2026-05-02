@@ -268,8 +268,9 @@ export default function ProductForm({ product, categories }: Props) {
 
   // ─── Bild hinzufügen ──────────────────────────────────────────────────────────
 
-  async function handleAddImage() {
-    if (!product || !newImage.url.trim()) return;
+  async function handleAddImage(directUrl?: string) {
+    const urlToUse = directUrl ?? newImage.url;
+    if (!product || !urlToUse.trim()) return;
     setError(null);
 
     try {
@@ -277,7 +278,7 @@ export default function ProductForm({ product, categories }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          url: newImage.url.trim(),
+          url: urlToUse.trim(),
           alt: newImage.alt.trim() || null,
           sort_order: parseInt(newImage.sort_order, 10) || 0,
         }),
@@ -664,8 +665,16 @@ export default function ProductForm({ product, categories }: Props) {
                 folder="images"
                 accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
                 label="Bild hochladen"
-                onUploaded={(url) => setNewImage((prev) => ({ ...prev, url }))}
+                onUploaded={(url) => {
+                  setNewImage((prev) => ({ ...prev, url }));
+                  if (product) handleAddImage(url);
+                }}
               />
+              {!product && (
+                <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: 8 }}>
+                  Produkt zuerst speichern, dann Bilder hochladen
+                </span>
+              )}
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 80px auto", gap: 8, alignItems: "end" }}>
