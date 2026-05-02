@@ -593,7 +593,7 @@ adminRoutes.post("/products/:id/images", async (c) => {
     data: {
       product_id: id,
       url: url.trim(),
-      alt: typeof alt === "string" ? alt.trim() || null : null,
+      alt: typeof alt === "string" ? alt.trim() || "" : "",
       sort_order: typeof sort_order === "number" ? sort_order : 0,
     },
   });
