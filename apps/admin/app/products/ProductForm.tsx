@@ -709,7 +709,7 @@ export default function ProductForm({ product, categories }: Props) {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={handleAddImage}
+                  onClick={() => handleAddImage()}
                   disabled={!newImage.url.trim()}
                 >
                   + Bild
