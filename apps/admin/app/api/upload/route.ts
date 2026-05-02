@@ -54,11 +54,9 @@ export async function POST(req: NextRequest) {
       metadata: { contentType: file.type },
     });
 
-    await fileRef.makePublic();
-
     const bucketName = bucket.name;
-    const encodedPath = storagePath.split("/").map(encodeURIComponent).join("/");
-    const url = `https://storage.googleapis.com/${bucketName}/${encodedPath}`;
+    const encodedPath = encodeURIComponent(storagePath);
+    const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media`;
 
     return NextResponse.json({ url });
   } catch (err) {
