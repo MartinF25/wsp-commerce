@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ProductDetail, Locale, ProductType, ProductStatus, Variant, ProductImage, ProductDocument } from "@/lib/api";
+import UploadButton from "@/components/UploadButton";
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
@@ -658,6 +659,15 @@ export default function ProductForm({ product, categories }: Props) {
               </div>
             )}
 
+            <div style={{ marginBottom: 8 }}>
+              <UploadButton
+                folder="images"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                label="Bild hochladen"
+                onUploaded={(url) => setNewImage((prev) => ({ ...prev, url }))}
+              />
+            </div>
+
             <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 80px auto", gap: 8, alignItems: "end" }}>
               <div>
                 <label>Bild-URL <span className="req">*</span></label>
@@ -884,6 +894,14 @@ export default function ProductForm({ product, categories }: Props) {
             </div>
             <div>
               <label>URL <span className="req">*</span></label>
+              <div style={{ marginBottom: 4 }}>
+                <UploadButton
+                  folder="documents"
+                  accept="application/pdf"
+                  label="PDF hochladen"
+                  onUploaded={(url) => setNewDocument((prev) => ({ ...prev, url }))}
+                />
+              </div>
               <input
                 type="url"
                 value={newDocument.url}
