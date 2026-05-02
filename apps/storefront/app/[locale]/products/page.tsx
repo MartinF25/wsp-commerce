@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { fetchProducts, fetchCategories } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
+import type { CategorySummary } from "@wsp/types";
 
 type Props = { params: { locale: string }; searchParams: { category?: string } };
 
@@ -22,6 +24,7 @@ export default async function ProductsPage({ params, searchParams }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* ── Header ── */}
       <div className="mb-8">
         <nav className="flex items-center gap-2 text-xs text-brand-muted mb-6">
           <Link href="/" className="hover:text-brand-text transition-colors duration-150">{t("breadcrumb_home")}</Link>
@@ -34,6 +37,27 @@ export default async function ProductsPage({ params, searchParams }: Props) {
         </p>
       </div>
 
+      {/* ── Kategorie-Kacheln (nur wenn kein Filter aktiv) ── */}
+      {!selectedCategory && categories.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-end justify-between mb-5">
+            <div>
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-1">Sortiment</p>
+              <h2 className="font-display text-xl font-bold text-brand-text">Nach Kategorien kaufen</h2>
+            </div>
+          </div>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0">
+            {categories.map((cat) => (
+              <li key={cat.id}>
+                <CategoryCard category={cat} />
+              </li>
+            ))}
+          </ul>
+          <hr className="mt-10 border-gray-100" />
+        </section>
+      )}
+
+      {/* ── Filter-Tabs ── */}
       {categories.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-8">
           <Link
@@ -62,6 +86,7 @@ export default async function ProductsPage({ params, searchParams }: Props) {
         </div>
       )}
 
+      {/* ── Produkt-Grid ── */}
       {result == null ? (
         <p role="alert" className="text-brand-muted">{t("no_products")}</p>
       ) : result.items.length === 0 ? (
@@ -82,5 +107,47 @@ export default async function ProductsPage({ params, searchParams }: Props) {
         </Link>
       </div>
     </div>
+  );
+}
+
+// ─── Kategorie-Kachel ─────────────────────────────────────────────────────────
+
+function CategoryCard({ category }: { category: CategorySummary }) {
+  return (
+    <Link
+      href={`/products?category=${category.slug}`}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 bg-white"
+    >
+      {/* Bild */}
+      <div className="relative h-44 w-full overflow-hidden bg-gray-100">
+        {category.coverImageUrl ? (
+          <Image
+            src={category.coverImageUrl}
+            alt={category.name}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+            <span className="text-4xl text-gray-400">📦</span>
+          </div>
+        )}
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+      </div>
+
+      {/* Text */}
+      <div className="p-5">
+        <h3 className="font-display font-semibold text-lg text-brand-text group-hover:text-brand-accent transition-colors duration-150 mb-1">
+          {category.name}
+        </h3>
+        <p className="text-sm text-brand-muted">
+          {category.productCount === 0
+            ? "Keine Produkte"
+            : `${category.productCount} ${category.productCount === 1 ? "Produkt" : "Produkte"}`}
+        </p>
+      </div>
+    </Link>
   );
 }

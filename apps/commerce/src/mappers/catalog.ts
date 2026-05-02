@@ -134,7 +134,8 @@ export function toProductDetail(product: ProductWithVariants, locale = "de"): Pr
  */
 export function toCategorySummary(
   category: { id: string; slug: string; name: string; parent_id: string | null },
-  productCount: number
+  productCount: number,
+  coverImageUrl: string | null = null
 ): CategorySummary {
   return {
     id: category.id,
@@ -142,6 +143,7 @@ export function toCategorySummary(
     name: category.name,
     parent_id: category.parent_id ?? null,
     productCount,
+    coverImageUrl,
   };
 }
 

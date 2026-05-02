@@ -13,6 +13,7 @@ export const CategorySummarySchema = z.object({
   name: z.string(),
   parent_id: z.string().uuid().nullable(),
   productCount: z.number().int().nonnegative(),
+  coverImageUrl: z.string().nullable(),
 });
 export type CategorySummary = z.infer<typeof CategorySummarySchema>;
 

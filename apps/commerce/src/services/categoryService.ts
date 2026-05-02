@@ -36,6 +36,12 @@ export class CategoryService {
       orderBy: { name: "asc" },
       include: {
         _count: { select: { products: { where: { status: "active" } } } },
+        products: {
+          where: { status: "active" },
+          take: 1,
+          orderBy: { created_at: "asc" },
+          include: { images: { orderBy: { sort_order: "asc" }, take: 1 } },
+        },
       },
     });
   }

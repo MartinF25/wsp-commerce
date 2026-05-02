@@ -28,9 +28,10 @@ categoryRoutes.get("/", async (c) => {
   // listAllCategories liefert _count.products – ein einziger DB-Roundtrip.
   const categories = await CategoryService.listAllCategories();
 
-  const summaries = categories.map((cat) =>
-    toCategorySummary(cat, cat._count.products)
-  );
+  const summaries = categories.map((cat) => {
+    const coverImageUrl = cat.products?.[0]?.images?.[0]?.url ?? null;
+    return toCategorySummary(cat, cat._count.products, coverImageUrl);
+  });
 
   return c.json({ data: summaries });
 });

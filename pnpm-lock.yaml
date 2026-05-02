@@ -635,7 +635,7 @@ packages:
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
 
   '@wsp/contracts@file:packages/contracts/wsp-contracts-0.0.1.tgz':
-    resolution: {integrity: sha512-UUE4wRm5D81hWRCOymdqTk1RzY29tQQkk3yXSdXmHTUre2tkpUFZDuB96YCvmDIRz3uZsuH7i6+aek71SVFytA==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
+    resolution: {integrity: sha512-j+b1n7oMtqiTzMasLfBTUNzDrMWEQC9Svon0jRD6Uvpt+7IyBA/1+MnTuP1/bSnAIl96qMS7nw2kDP0TSBIzFQ==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
     version: 0.0.1
 
   '@wsp/types@file:packages/types/wsp-types-0.0.1.tgz':
