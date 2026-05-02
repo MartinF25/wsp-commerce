@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       metadata: { contentType: file.type },
     });
 
-    const bucketName = bucket.name;
+    const bucketName = bucket.name.trim();
     const encodedPath = encodeURIComponent(storagePath);
     const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media`;
 
