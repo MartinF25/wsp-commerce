@@ -84,6 +84,8 @@ export default function ProductForm({ product, categories }: Props) {
   const [newVariant, setNewVariant] = useState({
     sku: "", price_cents: "", currency: "EUR", stock_quantity: "0", is_active: true,
   });
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [editingVariantPrice, setEditingVariantPrice] = useState("");
 
   // ── Bilder
   const [images, setImages] = useState<ProductImage[]>(product?.images ?? []);
@@ -223,14 +225,41 @@ export default function ProductForm({ product, categories }: Props) {
 
   // ─── Variante hinzufügen ──────────────────────────────────────────────────────
 
+  async function handleUpdateVariantPrice(varId: string) {
+    const raw = editingVariantPrice.trim();
+    const parsed = raw === "" ? null : parseFloat(raw.replace(",", "."));
+    if (raw !== "" && (isNaN(parsed!) || parsed! < 0)) {
+      setError("Ungültiger Preis. Bitte eine Zahl eingeben (z.B. 1299,00).");
+      return;
+    }
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin-proxy/variants/${varId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ price_cents: parsed === null ? null : Math.round(parsed * 100) }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
+      setVariants((prev) => prev.map((v) => v.id === varId ? { ...v, price_cents: json.data.price_cents } : v));
+      setEditingVariantId(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   async function handleAddVariant() {
     if (!product || !newVariant.sku.trim()) return;
     setError(null);
 
     try {
-      const priceCents = newVariant.price_cents !== ""
-        ? Math.round(parseFloat(newVariant.price_cents.replace(",", ".")) * 100)
-        : null;
+      const rawPrice = newVariant.price_cents.trim();
+      const parsedPrice = rawPrice !== "" ? parseFloat(rawPrice.replace(",", ".")) : null;
+      if (rawPrice !== "" && (isNaN(parsedPrice!) || parsedPrice! < 0)) {
+        setError("Ungültiger Preis. Bitte eine Zahl eingeben (z.B. 1299,00).");
+        return;
+      }
+      const priceCents = parsedPrice !== null ? Math.round(parsedPrice * 100) : null;
 
       const res = await fetch(`/api/admin-proxy/products/${product.id}/variants`, {
         method: "POST",
@@ -791,7 +820,40 @@ export default function ProductForm({ product, categories }: Props) {
                   {variants.map((v) => (
                     <tr key={v.id}>
                       <td style={{ fontFamily: "monospace" }}>{v.sku}</td>
-                      <td>{v.price_cents != null ? `${(v.price_cents / 100).toFixed(2).replace(".", ",")} €` : <span style={{ color: "#9ca3af" }}>—</span>}</td>
+                      <td>
+                        {editingVariantId === v.id ? (
+                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                            <input
+                              type="text"
+                              value={editingVariantPrice}
+                              onChange={(e) => setEditingVariantPrice(e.target.value)}
+                              style={{ width: 90 }}
+                              placeholder="z.B. 1299,00"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleUpdateVariantPrice(v.id);
+                                if (e.key === "Escape") setEditingVariantId(null);
+                              }}
+                            />
+                            <button type="button" className="btn btn-primary btn-sm" onClick={() => handleUpdateVariantPrice(v.id)}>✓</button>
+                            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditingVariantId(null)}>✕</button>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                            <span>{v.price_cents != null ? `${(v.price_cents / 100).toFixed(2).replace(".", ",")} €` : <span style={{ color: "#ef4444", fontWeight: 600 }}>kein Preis!</span>}</span>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => {
+                                setEditingVariantId(v.id);
+                                setEditingVariantPrice(v.price_cents != null ? (v.price_cents / 100).toFixed(2).replace(".", ",") : "");
+                              }}
+                            >
+                              Bearbeiten
+                            </button>
+                          </div>
+                        )}
+                      </td>
                       <td>{v.currency}</td>
                       <td>{v.stock_quantity}</td>
                       <td>

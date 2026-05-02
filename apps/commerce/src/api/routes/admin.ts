@@ -601,6 +601,36 @@ adminRoutes.post("/products/:id/images", async (c) => {
   return c.json({ data: image }, 201);
 });
 
+adminRoutes.get("/images", async (c) => {
+  const prisma = getPrismaClient();
+  const images = await prisma.productImage.findMany({
+    include: {
+      product: {
+        select: {
+          id: true,
+          slug: true,
+          translations: { where: { locale: "de" }, select: { name: true } },
+        },
+      },
+    },
+    orderBy: [{ product_id: "asc" }, { sort_order: "asc" }],
+  });
+  return c.json({
+    data: images.map((img) => ({
+      id: img.id,
+      url: img.url,
+      alt: img.alt,
+      sort_order: img.sort_order,
+      product_id: img.product_id,
+      product: {
+        id: img.product.id,
+        slug: img.product.slug,
+        name: img.product.translations[0]?.name ?? img.product.slug,
+      },
+    })),
+  });
+});
+
 adminRoutes.patch("/images/:imgId", async (c) => {
   const prisma = getPrismaClient();
   const imgId = c.req.param("imgId");
