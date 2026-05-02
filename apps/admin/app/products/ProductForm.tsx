@@ -279,7 +279,7 @@ export default function ProductForm({ product, categories }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           url: urlToUse.trim(),
-          alt: newImage.alt.trim() || null,
+          alt: newImage.alt.trim(),
           sort_order: parseInt(newImage.sort_order, 10) || 0,
         }),
       });
