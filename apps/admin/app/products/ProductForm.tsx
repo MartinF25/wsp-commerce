@@ -88,6 +88,8 @@ export default function ProductForm({ product, categories }: Props) {
   // ── Bilder
   const [images, setImages] = useState<ProductImage[]>(product?.images ?? []);
   const [newImage, setNewImage] = useState({ url: "", alt: "", sort_order: "0" });
+  const [editingAltId, setEditingAltId] = useState<string | null>(null);
+  const [editingAltValue, setEditingAltValue] = useState("");
 
   // ── Dokumente
   const [documents, setDocuments] = useState<ProductDocument[]>(product?.documents ?? []);
@@ -303,6 +305,24 @@ export default function ProductForm({ product, categories }: Props) {
         throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       }
       setImages((prev) => prev.filter((i) => i.id !== imgId));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleUpdateImageAlt(imgId: string) {
+    const altToSave = editingAltValue.trim() || "Produktbild";
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin-proxy/images/${imgId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alt: altToSave }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
+      setImages((prev) => prev.map((i) => i.id === imgId ? { ...i, alt: json.data.alt } : i));
+      setEditingAltId(null);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -642,7 +662,36 @@ export default function ProductForm({ product, categories }: Props) {
                             {img.url.length > 55 ? img.url.slice(0, 55) + "…" : img.url}
                           </a>
                         </td>
-                        <td>{img.alt ?? <span style={{ color: "#9ca3af" }}>—</span>}</td>
+                        <td>
+                          {editingAltId === img.id ? (
+                            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                              <input
+                                type="text"
+                                value={editingAltValue}
+                                onChange={(e) => setEditingAltValue(e.target.value)}
+                                style={{ width: 130 }}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleUpdateImageAlt(img.id);
+                                  if (e.key === "Escape") setEditingAltId(null);
+                                }}
+                              />
+                              <button type="button" className="btn btn-primary btn-sm" onClick={() => handleUpdateImageAlt(img.id)}>✓</button>
+                              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditingAltId(null)}>✕</button>
+                            </div>
+                          ) : (
+                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                              <span>{img.alt || <span style={{ color: "#9ca3af" }}>—</span>}</span>
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => { setEditingAltId(img.id); setEditingAltValue(img.alt ?? ""); }}
+                              >
+                                Bearbeiten
+                              </button>
+                            </div>
+                          )}
+                        </td>
                         <td>{img.sort_order}</td>
                         <td>
                           <button
