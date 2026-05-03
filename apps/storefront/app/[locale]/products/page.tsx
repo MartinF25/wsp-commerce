@@ -18,7 +18,7 @@ export default async function ProductsPage({ params, searchParams }: Props) {
   const selectedCategory = searchParams.category;
 
   const [result, categories] = await Promise.all([
-    fetchProducts(selectedCategory ? { category: selectedCategory } : undefined).catch(() => null),
+    fetchProducts(selectedCategory ? { locale: params.locale as "de" | "en" | "es", category: selectedCategory } : undefined).catch(() => null),
     fetchCategories().catch(() => []),
   ]);
 
