@@ -275,6 +275,15 @@ function CategoryCard({
 
 // ─── Product Card ─────────────────────────────────────────────────────────────
 
+function formatCents(cents: number, currency: string): string {
+  return new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+}
+
 function ProductCard({
   product,
   buyLabel,
@@ -294,6 +303,8 @@ function ProductCard({
     ? { src: product.coverImageUrl, alt: product.name }
     : (imageMap[product.category?.slug ?? ""] ?? null);
 
+  const { priceDisplay } = product;
+
   return (
     <article className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden hover:shadow-md transition-shadow duration-200 group">
       <Link href={`/products/${product.slug}`} className="block">
@@ -302,6 +313,13 @@ function ProductCard({
             <Image src={image.src} alt={image.alt} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />
+          )}
+
+          {/* Angebots-Badge */}
+          {priceDisplay.isOnSale && (
+            <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-white bg-orange-500 px-2.5 py-1 rounded-full shadow-sm">
+              {priceDisplay.saleLabel ?? "Angebot"}
+            </span>
           )}
         </div>
       </Link>
@@ -312,7 +330,19 @@ function ProductCard({
         <h3 className="font-display font-semibold text-lg text-brand-text leading-snug">
           <Link href={`/products/${product.slug}`} className="hover:text-brand-accent transition-colors duration-150">{product.name}</Link>
         </h3>
-        <p className="text-brand-text font-bold text-xl mt-1">{product.priceDisplay.displayText}</p>
+
+        {/* Preis mit optionalem Durchstreichpreis */}
+        <div className="mt-1">
+          <p className={`font-bold text-xl leading-tight ${priceDisplay.isOnSale ? "text-orange-600" : "text-brand-text"}`}>
+            {priceDisplay.displayText}
+          </p>
+          {priceDisplay.isOnSale && priceDisplay.originalPriceCents != null && (
+            <p className="text-sm text-brand-muted line-through">
+              {formatCents(priceDisplay.originalPriceCents, priceDisplay.currencyCode)}
+            </p>
+          )}
+        </div>
+
         <div className="mt-auto pt-3">
           {product.purchasable ? (
             <Link href={`/products/${product.slug}`} className="block w-full text-center bg-brand-accent text-white font-semibold py-2.5 rounded-xl hover:bg-green-600 transition-colors duration-150 text-sm">
