@@ -9,6 +9,7 @@ import { PaymentOptions } from "@/components/PaymentOptions";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductImageGallery } from "@/components/ProductImageGallery";
 import { ShareButtons } from "@/components/ShareButtons";
+import { OfferCountdown } from "@/components/storefront/offer-countdown";
 
 const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000";
 
@@ -157,6 +158,18 @@ export default async function ProductDetailPage({ params }: Props) {
             {p.short_description && (
               <p className="text-brand-muted text-base leading-relaxed mb-5">{p.short_description}</p>
             )}
+
+            {/*
+              Countdown-Beispiel: endsAt auf echtes Angebotsdatum setzen.
+              Komponente entfernen oder mit einer bedingten Prüfung (z.B. p.offer_ends_at)
+              koppeln, sobald das Feld im Produktmodell vorhanden ist.
+            */}
+            <OfferCountdown
+              endsAt="2026-06-01T23:59:59"
+              label="Frühjahrsaktion endet in"
+              footnote="Aktionskonditionen nur im Aktionszeitraum gültig. Solange der Vorrat reicht."
+              className="mb-5"
+            />
 
             <VariantSelector
               variants={p.variants}
