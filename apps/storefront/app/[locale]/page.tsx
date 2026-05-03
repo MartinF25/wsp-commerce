@@ -1,9 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { fetchProducts } from "@/lib/catalog";
+import { fetchProducts, fetchCategories } from "@/lib/catalog";
 import type { Locale } from "@/i18n/routing";
-import type { ProductSummary } from "@wsp/types";
+import type { ProductSummary, CategorySummary } from "@wsp/types";
 
 export default async function HomePage({
   params,
@@ -13,9 +13,14 @@ export default async function HomePage({
   const t = await getTranslations({ locale: params.locale, namespace: "home" });
 
   let products: ProductSummary[] = [];
+  let categories: CategorySummary[] = [];
   try {
-    const result = await fetchProducts({ locale: params.locale, limit: 8 });
-    products = result.items;
+    const [productsResult, categoriesResult] = await Promise.allSettled([
+      fetchProducts({ locale: params.locale, limit: 8 }),
+      fetchCategories(),
+    ]);
+    if (productsResult.status === "fulfilled") products = productsResult.value.items;
+    if (categoriesResult.status === "fulfilled") categories = categoriesResult.value;
   } catch {
     // show page anyway
   }
@@ -98,6 +103,31 @@ export default async function HomePage({
         </div>
       </section>
 
+      {/* ── Categories ── */}
+      {categories.length > 0 && (
+        <section className="bg-gray-50 py-16 sm:py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-10">
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">
+                {t("categories_eyebrow")}
+              </p>
+              <h2 className="font-display text-3xl font-bold text-brand-text">
+                {t("categories_h2")}
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categories.map((cat) => (
+                <CategoryCard
+                  key={cat.id}
+                  category={cat}
+                  productsLabel={t("categories_products")}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Benefits ── */}
       <section className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -163,6 +193,66 @@ export default async function HomePage({
         </div>
       </section>
     </main>
+  );
+}
+
+// ─── Category Card ────────────────────────────────────────────────────────────
+
+const CATEGORY_FALLBACK_IMAGES: Record<string, { src: string; alt: string }> = {
+  solarzaun:    { src: "/images/solarzaun-house.png", alt: "Solarzaun" },
+  skywind:      { src: "/images/skywind-hero.png",    alt: "SkyWind Kleinwindanlage" },
+  kombiloesung: { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
+  "kombilösung": { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
+};
+
+function CategoryCard({
+  category,
+  productsLabel,
+}: {
+  category: CategorySummary;
+  productsLabel: string;
+}) {
+  const fallback = CATEGORY_FALLBACK_IMAGES[category.slug];
+  const imageSrc = category.coverImageUrl ?? fallback?.src ?? null;
+  const imageAlt = fallback?.alt ?? category.name;
+
+  return (
+    <Link
+      href={`/categories/${category.slug}`}
+      className="group relative block aspect-[4/3] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300"
+    >
+      {imageSrc ? (
+        <Image
+          src={imageSrc}
+          alt={imageAlt}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900" />
+      )}
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+      {/* Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-5">
+        <p className="font-display font-bold text-white text-xl leading-tight">
+          {category.name}
+        </p>
+        <p className="text-white/65 text-sm mt-1">
+          {category.productCount} {productsLabel}
+        </p>
+      </div>
+
+      {/* Arrow badge on hover */}
+      <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </Link>
   );
 }
 
