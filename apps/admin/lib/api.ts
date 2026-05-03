@@ -51,6 +51,7 @@ export interface Variant {
   sku: string;
   is_active: boolean;
   price_cents: number | null;
+  sale_price_cents: number | null;
   currency: string;
   stock_quantity: number;
   attributes: Record<string, unknown>;
@@ -97,6 +98,10 @@ export interface ProductDetail {
   category: Category | null;
   paypal_url: string | null;
   stripe_url: string | null;
+  sale_starts_at: string | null;
+  sale_ends_at: string | null;
+  sale_label: string | null;
+  show_countdown: boolean;
   translations: Translation[];
   variants: Variant[];
   images: ProductImage[];
@@ -165,6 +170,12 @@ export const api = {
         product_type?: ProductType;
         status?: ProductStatus;
         category_id?: string | null;
+        paypal_url?: string | null;
+        stripe_url?: string | null;
+        sale_starts_at?: string | null;
+        sale_ends_at?: string | null;
+        sale_label?: string | null;
+        show_countdown?: boolean;
         translations?: Partial<Record<Locale, Partial<Translation>>>;
       }
     ) => request<ProductDetail>(`/products/${id}`, { method: "PUT", body: JSON.stringify(data) }),

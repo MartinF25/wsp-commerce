@@ -41,6 +41,7 @@ type ImportVariant = {
   is_active?: boolean;
   price_cents?: number | null;
   price?: number | string | null;
+  sale_price_cents?: number | null;
   currency?: string;
   stock_quantity?: number;
   attributes?: Record<string, unknown>;
@@ -64,6 +65,10 @@ type ImportProduct = {
   category_slug?: string | null;
   product_type: ProductType;
   status?: ProductStatus;
+  sale_starts_at?: string | null;
+  sale_ends_at?: string | null;
+  sale_label?: string | null;
+  show_countdown?: boolean;
   translations: {
     de: ImportProductTranslation;
     en?: ImportProductTranslation;
@@ -110,6 +115,7 @@ type ValidatedVariant = {
   sku: string;
   is_active: boolean;
   price_cents: number | null;
+  sale_price_cents: number | null;
   currency: string;
   stock_quantity: number;
   attributes: Record<string, unknown>;
@@ -123,6 +129,10 @@ type ValidatedProduct = {
   category_slug: string | null;
   product_type: ProductType;
   status: ProductStatus;
+  sale_starts_at: Date | null;
+  sale_ends_at: Date | null;
+  sale_label: string | null;
+  show_countdown: boolean;
   translations: ValidatedProductTranslation[];
   variants: ValidatedVariant[];
   images: Array<{ url: string; alt: string | null; sort_order: number }>;
@@ -349,6 +359,10 @@ function validateProduct(
     category_slug: normalizeNullableString(p.category_slug),
     product_type: p.product_type,
     status,
+    sale_starts_at: p.sale_starts_at ? new Date(p.sale_starts_at as string) : null,
+    sale_ends_at: p.sale_ends_at ? new Date(p.sale_ends_at as string) : null,
+    sale_label: normalizeNullableString(p.sale_label),
+    show_countdown: typeof p.show_countdown === "boolean" ? p.show_countdown && !!p.sale_ends_at : false,
     translations,
     variants,
     images,
@@ -467,6 +481,7 @@ function validateVariant(
     sku: typeof v.sku === "string" ? v.sku.trim() : "",
     is_active: v.is_active ?? true,
     price_cents,
+    sale_price_cents: typeof v.sale_price_cents === "number" ? Math.round(v.sale_price_cents) : null,
     currency,
     stock_quantity: stockQuantity,
     attributes: isPlainObject(v.attributes) ? v.attributes : {},
@@ -615,12 +630,20 @@ async function importCatalog(data: ValidatedImport): Promise<ImportStats> {
           product_type: product.product_type,
           status: product.status,
           category_id: categoryId,
+          sale_starts_at: product.sale_starts_at,
+          sale_ends_at: product.sale_ends_at,
+          sale_label: product.sale_label,
+          show_countdown: product.show_countdown,
         },
         create: {
           slug: product.slug,
           product_type: product.product_type,
           status: product.status,
           category_id: categoryId,
+          sale_starts_at: product.sale_starts_at,
+          sale_ends_at: product.sale_ends_at,
+          sale_label: product.sale_label,
+          show_countdown: product.show_countdown,
         },
       });
       stats.productsUpserted += 1;
@@ -680,6 +703,7 @@ async function importCatalog(data: ValidatedImport): Promise<ImportStats> {
           update: {
             is_active: variant.is_active,
             price_cents: variant.price_cents,
+            sale_price_cents: variant.sale_price_cents,
             currency: variant.currency,
             stock_quantity: variant.stock_quantity,
             attributes: variant.attributes as Prisma.InputJsonObject,
@@ -691,6 +715,7 @@ async function importCatalog(data: ValidatedImport): Promise<ImportStats> {
             sku: variant.sku,
             is_active: variant.is_active,
             price_cents: variant.price_cents,
+            sale_price_cents: variant.sale_price_cents,
             currency: variant.currency,
             stock_quantity: variant.stock_quantity,
             attributes: variant.attributes as Prisma.InputJsonObject,

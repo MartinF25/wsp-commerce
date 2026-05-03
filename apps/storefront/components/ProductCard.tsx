@@ -116,8 +116,18 @@ function DefaultIcon() {
   );
 }
 
+function formatCents(cents: number, currency: string): string {
+  return new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+}
+
 export function ProductCard({ product, showCategory = true }: Props) {
   const t = useTranslations("products");
+  const { priceDisplay } = product;
   return (
     <article className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col h-full hover:shadow-lg hover:border-gray-200 transition-all duration-200 overflow-hidden group">
 
@@ -138,6 +148,13 @@ export function ProductCard({ product, showCategory = true }: Props) {
           />
         ) : (
           <ProductImagePlaceholder categorySlug={product.category?.slug ?? null} />
+        )}
+
+        {/* Angebots-Badge */}
+        {priceDisplay.isOnSale && (
+          <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-white bg-orange-500 px-2.5 py-1 rounded-full shadow-sm">
+            {priceDisplay.saleLabel ?? "Angebot"}
+          </span>
         )}
       </Link>
 
@@ -169,9 +186,16 @@ export function ProductCard({ product, showCategory = true }: Props) {
         )}
 
         {/* Preis */}
-        <p className="font-display font-bold text-2xl text-brand-text leading-tight mb-4">
-          {product.priceDisplay.displayText}
-        </p>
+        <div className="mb-4">
+          <p className={`font-display font-bold text-2xl leading-tight ${priceDisplay.isOnSale ? "text-orange-600" : "text-brand-text"}`}>
+            {priceDisplay.displayText}
+          </p>
+          {priceDisplay.isOnSale && priceDisplay.originalPriceCents != null && (
+            <p className="text-sm text-brand-muted line-through mt-0.5">
+              {formatCents(priceDisplay.originalPriceCents, priceDisplay.currencyCode)}
+            </p>
+          )}
+        </div>
 
         {/* Footer: Badge links + CTA rechts */}
         <div className="mt-auto flex items-center justify-between gap-3">

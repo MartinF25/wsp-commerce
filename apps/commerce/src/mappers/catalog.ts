@@ -6,7 +6,7 @@ import type {
   CategoryTreeNode,
   PriceDisplay,
 } from "@wsp/contracts";
-import { isDirectlyPurchasable, isConfigurable, calculatePriceDisplay } from "../utils/productUtils";
+import { isDirectlyPurchasable, isConfigurable, calculatePriceDisplay, computeSaleStatus } from "../utils/productUtils";
 import { resolveTranslation, resolveVariantTranslation } from "../utils/localeUtils";
 import type { ProductWithVariants, CategoryWithProducts } from "../types";
 
@@ -105,6 +105,12 @@ export function toProductDetail(product: ProductWithVariants, locale = "de"): Pr
         attributes: v.attributes as Record<string, unknown>,
         weight_kg: v.weight_kg ?? null,
         dimensions: toRecordOrNull(v.dimensions),
+        sale_price_cents: v.sale_price_cents ?? null,
+        sale_status: computeSaleStatus(
+          v.sale_price_cents,
+          product.sale_starts_at,
+          product.sale_ends_at
+        ),
       };
     }),
     images: product.images.map((img) => ({
@@ -173,12 +179,14 @@ export function toCategoryDetail(category: CategoryWithProducts, locale = "de"):
 export function toCategoryTreeNode(
   category: CategoryWithProducts
 ): CategoryTreeNode {
+  const coverImage = category.products?.[0]?.images?.[0] ?? null;
   return {
     id: category.id,
     slug: category.slug,
     name: category.name,
     parent_id: category.parent_id ?? null,
     productCount: category.products?.length ?? 0,
+    coverImageUrl: coverImage?.url ?? null,
     children: category.children.map(toCategoryTreeNode),
   };
 }

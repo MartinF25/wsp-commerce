@@ -1,6 +1,17 @@
 import { z } from "zod";
 import { ProductTypeSchema } from "./query";
 
+// ─── SaleStatus ───────────────────────────────────────────────────────────────
+
+/** Abgeleitet – nie gespeichert. Berechnung: computeSaleStatus() im Commerce-Service. */
+export const SaleStatusSchema = z.enum([
+  "active",    // Angebotspreis gilt jetzt
+  "scheduled", // Angebot beginnt in der Zukunft
+  "expired",   // Angebot ist abgelaufen
+  "inactive",  // kein sale_price_cents gesetzt
+]);
+export type SaleStatus = z.infer<typeof SaleStatusSchema>;
+
 // ─── Variant ──────────────────────────────────────────────────────────────────
 
 /**
@@ -18,6 +29,8 @@ export const VariantSchema = z.object({
   attributes: z.record(z.unknown()),
   weight_kg: z.number().nonnegative().nullable(),
   dimensions: z.record(z.unknown()).nullable(),
+  sale_price_cents: z.number().int().nullable(),
+  sale_status: SaleStatusSchema,
 });
 export type Variant = z.infer<typeof VariantSchema>;
 
@@ -33,6 +46,14 @@ export const PriceDisplaySchema = z.object({
   maxCents: z.number().int().optional(),
   currencyCode: z.string().length(3),
   displayText: z.string(),
+  // Offer/Sale fields – abgeleitet, nie gespeichert
+  isOnSale: z.boolean(),
+  showCountdown: z.boolean(),
+  salePriceCents: z.number().int().optional(),
+  originalPriceCents: z.number().int().optional(),
+  saleLabel: z.string().optional(),
+  /** ISO-String – nur gesetzt wenn showCountdown true und sale_ends_at vorhanden. */
+  saleEndsAt: z.string().datetime().optional(),
 });
 export type PriceDisplay = z.infer<typeof PriceDisplaySchema>;
 

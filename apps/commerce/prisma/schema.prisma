@@ -71,6 +71,14 @@ model Product {
   /// Stripe Payment Link (z.B. https://buy.stripe.com/...)
   stripe_url   String?
 
+  /// Angebotszeitraum. Null = sofort aktiv / kein Ablauf.
+  sale_starts_at   DateTime?
+  sale_ends_at     DateTime?
+  /// Optionales Label, z.B. "Frühjahrsangebot". Null = Default "Angebot".
+  sale_label       String?
+  /// Countdown nur anzeigen wenn sale_ends_at gesetzt ist.
+  show_countdown   Boolean   @default(false)
+
   category     Category?            @relation(fields: [category_id], references: [id])
   translations ProductTranslation[]
   variants     ProductVariant[]
@@ -113,7 +121,9 @@ model ProductVariant {
   sku            String  @unique
   is_active      Boolean @default(true)
   /// Preis in Cent (integer). Null erlaubt bei inquiry_only ohne Richtpreis.
-  price_cents    Int?
+  price_cents      Int?
+  /// Sale-Preis in Cent. Null = kein Angebot auf dieser Variante.
+  sale_price_cents Int?
   currency       String  @default("EUR")
   stock_quantity Int     @default(0)
   /// Flexible Produkt-Attribute (Farbe, Länge, Leistung …) als JSONB.

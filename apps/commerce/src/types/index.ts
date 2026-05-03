@@ -73,6 +73,13 @@ export interface PriceDisplay {
   maxCents?: number;
   currencyCode: string;
   displayText: string;
+  isOnSale: boolean;
+  showCountdown: boolean;
+  salePriceCents?: number;
+  originalPriceCents?: number;
+  saleLabel?: string;
+  /** ISO-String – nur wenn showCountdown true und sale_ends_at vorhanden. */
+  saleEndsAt?: string;
 }
 
 /**

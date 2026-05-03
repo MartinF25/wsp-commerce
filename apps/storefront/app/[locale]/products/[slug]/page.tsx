@@ -159,17 +159,32 @@ export default async function ProductDetailPage({ params }: Props) {
               <p className="text-brand-muted text-base leading-relaxed mb-5">{p.short_description}</p>
             )}
 
-            {/*
-              Countdown-Beispiel: endsAt auf echtes Angebotsdatum setzen.
-              Komponente entfernen oder mit einer bedingten Prüfung (z.B. p.offer_ends_at)
-              koppeln, sobald das Feld im Produktmodell vorhanden ist.
-            */}
-            <OfferCountdown
-              endsAt="2026-06-01T23:59:59"
-              label="Frühjahrsaktion endet in"
-              footnote="Aktionskonditionen nur im Aktionszeitraum gültig. Solange der Vorrat reicht."
-              className="mb-5"
-            />
+            {p.priceDisplay.isOnSale && (
+              <div className="flex items-center gap-2 mb-4">
+                <span className="inline-block text-sm font-semibold text-white bg-orange-500 px-3 py-1 rounded-full">
+                  {p.priceDisplay.saleLabel ?? "Angebot"}
+                </span>
+                {p.priceDisplay.originalPriceCents != null && (
+                  <span className="text-sm text-brand-muted line-through">
+                    {new Intl.NumberFormat("de-DE", {
+                      style: "currency",
+                      currency: p.priceDisplay.currencyCode,
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    }).format(p.priceDisplay.originalPriceCents / 100)}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {p.priceDisplay.showCountdown && p.priceDisplay.saleEndsAt && (
+              <OfferCountdown
+                endsAt={p.priceDisplay.saleEndsAt}
+                label={p.priceDisplay.saleLabel ? `${p.priceDisplay.saleLabel} endet in` : "Angebot endet in"}
+                footnote="Aktionskonditionen nur im Aktionszeitraum gültig. Solange der Vorrat reicht."
+                className="mb-5"
+              />
+            )}
 
             <VariantSelector
               variants={p.variants}

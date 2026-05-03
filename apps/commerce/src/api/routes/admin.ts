@@ -418,6 +418,18 @@ adminRoutes.put("/products/:id", async (c) => {
   if ("stripe_url" in b) {
     productData.stripe_url = typeof stripe_url === "string" ? stripe_url.trim() || null : null;
   }
+  if ("sale_starts_at" in b) {
+    productData.sale_starts_at = b.sale_starts_at ? new Date(b.sale_starts_at as string) : null;
+  }
+  if ("sale_ends_at" in b) {
+    productData.sale_ends_at = b.sale_ends_at ? new Date(b.sale_ends_at as string) : null;
+  }
+  if ("sale_label" in b) {
+    productData.sale_label = typeof b.sale_label === "string" ? b.sale_label.trim() || null : null;
+  }
+  if ("show_countdown" in b) {
+    productData.show_countdown = typeof b.show_countdown === "boolean" ? b.show_countdown : false;
+  }
 
   // Translations upsert
   if (translations && typeof translations === "object") {
@@ -756,6 +768,8 @@ adminRoutes.patch("/variants/:varId", async (c) => {
   if (typeof b.is_active === "boolean") updateData.is_active = b.is_active;
   if (typeof b.price_cents === "number") updateData.price_cents = Math.round(b.price_cents);
   if (b.price_cents === null) updateData.price_cents = null;
+  if (typeof b.sale_price_cents === "number") updateData.sale_price_cents = Math.round(b.sale_price_cents);
+  if (b.sale_price_cents === null) updateData.sale_price_cents = null;
   if (typeof b.currency === "string" && b.currency) updateData.currency = b.currency;
   if (typeof b.stock_quantity === "number") updateData.stock_quantity = Math.round(b.stock_quantity);
   if (b.attributes && typeof b.attributes === "object") updateData.attributes = b.attributes;

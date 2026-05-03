@@ -67,6 +67,16 @@ export default function ProductForm({ product, categories }: Props) {
   const [paypalUrl, setPaypalUrl] = useState(product?.paypal_url ?? "");
   const [stripeUrl, setStripeUrl] = useState(product?.stripe_url ?? "");
 
+  // ── Angebot
+  const [saleStartsAt, setSaleStartsAt] = useState(
+    product?.sale_starts_at ? product.sale_starts_at.slice(0, 16) : ""
+  );
+  const [saleEndsAt, setSaleEndsAt] = useState(
+    product?.sale_ends_at ? product.sale_ends_at.slice(0, 16) : ""
+  );
+  const [saleLabel, setSaleLabel] = useState(product?.sale_label ?? "");
+  const [showCountdown, setShowCountdown] = useState(product?.show_countdown ?? false);
+
   // ── Übersetzungen
   const [activeLocale, setActiveLocale] = useState<Locale>("de");
   const [translations, setTranslations] = useState<Record<Locale, TranslationFields>>({
@@ -86,6 +96,8 @@ export default function ProductForm({ product, categories }: Props) {
   });
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [editingVariantPrice, setEditingVariantPrice] = useState("");
+  const [editingSalePriceId, setEditingSalePriceId] = useState<string | null>(null);
+  const [editingSalePrice, setEditingSalePrice] = useState("");
 
   // ── Bilder
   const [images, setImages] = useState<ProductImage[]>(product?.images ?? []);
@@ -156,6 +168,10 @@ export default function ProductForm({ product, categories }: Props) {
         category_id: categoryId || null,
         paypal_url: paypalUrl.trim() || null,
         stripe_url: stripeUrl.trim() || null,
+        sale_starts_at: saleStartsAt.trim() ? new Date(saleStartsAt).toISOString() : null,
+        sale_ends_at: saleEndsAt.trim() ? new Date(saleEndsAt).toISOString() : null,
+        sale_label: saleLabel.trim() || null,
+        show_countdown: showCountdown && saleEndsAt.trim() !== "",
         translations: buildTranslationsPayload(),
       };
 
@@ -243,6 +259,29 @@ export default function ProductForm({ product, categories }: Props) {
       if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       setVariants((prev) => prev.map((v) => v.id === varId ? { ...v, price_cents: json.data.price_cents } : v));
       setEditingVariantId(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleUpdateVariantSalePrice(varId: string) {
+    const raw = editingSalePrice.trim();
+    const parsed = raw === "" ? null : parseFloat(raw.replace(",", "."));
+    if (raw !== "" && (isNaN(parsed!) || parsed! < 0)) {
+      setError("Ungültiger Angebotspreis. Bitte eine Zahl eingeben oder leer lassen.");
+      return;
+    }
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin-proxy/variants/${varId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sale_price_cents: parsed === null ? null : Math.round(parsed * 100) }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
+      setVariants((prev) => prev.map((v) => v.id === varId ? { ...v, sale_price_cents: json.data.sale_price_cents } : v));
+      setEditingSalePriceId(null);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -478,6 +517,65 @@ export default function ProductForm({ product, categories }: Props) {
               onChange={(e) => setStripeUrl(e.target.value)}
               placeholder="https://buy.stripe.com/..."
             />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Angebot ── */}
+      <div className="form-card" style={{ marginBottom: 16 }}>
+        <div className="section-title" style={{ marginTop: 0 }}>Angebot</div>
+        <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+          Zeitraum und Label gelten produktweit. Angebotspreis wird pro Variante gesetzt.
+          Countdown nur aktivierbar wenn ein Enddatum gesetzt ist.
+        </p>
+
+        <div className="form-row form-row-2">
+          <div>
+            <label>Angebot ab <span className="opt">(optional, leer = sofort)</span></label>
+            <input
+              type="datetime-local"
+              value={saleStartsAt}
+              onChange={(e) => setSaleStartsAt(e.target.value)}
+            />
+          </div>
+          <div>
+            <label>Angebot bis <span className="opt">(optional, leer = kein Ablauf)</span></label>
+            <input
+              type="datetime-local"
+              value={saleEndsAt}
+              onChange={(e) => {
+                setSaleEndsAt(e.target.value);
+                if (!e.target.value) setShowCountdown(false);
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="form-row form-row-2">
+          <div>
+            <label>Angebots-Label <span className="opt">(optional, z.B. "Frühjahrsangebot")</span></label>
+            <input
+              type="text"
+              value={saleLabel}
+              onChange={(e) => setSaleLabel(e.target.value)}
+              placeholder='Standard: "Angebot"'
+            />
+          </div>
+          <div style={{ paddingTop: 24 }}>
+            <label className="checkbox-row" style={{ opacity: saleEndsAt.trim() ? 1 : 0.4 }}>
+              <input
+                type="checkbox"
+                checked={showCountdown}
+                disabled={!saleEndsAt.trim()}
+                onChange={(e) => setShowCountdown(e.target.checked)}
+              />
+              Countdown anzeigen
+            </label>
+            {!saleEndsAt.trim() && (
+              <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+                Kein Countdown ohne Enddatum.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -810,6 +908,7 @@ export default function ProductForm({ product, categories }: Props) {
                   <tr>
                     <th>SKU</th>
                     <th>Preis</th>
+                    <th>Angebotspreis</th>
                     <th>Währung</th>
                     <th>Lagerbestand</th>
                     <th>Aktiv</th>
@@ -850,6 +949,42 @@ export default function ProductForm({ product, categories }: Props) {
                               }}
                             >
                               Bearbeiten
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        {editingSalePriceId === v.id ? (
+                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                            <input
+                              type="text"
+                              value={editingSalePrice}
+                              onChange={(e) => setEditingSalePrice(e.target.value)}
+                              style={{ width: 90 }}
+                              placeholder="leer = kein Angebot"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleUpdateVariantSalePrice(v.id);
+                                if (e.key === "Escape") setEditingSalePriceId(null);
+                              }}
+                            />
+                            <button type="button" className="btn btn-primary btn-sm" onClick={() => handleUpdateVariantSalePrice(v.id)}>✓</button>
+                            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditingSalePriceId(null)}>✕</button>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                            <span style={{ color: v.sale_price_cents != null ? "#ea580c" : "#9ca3af" }}>
+                              {v.sale_price_cents != null ? `${(v.sale_price_cents / 100).toFixed(2).replace(".", ",")} €` : "—"}
+                            </span>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => {
+                                setEditingSalePriceId(v.id);
+                                setEditingSalePrice(v.sale_price_cents != null ? (v.sale_price_cents / 100).toFixed(2).replace(".", ",") : "");
+                              }}
+                            >
+                              Setzen
                             </button>
                           </div>
                         )}
