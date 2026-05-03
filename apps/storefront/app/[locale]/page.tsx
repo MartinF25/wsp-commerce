@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { fetchProducts, fetchCategories } from "@/lib/catalog";
+import { fetchProducts } from "@/lib/catalog";
 import type { Locale } from "@/i18n/routing";
 import type { ProductSummary, CategorySummary } from "@wsp/types";
 
@@ -13,21 +13,15 @@ export default async function HomePage({
   const t = await getTranslations({ locale: params.locale, namespace: "home" });
 
   let products: ProductSummary[] = [];
-  let categories: CategorySummary[] = [];
   try {
-    const [productsResult, categoriesResult] = await Promise.allSettled([
-      fetchProducts({ locale: params.locale, limit: 8 }),
-      fetchCategories(),
-    ]);
-    if (productsResult.status === "fulfilled") products = productsResult.value.items;
-    if (categoriesResult.status === "fulfilled") categories = categoriesResult.value;
+    const result = await fetchProducts({ locale: params.locale, limit: 50 });
+    products = result.items;
   } catch {
     // show page anyway
   }
 
-  // Fallback: wenn die Categories-API nichts zurückgibt (z.B. is_active=false),
-  // Kategorien aus den bereits geladenen Produkten ableiten.
-  if (categories.length === 0 && products.length > 0) {
+  // Kategorien aus Produkten ableiten — kein separater API-Call nötig
+  const categories: CategorySummary[] = (() => {
     const slugs = [
       ...new Set(
         products
@@ -35,7 +29,7 @@ export default async function HomePage({
           .filter((s): s is string => s != null),
       ),
     ];
-    categories = slugs.map((slug) => {
+    return slugs.map((slug) => {
       const matching = products.filter((p) => p.category?.slug === slug);
       return {
         id: slug,
@@ -46,7 +40,7 @@ export default async function HomePage({
         coverImageUrl: matching[0]?.coverImageUrl ?? null,
       };
     });
-  }
+  })();
 
   const benefits = t.raw("benefits") as { number: string; title: string; desc: string }[];
   const faqItems = t.raw("faq_items") as { q: string; a: string }[];
@@ -116,7 +110,7 @@ export default async function HomePage({
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {products.slice(0, 8).map((product) => (
               <ProductCard key={product.id} product={product} buyLabel={t("products_buy")} learnLabel={t("products_learn")} />
             ))}
           </div>
