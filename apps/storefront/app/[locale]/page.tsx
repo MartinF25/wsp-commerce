@@ -25,6 +25,29 @@ export default async function HomePage({
     // show page anyway
   }
 
+  // Fallback: wenn die Categories-API nichts zurückgibt (z.B. is_active=false),
+  // Kategorien aus den bereits geladenen Produkten ableiten.
+  if (categories.length === 0 && products.length > 0) {
+    const slugs = [
+      ...new Set(
+        products
+          .map((p) => p.category?.slug)
+          .filter((s): s is string => s != null),
+      ),
+    ];
+    categories = slugs.map((slug) => {
+      const matching = products.filter((p) => p.category?.slug === slug);
+      return {
+        id: slug,
+        slug,
+        name: matching[0]?.category?.name ?? slug,
+        parent_id: null,
+        productCount: matching.length,
+        coverImageUrl: matching[0]?.coverImageUrl ?? null,
+      };
+    });
+  }
+
   const benefits = t.raw("benefits") as { number: string; title: string; desc: string }[];
   const faqItems = t.raw("faq_items") as { q: string; a: string }[];
 
