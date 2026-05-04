@@ -11,7 +11,7 @@
   "dependencies": {
     "@wsp/contracts": "file:../../packages/contracts/wsp-contracts-0.0.1.tgz",
     "@wsp/types": "file:../../packages/types/wsp-types-0.0.1.tgz",
-    "next": "14.2.3",
+    "next": "14.2.35",
     "next-intl": "4.9.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
