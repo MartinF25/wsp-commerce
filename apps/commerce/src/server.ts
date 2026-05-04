@@ -2,7 +2,7 @@ import { serve } from "@hono/node-server";
 import { createApp } from "./api/app";
 import { disconnectPrisma } from "./lib/prisma";
 
-const PORT = parseInt(process.env.PORT ?? "3001", 10); // v2 – sale offer fields
+const PORT = parseInt(process.env.PORT ?? "3001", 10); // v3 – force Docker source build
 const app = createApp();
 
 // ─── Server starten ───────────────────────────────────────────────────────────
