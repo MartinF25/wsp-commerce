@@ -124,7 +124,15 @@ importers:
 
   packages/config: {}
 
-  packages/contracts: {}
+  packages/contracts:
+    dependencies:
+      zod:
+        specifier: ^3.22.4
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
 
   packages/types: {}
 
@@ -635,7 +643,7 @@ packages:
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
 
   '@wsp/contracts@file:packages/contracts/wsp-contracts-0.0.1.tgz':
-    resolution: {integrity: sha512-J54nA+l1oxaJjkx7EUTWaXs3ouHB8e4mfLk5KsaZP9E21r72CxpZovLt4sMAp0IklAQplaxz8bwc+hZbgCstkg==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
+    resolution: {integrity: sha512-dEc6m9T+/HGWQKZC2LitB6MXK2vUai+GcBgNG91pPjN5vzLFSjwVzm0QI2ADGAHqvRJ1/qe58IBbexGfITbqfA==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
     version: 0.0.1
 
   '@wsp/types@file:packages/types/wsp-types-0.0.1.tgz':
@@ -2082,7 +2090,9 @@ snapshots:
   '@types/tough-cookie@4.0.5':
     optional: true
 
-  '@wsp/contracts@file:packages/contracts/wsp-contracts-0.0.1.tgz': {}
+  '@wsp/contracts@file:packages/contracts/wsp-contracts-0.0.1.tgz':
+    dependencies:
+      zod: 3.25.76
 
   '@wsp/types@file:packages/types/wsp-types-0.0.1.tgz': {}
 
