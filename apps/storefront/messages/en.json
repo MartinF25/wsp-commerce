@@ -139,7 +139,12 @@
     "view_aria": "View {name}",
     "empty_state_text": "No active products have been published in this category yet.",
     "empty_cta_primary": "Request Project",
-    "empty_cta_secondary": "View All Products"
+    "empty_cta_secondary": "View All Products",
+    "categories_eyebrow": "Assortment",
+    "categories_h2": "Shop by Category.",
+    "result_count": "{count} Products",
+    "category_no_products": "No products",
+    "category_product_count": "{count} Products"
   },
   "product": {
     "breadcrumb_home": "Home",
@@ -190,7 +195,17 @@
     "documents_type_manual": "Installation Manual",
     "documents_type_certificate": "Certificate",
     "documents_type_other": "Document",
-    "variant_chosen_label": "Selected:"
+    "variant_chosen_label": "Selected:",
+    "sale_badge": "Sale",
+    "countdown_label": "Offer ends in",
+    "countdown_expired": "This offer has expired.",
+    "countdown_footnote": "Offer conditions valid during the promotional period only. While supplies last.",
+    "spec_length": "Length",
+    "spec_color": "Colour",
+    "spec_power": "Power",
+    "spec_rotor": "Rotor Diameter",
+    "spec_target": "Suitable for",
+    "spec_note": "Note"
   },
   "blog": {
     "meta_title": "Blog – Renewable Energy | Solar Fence & SkyWind",
@@ -259,11 +274,33 @@
     "anfrageart_hint": "Please select the appropriate category for your enquiry.",
     "projektart_hint": "optional – if you already have a direction in mind",
     "anfrageart_options": ["Private project", "Commercial project", "Agriculture / Farm", "Partner enquiry", "Dealer enquiry", "Installation partnership", "General advice"],
-    "projektart_options": ["Solar Fence", "SkyWind", "Combo solution", "Advice requested"]
+    "projektart_options": ["Solar Fence", "SkyWind", "Combo solution", "Advice requested"],
+    "error_firstname_required": "First name is required.",
+    "error_lastname_required": "Last name is required.",
+    "error_email_invalid": "Please enter a valid email address.",
+    "error_type_required": "Please select an enquiry type.",
+    "error_message_min": "Please enter at least 10 characters.",
+    "error_spam": "Spam detected.",
+    "error_invalid_input": "Invalid input. Please check your details.",
+    "error_submit": "Your enquiry could not be submitted. Please try again later or contact us directly by email."
   },
   "common": {
     "home": "Home",
-    "back_home": "← Back to home"
+    "back_home": "← Back to home",
+    "countdown_days_short": "Days",
+    "countdown_hours_short": "Hrs",
+    "countdown_minutes_short": "Min",
+    "countdown_seconds_short": "Sec",
+    "countdown_sr": "{label}: {days} days, {hours} hours, {minutes} minutes remaining",
+    "sales_popup_project_inquiry": "Project enquiry",
+    "sales_popup_purchase": "Purchase",
+    "sales_popup_inquiry": "Enquiry",
+    "sales_popup_minutes_ago": "{count} minutes ago",
+    "sales_popup_close": "Close",
+    "img_prev": "Previous image",
+    "img_next": "Next image",
+    "img_dot": "Image {number}",
+    "img_thumb": "Show image {number}"
   },
   "solarzaun": {
     "meta_title": "Solar Fence – Fencing and Energy in One",

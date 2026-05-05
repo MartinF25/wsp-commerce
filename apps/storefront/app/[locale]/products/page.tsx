@@ -33,7 +33,7 @@ export default async function ProductsPage({ params, searchParams }: Props) {
         </nav>
         <h1 className="font-display text-3xl font-bold text-brand-text mb-1">{t("page_title")}</h1>
         <p className="text-sm text-brand-muted">
-          {result == null ? "" : result.total === 0 ? t("no_products") : `${result.total} Produkte`}
+          {result == null ? "" : result.total === 0 ? t("no_products") : t("result_count", { count: result.total })}
         </p>
       </div>
 
@@ -42,14 +42,21 @@ export default async function ProductsPage({ params, searchParams }: Props) {
         <section className="mb-12">
           <div className="flex items-end justify-between mb-5">
             <div>
-              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-1">Sortiment</p>
-              <h2 className="font-display text-xl font-bold text-brand-text">Nach Kategorien kaufen</h2>
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-1">{t("categories_eyebrow")}</p>
+              <h2 className="font-display text-xl font-bold text-brand-text">{t("categories_h2")}</h2>
             </div>
           </div>
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0">
             {categories.map((cat) => (
               <li key={cat.id}>
-                <CategoryCard category={cat} />
+                <CategoryCard
+                  category={cat}
+                  productCountLabel={
+                    cat.productCount === 0
+                      ? t("category_no_products")
+                      : t("category_product_count", { count: cat.productCount })
+                  }
+                />
               </li>
             ))}
           </ul>
@@ -68,7 +75,7 @@ export default async function ProductsPage({ params, searchParams }: Props) {
                 : "bg-white border-gray-200 text-brand-muted hover:border-brand-accent hover:text-brand-accent"
             }`}
           >
-            Alle
+            {t("filter_all")}
           </Link>
           {categories.map((cat) => (
             <Link
@@ -112,7 +119,7 @@ export default async function ProductsPage({ params, searchParams }: Props) {
 
 // ─── Kategorie-Kachel ─────────────────────────────────────────────────────────
 
-function CategoryCard({ category }: { category: CategorySummary }) {
+function CategoryCard({ category, productCountLabel }: { category: CategorySummary; productCountLabel: string }) {
   return (
     <Link
       href={`/products?category=${category.slug}`}
@@ -142,11 +149,7 @@ function CategoryCard({ category }: { category: CategorySummary }) {
         <h3 className="font-display font-semibold text-lg text-brand-text group-hover:text-brand-accent transition-colors duration-150 mb-1">
           {category.name}
         </h3>
-        <p className="text-sm text-brand-muted">
-          {category.productCount === 0
-            ? "Keine Produkte"
-            : `${category.productCount} ${category.productCount === 1 ? "Produkt" : "Produkte"}`}
-        </p>
+        <p className="text-sm text-brand-muted">{productCountLabel}</p>
       </div>
     </Link>
   );

@@ -2,7 +2,7 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
-import { submitKontaktanfrage, type LeadFormState } from "./actions";
+import { submitKontaktanfrage, ANFRAGEART_VALUES, PROJEKTART_VALUES, type LeadFormState } from "./actions";
 
 const INPUT_CLASS =
   "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-brand-text placeholder-brand-muted bg-white focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent transition-shadow duration-150";
@@ -101,8 +101,8 @@ export function KontaktForm() {
         <FormField id="anfrageart" label={t("field_type")} required hint={t("anfrageart_hint")}>
           <select id="anfrageart" name="anfrageart" required defaultValue="" className={SELECT_CLASS}>
             <option value="" disabled>{t("select_placeholder")}</option>
-            {anfrageartOptions.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
+            {ANFRAGEART_VALUES.map((val, i) => (
+              <option key={val} value={val}>{anfrageartOptions[i] ?? val}</option>
             ))}
           </select>
         </FormField>
@@ -110,8 +110,8 @@ export function KontaktForm() {
         <FormField id="projektart" label={t("field_project")} hint={t("projektart_hint")}>
           <select id="projektart" name="projektart" defaultValue="" className={SELECT_CLASS}>
             <option value="">{t("project_placeholder")}</option>
-            {projektartOptions.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
+            {PROJEKTART_VALUES.map((val, i) => (
+              <option key={val} value={val}>{projektartOptions[i] ?? val}</option>
             ))}
           </select>
         </FormField>

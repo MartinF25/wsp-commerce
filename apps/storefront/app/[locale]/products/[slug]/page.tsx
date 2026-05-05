@@ -69,7 +69,7 @@ export default async function ProductDetailPage({ params }: Props) {
     ? { src: p.images[0].url, alt: p.images[0].alt ?? p.name }
     : (CATEGORY_IMAGES[p.category?.slug ?? ""] ?? { src: "/images/solarzaun-house.png", alt: p.name });
 
-  const specs = deriveSpecs(p);
+  const specs = deriveSpecs(p, t);
   const trustBadges = getTrustBadges(p.product_type, t);
   const deliveryHint = getDeliveryHint(p.product_type, t);
 
@@ -162,7 +162,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {p.priceDisplay.isOnSale && (
               <div className="flex items-center gap-2 mb-4">
                 <span className="inline-block text-sm font-semibold text-white bg-orange-500 px-3 py-1 rounded-full">
-                  {p.priceDisplay.saleLabel ?? "Angebot"}
+                  {p.priceDisplay.saleLabel ?? t("sale_badge")}
                 </span>
                 {p.priceDisplay.originalPriceCents != null && (
                   <span className="text-sm text-brand-muted line-through">
@@ -180,8 +180,9 @@ export default async function ProductDetailPage({ params }: Props) {
             {p.priceDisplay.showCountdown && p.priceDisplay.saleEndsAt && (
               <OfferCountdown
                 endsAt={p.priceDisplay.saleEndsAt}
-                label={p.priceDisplay.saleLabel ? `${p.priceDisplay.saleLabel} endet in` : "Angebot endet in"}
-                footnote="Aktionskonditionen nur im Aktionszeitraum gültig. Solange der Vorrat reicht."
+                label={t("countdown_label")}
+                expiredText={t("countdown_expired")}
+                footnote={t("countdown_footnote")}
                 className="mb-5"
               />
             )}
@@ -338,20 +339,21 @@ function getTrustBadges(product_type: ProductType, t: any): string[] {
 
 type Spec = { label: string; value: string };
 
-function deriveSpecs(product: ProductDetail): Spec[] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function deriveSpecs(product: ProductDetail, t: any): Spec[] {
   if (product.variants.length === 0) return [];
 
   const attrs = product.variants.map((v) => v.attributes ?? {});
   const keys = [...new Set(attrs.flatMap((a) => Object.keys(a)))];
 
   const LABEL_MAP: Record<string, string> = {
-    laenge_m: "Länge",
-    farbe: "Farbe",
-    leistung_wp: "Leistung",
-    leistung_kw: "Leistung",
-    rotordurchmesser_m: "Rotordurchmesser",
-    zielgruppe: "Geeignet für",
-    hinweis: "Hinweis",
+    laenge_m: t("spec_length"),
+    farbe: t("spec_color"),
+    leistung_wp: t("spec_power"),
+    leistung_kw: t("spec_power"),
+    rotordurchmesser_m: t("spec_rotor"),
+    zielgruppe: t("spec_target"),
+    hinweis: t("spec_note"),
   };
 
   const specs: Spec[] = [];

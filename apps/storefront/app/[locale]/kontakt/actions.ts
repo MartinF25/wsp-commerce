@@ -1,11 +1,12 @@
 "use server";
 
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { env } from "@/lib/env";
 
 // ─── Zulässige Enum-Werte (müssen mit KontaktForm.tsx übereinstimmen) ────────
 
-const ANFRAGEART_VALUES = [
+export const ANFRAGEART_VALUES = [
   "Privatprojekt",
   "Gewerbeprojekt",
   "Landwirtschaft / Hof",
@@ -15,7 +16,7 @@ const ANFRAGEART_VALUES = [
   "Allgemeine Beratung",
 ] as const;
 
-const PROJEKTART_VALUES = [
+export const PROJEKTART_VALUES = [
   "Solarzaun",
   "SkyWind",
   "Kombilösung",
@@ -24,23 +25,25 @@ const PROJEKTART_VALUES = [
 
 // ─── Validierungsschema ───────────────────────────────────────────────────────
 
-const LeadFormSchema = z.object({
-  vorname: z.string().min(1, "Vorname ist erforderlich.").max(100),
-  nachname: z.string().min(1, "Nachname ist erforderlich.").max(100),
-  firma: z.string().max(200).optional(),
-  email: z.string().email("Bitte eine gültige E-Mail-Adresse eingeben."),
-  telefon: z.string().max(50).optional(),
-  anfrageart: z.enum(ANFRAGEART_VALUES, {
-    errorMap: () => ({ message: "Bitte eine Anfrageart wählen." }),
-  }),
-  projektart: z.enum(PROJEKTART_VALUES).optional(),
-  nachricht: z
-    .string()
-    .min(10, "Bitte mindestens 10 Zeichen eingeben.")
-    .max(5000),
-  // Honeypot – muss leer sein; bots füllen dieses Feld aus
-  website: z.string().max(0, "Spam erkannt."),
-});
+function buildLeadFormSchema(t: Awaited<ReturnType<typeof getTranslations<"kontakt">>>) {
+  return z.object({
+    vorname: z.string().min(1, t("error_firstname_required")).max(100),
+    nachname: z.string().min(1, t("error_lastname_required")).max(100),
+    firma: z.string().max(200).optional(),
+    email: z.string().email(t("error_email_invalid")),
+    telefon: z.string().max(50).optional(),
+    anfrageart: z.enum(ANFRAGEART_VALUES, {
+      errorMap: () => ({ message: t("error_type_required") }),
+    }),
+    projektart: z.enum(PROJEKTART_VALUES).optional(),
+    nachricht: z
+      .string()
+      .min(10, t("error_message_min"))
+      .max(5000),
+    // Honeypot – muss leer sein; bots füllen dieses Feld aus
+    website: z.string().max(0, t("error_spam")),
+  });
+}
 
 // ─── Mapping: Formular-Werte → n8n-Webhook-Werte ─────────────────────────────
 
@@ -85,6 +88,9 @@ export async function submitKontaktanfrage(
   _prevState: LeadFormState,
   formData: FormData
 ): Promise<LeadFormState> {
+  const t = await getTranslations("kontakt");
+  const LeadFormSchema = buildLeadFormSchema(t);
+
   // ── 1. FormData extrahieren und validieren ────────────────────────────────
 
   const raw = {
@@ -102,7 +108,7 @@ export async function submitKontaktanfrage(
   const parsed = LeadFormSchema.safeParse(raw);
   if (!parsed.success) {
     const firstError =
-      parsed.error.issues[0]?.message ?? "Ungültige Eingabe. Bitte prüfen Sie Ihre Angaben.";
+      parsed.error.issues[0]?.message ?? t("error_invalid_input");
     return { status: "error", message: firstError };
   }
 
@@ -177,9 +183,7 @@ export async function submitKontaktanfrage(
     console.error("[submitKontaktanfrage]", err);
     return {
       status: "error",
-      message:
-        "Ihre Anfrage konnte leider nicht übermittelt werden. " +
-        "Bitte versuchen Sie es später erneut oder schreiben Sie uns direkt per E-Mail.",
+      message: t("error_submit"),
     };
   }
 }

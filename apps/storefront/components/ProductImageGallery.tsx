@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import type { ProductImage } from "@wsp/types";
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export function ProductImageGallery({ images, fallback, categoryName }: Props) {
+  const t = useTranslations("common");
   const [activeIndex, setActiveIndex] = useState(0);
 
   const hasImages = images.length > 0;
@@ -56,7 +58,7 @@ export function ProductImageGallery({ images, fallback, categoryName }: Props) {
             <button
               type="button"
               onClick={prev}
-              aria-label="Vorheriges Bild"
+              aria-label={t("img_prev")}
               className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm rounded-full w-9 h-9 flex items-center justify-center shadow-md hover:bg-white transition-colors duration-150"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4 text-brand-text">
@@ -66,7 +68,7 @@ export function ProductImageGallery({ images, fallback, categoryName }: Props) {
             <button
               type="button"
               onClick={next}
-              aria-label="Nächstes Bild"
+              aria-label={t("img_next")}
               className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur-sm rounded-full w-9 h-9 flex items-center justify-center shadow-md hover:bg-white transition-colors duration-150"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4 text-brand-text">
@@ -84,7 +86,7 @@ export function ProductImageGallery({ images, fallback, categoryName }: Props) {
                 key={i}
                 type="button"
                 onClick={() => setActiveIndex(i)}
-                aria-label={`Bild ${i + 1}`}
+                aria-label={t("img_dot", { number: i + 1 })}
                 className={`w-2 h-2 rounded-full transition-all duration-200 ${
                   i === activeIndex ? "bg-white scale-110" : "bg-white/50"
                 }`}
@@ -102,7 +104,7 @@ export function ProductImageGallery({ images, fallback, categoryName }: Props) {
               key={img.id}
               type="button"
               onClick={() => setActiveIndex(i)}
-              aria-label={`Bild ${i + 1} anzeigen`}
+              aria-label={t("img_thumb", { number: i + 1 })}
               className={`relative shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all duration-150 ${
                 i === activeIndex
                   ? "border-brand-accent shadow-sm"
@@ -111,7 +113,7 @@ export function ProductImageGallery({ images, fallback, categoryName }: Props) {
             >
               <Image
                 src={img.url}
-                alt={img.alt ?? `${fallback.alt} – Bild ${i + 1}`}
+                alt={img.alt ?? `${fallback.alt} – ${t("img_dot", { number: i + 1 })}`}
                 fill
                 className="object-cover"
                 sizes="80px"

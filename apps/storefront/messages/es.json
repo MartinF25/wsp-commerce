@@ -139,7 +139,12 @@
     "view_aria": "Ver {name}",
     "empty_state_text": "Aún no hay productos activos publicados en esta categoría.",
     "empty_cta_primary": "Consultar proyecto",
-    "empty_cta_secondary": "Ver todos los productos"
+    "empty_cta_secondary": "Ver todos los productos",
+    "categories_eyebrow": "Surtido",
+    "categories_h2": "Comprar por categoría.",
+    "result_count": "{count} Productos",
+    "category_no_products": "Sin productos",
+    "category_product_count": "{count} Productos"
   },
   "product": {
     "breadcrumb_home": "Inicio",
@@ -190,7 +195,17 @@
     "documents_type_manual": "Manual de montaje",
     "documents_type_certificate": "Certificado",
     "documents_type_other": "Documento",
-    "variant_chosen_label": "Seleccionado:"
+    "variant_chosen_label": "Seleccionado:",
+    "sale_badge": "Oferta",
+    "countdown_label": "La oferta termina en",
+    "countdown_expired": "Esta oferta ha expirado.",
+    "countdown_footnote": "Condiciones de la oferta válidas solo durante el período promocional. Hasta agotar existencias.",
+    "spec_length": "Longitud",
+    "spec_color": "Color",
+    "spec_power": "Potencia",
+    "spec_rotor": "Diámetro del rotor",
+    "spec_target": "Adecuado para",
+    "spec_note": "Nota"
   },
   "blog": {
     "meta_title": "Blog – Energía Renovable | Valla Solar & SkyWind",
@@ -259,11 +274,33 @@
     "anfrageart_hint": "Por favor selecciona la categoría apropiada para tu consulta.",
     "projektart_hint": "opcional – si ya tienes una dirección en mente",
     "anfrageart_options": ["Proyecto privado", "Proyecto comercial", "Agricultura / Granja", "Consulta de socio", "Consulta de distribuidor", "Sociedad de instalación", "Asesoría general"],
-    "projektart_options": ["Valla Solar", "SkyWind", "Solución combinada", "Asesoría solicitada"]
+    "projektart_options": ["Valla Solar", "SkyWind", "Solución combinada", "Asesoría solicitada"],
+    "error_firstname_required": "El nombre es obligatorio.",
+    "error_lastname_required": "El apellido es obligatorio.",
+    "error_email_invalid": "Por favor, introduce una dirección de correo electrónico válida.",
+    "error_type_required": "Por favor, selecciona un tipo de consulta.",
+    "error_message_min": "Por favor, introduce al menos 10 caracteres.",
+    "error_spam": "Spam detectado.",
+    "error_invalid_input": "Entrada no válida. Por favor, comprueba tus datos.",
+    "error_submit": "Tu consulta no pudo enviarse. Por favor, inténtalo de nuevo más tarde o escríbenos directamente por correo electrónico."
   },
   "common": {
     "home": "Inicio",
-    "back_home": "← Volver al inicio"
+    "back_home": "← Volver al inicio",
+    "countdown_days_short": "Días",
+    "countdown_hours_short": "Hrs",
+    "countdown_minutes_short": "Min",
+    "countdown_seconds_short": "Seg",
+    "countdown_sr": "{label}: {days} días, {hours} horas, {minutes} minutos restantes",
+    "sales_popup_project_inquiry": "Consulta de proyecto",
+    "sales_popup_purchase": "Compra",
+    "sales_popup_inquiry": "Consulta",
+    "sales_popup_minutes_ago": "hace {count} minutos",
+    "sales_popup_close": "Cerrar",
+    "img_prev": "Imagen anterior",
+    "img_next": "Imagen siguiente",
+    "img_dot": "Imagen {number}",
+    "img_thumb": "Mostrar imagen {number}"
   },
   "solarzaun": {
     "meta_title": "Valla Solar – Vallado y Energía en Uno",

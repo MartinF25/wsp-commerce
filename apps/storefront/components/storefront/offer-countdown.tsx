@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 export type OfferCountdownProps = {
   endsAt: string | Date;
@@ -32,21 +33,30 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-const UNIT_LABELS = ["Tage", "Std", "Min", "Sek"] as const;
-
 export function OfferCountdown({
   endsAt,
-  label = "Angebot endet in",
-  expiredText = "Dieses Angebot ist abgelaufen.",
+  label,
+  expiredText,
   footnote,
   className = "",
 }: OfferCountdownProps) {
+  const t = useTranslations("common");
+  const effectiveLabel = label ?? "";
+  const effectiveExpiredText = expiredText ?? "";
+
+  const UNIT_LABELS = [
+    t("countdown_days_short"),
+    t("countdown_hours_short"),
+    t("countdown_minutes_short"),
+    t("countdown_seconds_short"),
+  ] as const;
+
   const endMs = (typeof endsAt === "string" ? new Date(endsAt) : endsAt).getTime();
 
   const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   // SR text updates per minute only — avoids reading out every second-tick
-  const [srText, setSrText] = useState(label);
+  const [srText, setSrText] = useState(effectiveLabel);
 
   useEffect(() => {
     setMounted(true);
@@ -55,12 +65,12 @@ export function OfferCountdown({
     setTimeLeft(initial);
 
     if (!initial) {
-      setSrText(expiredText);
+      setSrText(effectiveExpiredText);
       return;
     }
 
     setSrText(
-      `${label}: ${initial.days} Tage, ${initial.hours} Stunden, ${initial.minutes} Minuten verbleibend`,
+      t("countdown_sr", { label: effectiveLabel, days: initial.days, hours: initial.hours, minutes: initial.minutes }),
     );
 
     let prevMinute = initial.minutes;
@@ -70,7 +80,7 @@ export function OfferCountdown({
       setTimeLeft(remaining);
 
       if (!remaining) {
-        setSrText(expiredText);
+        setSrText(effectiveExpiredText);
         clearInterval(id);
         return;
       }
@@ -78,13 +88,13 @@ export function OfferCountdown({
       if (remaining.minutes !== prevMinute) {
         prevMinute = remaining.minutes;
         setSrText(
-          `${label}: ${remaining.days} Tage, ${remaining.hours} Stunden, ${remaining.minutes} Minuten verbleibend`,
+          t("countdown_sr", { label: effectiveLabel, days: remaining.days, hours: remaining.hours, minutes: remaining.minutes }),
         );
       }
     }, 1_000);
 
     return () => clearInterval(id);
-  }, [endMs, label, expiredText]);
+  }, [endMs, effectiveLabel, effectiveExpiredText, t]);
 
   // Render a stable skeleton before mount to prevent hydration mismatch
   if (!mounted) {
@@ -93,7 +103,7 @@ export function OfferCountdown({
         className={`rounded-2xl border border-gray-800 bg-gray-900 px-5 py-4 ${className}`}
         aria-hidden="true"
       >
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">{label}</p>
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">{effectiveLabel}</p>
         <div className="flex items-center gap-1.5 sm:gap-2">
           {UNIT_LABELS.map((unitLabel, i) => (
             <Fragment key={unitLabel}>
@@ -128,18 +138,18 @@ export function OfferCountdown({
       >
         <div className="flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0" aria-hidden="true" />
-          <p className="text-sm text-gray-400 font-medium">{expiredText}</p>
+          <p className="text-sm text-gray-400 font-medium">{effectiveExpiredText}</p>
         </div>
       </div>
     );
   }
 
   const segments = [
-    { value: timeLeft.days,    unitLabel: "Tage" },
-    { value: timeLeft.hours,   unitLabel: "Std"  },
-    { value: timeLeft.minutes, unitLabel: "Min"  },
-    { value: timeLeft.seconds, unitLabel: "Sek"  },
-  ] as const;
+    { value: timeLeft.days,    unitLabel: t("countdown_days_short")    },
+    { value: timeLeft.hours,   unitLabel: t("countdown_hours_short")   },
+    { value: timeLeft.minutes, unitLabel: t("countdown_minutes_short") },
+    { value: timeLeft.seconds, unitLabel: t("countdown_seconds_short") },
+  ];
 
   return (
     <div
@@ -155,7 +165,7 @@ export function OfferCountdown({
         className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3"
         aria-hidden="true"
       >
-        {label}
+        {effectiveLabel}
       </p>
 
       <div className="flex items-center gap-1.5 sm:gap-2" aria-hidden="true">

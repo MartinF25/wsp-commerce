@@ -139,7 +139,12 @@
     "view_aria": "{name} ansehen",
     "empty_state_text": "In dieser Kategorie sind aktuell noch keine aktiven Produkte veröffentlicht.",
     "empty_cta_primary": "Projekt anfragen",
-    "empty_cta_secondary": "Alle Produkte ansehen"
+    "empty_cta_secondary": "Alle Produkte ansehen",
+    "categories_eyebrow": "Sortiment",
+    "categories_h2": "Nach Kategorien kaufen",
+    "result_count": "{count} Produkte",
+    "category_no_products": "Keine Produkte",
+    "category_product_count": "{count} Produkte"
   },
   "product": {
     "breadcrumb_home": "Start",
@@ -190,7 +195,17 @@
     "documents_type_manual": "Montageanleitung",
     "documents_type_certificate": "Zertifikat",
     "documents_type_other": "Dokument",
-    "variant_chosen_label": "Ausgewählt:"
+    "variant_chosen_label": "Ausgewählt:",
+    "sale_badge": "Angebot",
+    "countdown_label": "Angebot endet in",
+    "countdown_expired": "Dieses Angebot ist abgelaufen.",
+    "countdown_footnote": "Aktionskonditionen nur im Aktionszeitraum gültig. Solange der Vorrat reicht.",
+    "spec_length": "Länge",
+    "spec_color": "Farbe",
+    "spec_power": "Leistung",
+    "spec_rotor": "Rotordurchmesser",
+    "spec_target": "Geeignet für",
+    "spec_note": "Hinweis"
   },
   "blog": {
     "meta_title": "Blog – Erneuerbare Energie | Solarzaun & SkyWind",
@@ -259,11 +274,33 @@
     "anfrageart_hint": "Bitte wählen Sie die passende Kategorie für Ihre Anfrage.",
     "projektart_hint": "optional – falls Sie bereits eine Richtung haben",
     "anfrageart_options": ["Privatprojekt", "Gewerbeprojekt", "Landwirtschaft / Hof", "Partneranfrage", "Händleranfrage", "Montagepartnerschaft", "Allgemeine Beratung"],
-    "projektart_options": ["Solarzaun", "SkyWind", "Kombilösung", "Beratung gewünscht"]
+    "projektart_options": ["Solarzaun", "SkyWind", "Kombilösung", "Beratung gewünscht"],
+    "error_firstname_required": "Vorname ist erforderlich.",
+    "error_lastname_required": "Nachname ist erforderlich.",
+    "error_email_invalid": "Bitte eine gültige E-Mail-Adresse eingeben.",
+    "error_type_required": "Bitte eine Anfrageart wählen.",
+    "error_message_min": "Bitte mindestens 10 Zeichen eingeben.",
+    "error_spam": "Spam erkannt.",
+    "error_invalid_input": "Ungültige Eingabe. Bitte prüfen Sie Ihre Angaben.",
+    "error_submit": "Ihre Anfrage konnte leider nicht übermittelt werden. Bitte versuchen Sie es später erneut oder schreiben Sie uns direkt per E-Mail."
   },
   "common": {
     "home": "Start",
-    "back_home": "← Zurück zur Startseite"
+    "back_home": "← Zurück zur Startseite",
+    "countdown_days_short": "Tage",
+    "countdown_hours_short": "Std",
+    "countdown_minutes_short": "Min",
+    "countdown_seconds_short": "Sek",
+    "countdown_sr": "{label}: {days} Tage, {hours} Stunden, {minutes} Minuten verbleibend",
+    "sales_popup_project_inquiry": "Projektanfrage",
+    "sales_popup_purchase": "Kauf",
+    "sales_popup_inquiry": "Anfrage",
+    "sales_popup_minutes_ago": "vor {count} Minuten",
+    "sales_popup_close": "Schließen",
+    "img_prev": "Vorheriges Bild",
+    "img_next": "Nächstes Bild",
+    "img_dot": "Bild {number}",
+    "img_thumb": "Bild {number} anzeigen"
   },
   "solarzaun": {
     "meta_title": "Solarzaun – Einfriedung und Energie in einem",

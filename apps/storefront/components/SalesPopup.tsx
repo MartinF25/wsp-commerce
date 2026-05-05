@@ -10,6 +10,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 type SaleEvent = {
   name: string;
@@ -94,6 +95,7 @@ const EVENTS: SaleEvent[] = [
 ];
 
 export function SalesPopup() {
+  const t = useTranslations("common");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -163,11 +165,11 @@ export function SalesPopup() {
           <div className="flex items-center gap-1.5 mb-0.5">
             {event.action === "Projekt angefragt" ? (
               <span className="inline-block text-[9px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full leading-none">
-                Projektanfrage
+                {t("sales_popup_project_inquiry")}
               </span>
             ) : (
               <span className="inline-block text-[9px] font-bold uppercase tracking-wide text-brand-accent bg-green-50 px-1.5 py-0.5 rounded-full leading-none">
-                {event.action === "gekauft" ? "Kauf" : "Anfrage"}
+                {event.action === "gekauft" ? t("sales_popup_purchase") : t("sales_popup_inquiry")}
               </span>
             )}
           </div>
@@ -181,7 +183,7 @@ export function SalesPopup() {
             <p className="text-[10px] text-brand-muted truncate">{event.detail}</p>
           )}
           <p className={`text-[10px] mt-0.5 ${event.action === "Projekt angefragt" ? "text-blue-500" : "text-brand-accent"}`}>
-            vor {event.minutesAgo} Minuten
+            {t("sales_popup_minutes_ago", { count: event.minutesAgo })}
           </p>
         </div>
 
@@ -189,7 +191,7 @@ export function SalesPopup() {
         <button
           onClick={() => setDismissed(true)}
           className="flex-shrink-0 text-gray-300 hover:text-gray-500 transition-colors duration-150 -mt-8 -mr-1"
-          aria-label="Schließen"
+          aria-label={t("sales_popup_close")}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
