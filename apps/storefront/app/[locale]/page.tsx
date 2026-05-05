@@ -1,9 +1,11 @@
 import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { fetchProducts } from "@/lib/catalog";
 import type { Locale } from "@/i18n/routing";
 import type { ProductSummary, CategorySummary } from "@wsp/types";
+import { OfferCountdown } from "@/components/storefront/offer-countdown";
 
 export default async function HomePage({
   params,
@@ -293,6 +295,7 @@ function ProductCard({
   buyLabel: string;
   learnLabel: string;
 }) {
+  const tProducts = useTranslations("products");
   const imageMap: Record<string, { src: string; alt: string }> = {
     solarzaun: { src: "/images/solarzaun-house.png", alt: "Solarzaun" },
     skywind: { src: "/images/skywind-hero.png", alt: "SkyWind" },
@@ -342,6 +345,16 @@ function ProductCard({
             </p>
           )}
         </div>
+
+        {priceDisplay.showCountdown && priceDisplay.saleEndsAt && (
+          <OfferCountdown
+            endsAt={priceDisplay.saleEndsAt}
+            label={tProducts("countdown_label")}
+            expiredText={tProducts("countdown_expired")}
+            compact
+            className="mb-1"
+          />
+        )}
 
         <div className="mt-auto pt-3">
           {product.purchasable ? (

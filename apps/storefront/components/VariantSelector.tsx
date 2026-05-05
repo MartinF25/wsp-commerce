@@ -27,10 +27,16 @@ export function VariantSelector({ variants, productType, productPriceDisplay }: 
 
   const selected = variants.find((v) => v.id === selectedId) ?? variants[0] ?? null;
 
-  const displayPrice =
-    selected !== null && selected.price_cents !== null
-      ? formatPrice(selected.price_cents, selected.currency, locale)
-      : productPriceDisplay.displayText;
+  const displayPrice = (() => {
+    if (selected === null) return productPriceDisplay.displayText;
+    if (selected.sale_status === "active" && selected.sale_price_cents !== null) {
+      return formatPrice(selected.sale_price_cents, selected.currency, locale);
+    }
+    if (selected.price_cents !== null) {
+      return formatPrice(selected.price_cents, selected.currency, locale);
+    }
+    return productPriceDisplay.displayText;
+  })();
 
   const priceHint = (() => {
     switch (productType) {
@@ -82,13 +88,21 @@ export function VariantSelector({ variants, productType, productPriceDisplay }: 
                       <span className="ml-2 text-xs text-brand-muted">{v.sku}</span>
                     )}
                   </div>
-                  {v.price_cents !== null && (
+                  {(v.sale_status === "active" && v.sale_price_cents !== null
+                    ? v.sale_price_cents
+                    : v.price_cents) !== null && (
                     <span
                       className={`text-sm font-semibold shrink-0 ml-3 ${
                         active ? "text-brand-accent" : "text-brand-text"
                       }`}
                     >
-                      {formatPrice(v.price_cents, v.currency, locale)}
+                      {formatPrice(
+                        v.sale_status === "active" && v.sale_price_cents !== null
+                          ? v.sale_price_cents
+                          : v.price_cents!,
+                        v.currency,
+                        locale,
+                      )}
                     </span>
                   )}
                 </button>
