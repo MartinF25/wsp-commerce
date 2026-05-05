@@ -9,6 +9,7 @@ export type OfferCountdownProps = {
   expiredText?: string;
   footnote?: string;
   className?: string;
+  compact?: boolean;
 };
 
 type TimeLeft = {
@@ -39,6 +40,7 @@ export function OfferCountdown({
   expiredText,
   footnote,
   className = "",
+  compact = false,
 }: OfferCountdownProps) {
   const t = useTranslations("common");
   const effectiveLabel = label ?? "";
@@ -98,6 +100,26 @@ export function OfferCountdown({
 
   // Render a stable skeleton before mount to prevent hydration mismatch
   if (!mounted) {
+    if (compact) {
+      return (
+        <div className={`rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 ${className}`} aria-hidden="true">
+          <p className="text-[10px] font-medium text-orange-600 uppercase tracking-widest mb-1.5">{effectiveLabel}</p>
+          <div className="flex items-center gap-1">
+            {UNIT_LABELS.map((unitLabel, i) => (
+              <Fragment key={unitLabel}>
+                <div className="flex flex-col items-center min-w-[1.75rem]">
+                  <span className="font-display text-xl font-bold text-orange-700 tabular-nums leading-none">--</span>
+                  <span className="text-[9px] text-orange-500 uppercase tracking-wider mt-1">{unitLabel}</span>
+                </div>
+                {i < UNIT_LABELS.length - 1 && (
+                  <span aria-hidden="true" className="text-orange-400 font-bold text-base leading-none mb-3 select-none">:</span>
+                )}
+              </Fragment>
+            ))}
+          </div>
+        </div>
+      );
+    }
     return (
       <div
         className={`rounded-2xl border border-gray-800 bg-gray-900 px-5 py-4 ${className}`}
@@ -134,11 +156,13 @@ export function OfferCountdown({
     return (
       <div
         role="status"
-        className={`rounded-2xl border border-gray-700 bg-gray-900 px-5 py-4 ${className}`}
+        className={compact
+          ? `rounded-xl border border-orange-100 bg-orange-50 px-3 py-2 ${className}`
+          : `rounded-2xl border border-gray-700 bg-gray-900 px-5 py-4 ${className}`}
       >
-        <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0" aria-hidden="true" />
-          <p className="text-sm text-gray-400 font-medium">{effectiveExpiredText}</p>
+        <div className="flex items-center gap-1.5">
+          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${compact ? "bg-orange-300" : "bg-gray-500"}`} aria-hidden="true" />
+          <p className={`font-medium ${compact ? "text-xs text-orange-500" : "text-sm text-gray-400"}`}>{effectiveExpiredText}</p>
         </div>
       </div>
     );
@@ -150,6 +174,32 @@ export function OfferCountdown({
     { value: timeLeft.minutes, unitLabel: t("countdown_minutes_short") },
     { value: timeLeft.seconds, unitLabel: t("countdown_seconds_short") },
   ];
+
+  if (compact) {
+    return (
+      <div role="timer" className={`rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 ${className}`}>
+        <span className="sr-only" aria-live="polite" aria-atomic="true">{srText}</span>
+        <p className="text-[10px] font-medium text-orange-600 uppercase tracking-widest mb-1.5" aria-hidden="true">
+          {effectiveLabel}
+        </p>
+        <div className="flex items-center gap-1" aria-hidden="true">
+          {segments.map((seg, i) => (
+            <Fragment key={seg.unitLabel}>
+              <div className="flex flex-col items-center min-w-[1.75rem]">
+                <span className="font-display text-xl font-bold text-orange-700 tabular-nums leading-none">
+                  {pad(seg.value)}
+                </span>
+                <span className="text-[9px] text-orange-500 uppercase tracking-wider mt-1">{seg.unitLabel}</span>
+              </div>
+              {i < segments.length - 1 && (
+                <span aria-hidden="true" className="text-orange-400 font-bold text-base leading-none mb-3 select-none">:</span>
+              )}
+            </Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

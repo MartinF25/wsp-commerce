@@ -12,6 +12,7 @@ import type { ProductSummary } from "@wsp/types";
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { OfferCountdown } from "@/components/storefront/offer-countdown";
 
 type Props = {
   product: ProductSummary;
@@ -196,6 +197,17 @@ export function ProductCard({ product, showCategory = true }: Props) {
             </p>
           )}
         </div>
+
+        {/* Countdown – nur wenn Angebot mit Ablaufdatum */}
+        {priceDisplay.showCountdown && priceDisplay.saleEndsAt && (
+          <OfferCountdown
+            endsAt={priceDisplay.saleEndsAt}
+            label={t("countdown_label")}
+            expiredText={t("countdown_expired")}
+            compact
+            className="mb-4"
+          />
+        )}
 
         {/* Footer: Badge links + CTA rechts */}
         <div className="mt-auto flex items-center justify-between gap-3">
