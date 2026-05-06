@@ -35,7 +35,10 @@ function buildLeadFormSchema(t: Awaited<ReturnType<typeof getTranslations<"konta
     anfrageart: z.enum(ANFRAGEART_VALUES, {
       errorMap: () => ({ message: t("error_type_required") }),
     }),
-    projektart: z.enum(PROJEKTART_VALUES).optional(),
+    projektart: z.preprocess(
+      (v) => (v === "" || v == null ? undefined : v),
+      z.enum(PROJEKTART_VALUES).optional()
+    ),
     nachricht: z
       .string()
       .min(10, t("error_message_min"))
