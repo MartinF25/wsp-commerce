@@ -15,7 +15,28 @@
     "faq": "Preguntas Frecuentes",
     "kontakt": "Contacto",
     "impressum": "Aviso Legal",
-    "datenschutz": "Política de Privacidad"
+    "datenschutz": "Política de Privacidad",
+    "brand_tagline": "Soluciones energéticas inteligentes para hogares, granjas y empresas.",
+    "col_products": "Productos",
+    "solarzaun": "Valla Solar",
+    "skywind": "SkyWind",
+    "kombiloesungen": "Soluciones Combinadas",
+    "all_products": "Todos los Productos",
+    "col_info": "Información",
+    "col_legal": "Legal",
+    "made_in": "Fabricado con convicción en Alemania."
+  },
+  "newsletter": {
+    "title": "Forma parte del futuro energético",
+    "subtitle": "Consejos de proyectos, noticias sobre subvenciones y ofertas exclusivas en tu bandeja de entrada.",
+    "firstname_placeholder": "Nombre (opcional)",
+    "email_placeholder": "Tu dirección de correo",
+    "consent": "Acepto la <link>Política de Privacidad</link> y puedo retirar mi consentimiento en cualquier momento.",
+    "cta": "Suscribirse ahora",
+    "sending": "Enviando…",
+    "close": "Cerrar",
+    "success_title": "¡Suscripción exitosa!",
+    "success_text": "Gracias. Sin spam – cancela cuando quieras."
   },
   "announcement": "Consulta gratuita para todos los proyectos · Planificación individual · Consulta ahora y verifica opciones de subvención",
   "home": {

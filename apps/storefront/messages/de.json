@@ -15,7 +15,28 @@
     "faq": "FAQ",
     "kontakt": "Kontakt",
     "impressum": "Impressum",
-    "datenschutz": "Datenschutz"
+    "datenschutz": "Datenschutz",
+    "brand_tagline": "Intelligente Energielösungen für Haus, Hof und Gewerbe.",
+    "col_products": "Produkte",
+    "solarzaun": "Solarzaun",
+    "skywind": "SkyWind",
+    "kombiloesungen": "Kombilösungen",
+    "all_products": "Alle Produkte",
+    "col_info": "Informationen",
+    "col_legal": "Rechtliches",
+    "made_in": "Gefertigt mit Überzeugung in Deutschland."
+  },
+  "newsletter": {
+    "title": "Energiezukunft mitgestalten",
+    "subtitle": "Projekttipps, Fördernews und exklusive Angebote – direkt in Ihr Postfach.",
+    "firstname_placeholder": "Vorname (optional)",
+    "email_placeholder": "Ihre E-Mail-Adresse",
+    "consent": "Ich stimme der <link>Datenschutzerklärung</link> zu und kann die Einwilligung jederzeit widerrufen.",
+    "cta": "Jetzt anmelden",
+    "sending": "Wird gesendet…",
+    "close": "Schließen",
+    "success_title": "Erfolgreich angemeldet!",
+    "success_text": "Vielen Dank. Kein Spam – jederzeit abmeldbar."
   },
   "announcement": "Kostenlose Beratung für alle Projekte · Individuelle Planung · Jetzt anfragen und Förderoptionen prüfen",
   "home": {

@@ -15,7 +15,28 @@
     "faq": "FAQ",
     "kontakt": "Contact",
     "impressum": "Legal Notice",
-    "datenschutz": "Privacy Policy"
+    "datenschutz": "Privacy Policy",
+    "brand_tagline": "Smart energy solutions for homes, farms and businesses.",
+    "col_products": "Products",
+    "solarzaun": "Solar Fence",
+    "skywind": "SkyWind",
+    "kombiloesungen": "Combined Solutions",
+    "all_products": "All Products",
+    "col_info": "Information",
+    "col_legal": "Legal",
+    "made_in": "Made with conviction in Germany."
+  },
+  "newsletter": {
+    "title": "Shape the Energy Future",
+    "subtitle": "Project tips, funding news and exclusive offers – delivered to your inbox.",
+    "firstname_placeholder": "First name (optional)",
+    "email_placeholder": "Your email address",
+    "consent": "I agree to the <link>Privacy Policy</link> and can withdraw consent at any time.",
+    "cta": "Subscribe now",
+    "sending": "Sending…",
+    "close": "Close",
+    "success_title": "Successfully subscribed!",
+    "success_text": "Thank you. No spam – unsubscribe anytime."
   },
   "announcement": "Free consultation for all projects · Individual planning · Enquire now and check subsidy options",
   "home": {

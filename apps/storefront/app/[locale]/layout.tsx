@@ -7,6 +7,8 @@ import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
 import { SalesPopup } from "@/components/SalesPopup";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Footer } from "@/components/Footer";
+import { NewsletterPopup } from "@/components/NewsletterPopup";
 import "../globals.css";
 
 const sora = Sora({
@@ -55,7 +57,6 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
   const t = await getTranslations({ locale, namespace: "nav" });
-  const tFooter = await getTranslations({ locale, namespace: "footer" });
   const tRoot = await getTranslations({ locale });
 
   return (
@@ -110,24 +111,8 @@ export default async function LocaleLayout({
           <div className="flex-1">{children}</div>
 
           <SalesPopup />
-
-          {/* ── Footer ── */}
-          <footer className="border-t border-gray-100 mt-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-brand-muted">
-                <span>&copy; {new Date().getFullYear()} {tFooter("copyright")}</span>
-                <nav className="flex items-center gap-6 flex-wrap justify-center">
-                  <Link href="/privatkunden" className="hover:text-brand-text transition-colors duration-150">{tFooter("privatkunden")}</Link>
-                  <Link href="/gewerbe-b2b" className="hover:text-brand-text transition-colors duration-150">{tFooter("gewerbe")}</Link>
-                  <Link href="/blog" className="hover:text-brand-text transition-colors duration-150">Blog</Link>
-                  <Link href="/faq" className="hover:text-brand-text transition-colors duration-150">{tFooter("faq")}</Link>
-                  <Link href="/kontakt" className="hover:text-brand-text transition-colors duration-150">{tFooter("kontakt")}</Link>
-                  <Link href="/impressum" className="hover:text-brand-text transition-colors duration-150">{tFooter("impressum")}</Link>
-                  <Link href="/datenschutz" className="hover:text-brand-text transition-colors duration-150">{tFooter("datenschutz")}</Link>
-                </nav>
-              </div>
-            </div>
-          </footer>
+          <NewsletterPopup />
+          <Footer />
 
         </NextIntlClientProvider>
       </body>
