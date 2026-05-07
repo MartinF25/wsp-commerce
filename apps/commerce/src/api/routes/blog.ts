@@ -1,141 +1,195 @@
 import { Hono } from "hono";
 import { getPrismaClient } from "../../lib/prisma";
 import { CatalogError } from "../../types";
+import type { Locale } from "@prisma/client";
 
 const prisma = getPrismaClient();
 
 export const blogRoutes = new Hono();
 
+const VALID_LOCALES: Locale[] = ["de", "en", "es"];
+
+function parseLocale(raw: string | undefined): Locale {
+  if (raw && VALID_LOCALES.includes(raw as Locale)) return raw as Locale;
+  return "de";
+}
+
+// Wählt die Translation für die angefragte Locale, fällt auf DE zurück.
+function resolveTranslation<T extends { locale: Locale }>(
+  translations: T[],
+  locale: Locale
+): { translation: T; fallbackUsed: boolean } | null {
+  const exact = translations.find((t) => t.locale === locale);
+  if (exact) return { translation: exact, fallbackUsed: false };
+  const de = translations.find((t) => t.locale === "de");
+  if (de) return { translation: de, fallbackUsed: true };
+  return null;
+}
+
 // ─── GET /posts ───────────────────────────────────────────────────────────────
 
 blogRoutes.get("/posts", async (c) => {
-  const limit = Math.min(Number(c.req.query("limit") ?? 20), 100);
+  const locale = parseLocale(c.req.query("locale"));
+  const limit = Math.min(Number(c.req.query("limit") ?? 12), 50);
   const offset = Number(c.req.query("offset") ?? 0);
-  const tag = c.req.query("tag");
-
-  const where = {
-    status: "published" as const,
-    ...(tag ? { tags: { has: tag } } : {}),
-  };
+  const categorySlug = c.req.query("category");
+  const tagSlug = c.req.query("tag");
+  const featuredOnly = c.req.query("featured") === "true";
 
   const [posts, total] = await Promise.all([
     prisma.blogPost.findMany({
-      where,
+      where: {
+        status: "published",
+        ...(featuredOnly ? { featured: true } : {}),
+        ...(categorySlug ? { category: { slug: categorySlug } } : {}),
+        ...(tagSlug ? { tags: { some: { tag: { slug: tagSlug } } } } : {}),
+      },
       orderBy: { published_at: "desc" },
       take: limit,
       skip: offset,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        excerpt: true,
-        cover_image: true,
-        author: true,
-        tags: true,
-        published_at: true,
-        created_at: true,
+      include: {
+        translations: true,
+        category: {
+          include: { translations: true },
+        },
+        tags: { include: { tag: true } },
       },
     }),
-    prisma.blogPost.count({ where }),
+    prisma.blogPost.count({
+      where: {
+        status: "published",
+        ...(featuredOnly ? { featured: true } : {}),
+        ...(categorySlug ? { category: { slug: categorySlug } } : {}),
+        ...(tagSlug ? { tags: { some: { tag: { slug: tagSlug } } } } : {}),
+      },
+    }),
   ]);
 
-  return c.json({ data: posts, meta: { total, limit, offset } });
+  const items = posts.map((post) => {
+    const resolved = resolveTranslation(post.translations, locale);
+    if (!resolved) return null;
+    const { translation, fallbackUsed } = resolved;
+
+    const categoryTranslation = post.category
+      ? resolveTranslation(post.category.translations, locale)
+      : null;
+
+    return {
+      id: post.id,
+      slug: post.slug,
+      status: post.status,
+      coverImageUrl: post.cover_image_url,
+      coverImageAlt: post.cover_image_alt,
+      publishedAt: post.published_at?.toISOString() ?? null,
+      readingTimeMinutes: post.reading_time_minutes,
+      featured: post.featured,
+      authorName: post.author_name,
+      locale: fallbackUsed ? ("de" as Locale) : locale,
+      fallbackUsed,
+      title: translation.title,
+      excerpt: translation.excerpt,
+      category: post.category
+        ? {
+            id: post.category.id,
+            slug: post.category.slug,
+            name: categoryTranslation?.translation.name ?? post.category.slug,
+          }
+        : null,
+      tags: post.tags.map((pt) => ({ slug: pt.tag.slug, name: pt.tag.name })),
+    };
+  }).filter(Boolean);
+
+  return c.json({ data: items, meta: { total, limit, offset } });
 });
 
 // ─── GET /posts/:slug ─────────────────────────────────────────────────────────
 
 blogRoutes.get("/posts/:slug", async (c) => {
   const slug = c.req.param("slug");
+  const locale = parseLocale(c.req.query("locale"));
 
-  const post = await prisma.blogPost.findUnique({ where: { slug } });
+  const post = await prisma.blogPost.findUnique({
+    where: { slug },
+    include: {
+      translations: true,
+      category: { include: { translations: true } },
+      tags: { include: { tag: true } },
+    },
+  });
 
   if (!post || post.status !== "published") {
     throw new CatalogError("NOT_FOUND", 404, `Blog-Beitrag nicht gefunden: ${slug}`);
   }
 
-  return c.json({ data: post });
+  const resolved = resolveTranslation(post.translations, locale);
+  if (!resolved) {
+    throw new CatalogError("NOT_FOUND", 404, `Keine Übersetzung verfügbar für: ${slug}`);
+  }
+
+  const { translation, fallbackUsed } = resolved;
+  const categoryTranslation = post.category
+    ? resolveTranslation(post.category.translations, locale)
+    : null;
+
+  const availableLocales = post.translations.map((t) => t.locale);
+
+  return c.json({
+    data: {
+      id: post.id,
+      slug: post.slug,
+      status: post.status,
+      coverImageUrl: post.cover_image_url,
+      coverImageAlt: post.cover_image_alt,
+      publishedAt: post.published_at?.toISOString() ?? null,
+      readingTimeMinutes: post.reading_time_minutes,
+      featured: post.featured,
+      authorName: post.author_name,
+      locale: fallbackUsed ? ("de" as Locale) : locale,
+      fallbackUsed,
+      availableLocales,
+      title: translation.title,
+      excerpt: translation.excerpt,
+      content: translation.content,
+      metaTitle: translation.meta_title,
+      metaDescription: translation.meta_description,
+      ogTitle: translation.og_title,
+      ogDescription: translation.og_description,
+      category: post.category
+        ? {
+            id: post.category.id,
+            slug: post.category.slug,
+            name: categoryTranslation?.translation.name ?? post.category.slug,
+          }
+        : null,
+      tags: post.tags.map((pt) => ({ slug: pt.tag.slug, name: pt.tag.name })),
+    },
+  });
 });
 
-// ─── POST /posts  (n8n / AI webhook) ─────────────────────────────────────────
+// ─── GET /categories ──────────────────────────────────────────────────────────
 
-blogRoutes.post("/posts", async (c) => {
-  const apiKey = c.req.header("x-api-key");
-  if (!apiKey || apiKey !== process.env.BLOG_API_KEY) {
-    throw new CatalogError("UNAUTHORIZED", 401, "Ungültiger API-Key");
-  }
+blogRoutes.get("/categories", async (c) => {
+  const locale = parseLocale(c.req.query("locale"));
 
-  const body = await c.req.json<{
-    slug: string;
-    title: string;
-    excerpt?: string;
-    content: string;
-    cover_image?: string;
-    author?: string;
-    tags?: string[];
-    status?: "draft" | "published";
-  }>();
-
-  if (!body.slug || !body.title || !body.content) {
-    throw new CatalogError("INVALID_INPUT", 422, "slug, title und content sind Pflichtfelder");
-  }
-
-  const existing = await prisma.blogPost.findUnique({ where: { slug: body.slug } });
-
-  if (existing) {
-    const updated = await prisma.blogPost.update({
-      where: { slug: body.slug },
-      data: {
-        title: body.title,
-        excerpt: body.excerpt ?? null,
-        content: body.content,
-        cover_image: body.cover_image ?? null,
-        author: body.author ?? null,
-        tags: body.tags ?? [],
-        status: body.status ?? "published",
-        published_at: body.status === "published" ? (existing.published_at ?? new Date()) : existing.published_at,
-      },
-    });
-    return c.json({ data: updated }, 200);
-  }
-
-  const post = await prisma.blogPost.create({
-    data: {
-      slug: body.slug,
-      title: body.title,
-      excerpt: body.excerpt ?? null,
-      content: body.content,
-      cover_image: body.cover_image ?? null,
-      author: body.author ?? null,
-      tags: body.tags ?? [],
-      status: body.status ?? "published",
-      published_at: body.status === "published" ? new Date() : null,
+  const categories = await prisma.blogCategory.findMany({
+    where: { is_active: true },
+    orderBy: { sort_order: "asc" },
+    include: {
+      translations: true,
+      _count: { select: { posts: { where: { status: "published" } } } },
     },
   });
 
-  return c.json({ data: post }, 201);
-});
-
-// ─── PATCH /posts/:slug  (Admin – Status ändern) ──────────────────────────────
-
-blogRoutes.patch("/posts/:slug", async (c) => {
-  const apiKey = c.req.header("x-api-key");
-  if (!apiKey || apiKey !== process.env.BLOG_API_KEY) {
-    throw new CatalogError("UNAUTHORIZED", 401, "Ungültiger API-Key");
-  }
-
-  const slug = c.req.param("slug");
-  const body = await c.req.json<{ status: "draft" | "published" | "archived" }>();
-
-  const post = await prisma.blogPost.findUnique({ where: { slug } });
-  if (!post) throw new CatalogError("NOT_FOUND", 404, `Blog-Beitrag nicht gefunden: ${slug}`);
-
-  const updated = await prisma.blogPost.update({
-    where: { slug },
-    data: {
-      status: body.status,
-      published_at: body.status === "published" && !post.published_at ? new Date() : post.published_at,
-    },
+  const data = categories.map((cat) => {
+    const resolved = resolveTranslation(cat.translations, locale);
+    return {
+      id: cat.id,
+      slug: cat.slug,
+      name: resolved?.translation.name ?? cat.slug,
+      description: resolved?.translation.description ?? null,
+      postCount: cat._count.posts,
+    };
   });
 
-  return c.json({ data: updated });
+  return c.json({ data });
 });

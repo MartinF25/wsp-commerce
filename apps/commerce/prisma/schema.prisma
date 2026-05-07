@@ -178,20 +178,102 @@ model ProductDocument {
   @@map("product_documents")
 }
 
-model BlogPost {
-  id           String     @id @default(uuid())
-  slug         String     @unique
-  title        String
-  excerpt      String?
-  content      String
-  cover_image  String?
-  author       String?
-  tags         String[]
-  status       BlogStatus @default(draft)
-  published_at DateTime?
+model BlogCategory {
+  id         String  @id @default(uuid())
+  slug       String  @unique
+  sort_order Int     @default(0)
+  is_active  Boolean @default(true)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  translations BlogCategoryTranslation[]
+  posts        BlogPost[]
+
+  @@map("blog_categories")
+}
+
+/// Sprachabhängiger Name und Beschreibung einer Blog-Kategorie.
+model BlogCategoryTranslation {
+  id          String @id @default(uuid())
+  category_id String
+  locale      Locale
+  name        String
+  description String?
+
+  category BlogCategory @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@unique([category_id, locale])
+  @@map("blog_category_translations")
+}
+
+model BlogPost {
+  id                   String     @id @default(uuid())
+  slug                 String     @unique
+  status               BlogStatus @default(draft)
+  cover_image_url      String?
+  /// Sprachneutraler Alt-Text (Bildtitel), gilt für alle Sprachversionen.
+  cover_image_alt      String?
+  published_at         DateTime?
+  reading_time_minutes Int?
+  featured             Boolean    @default(false)
+  category_id          String?
+  /// Einfaches Autorfeld ohne separates Author-Modell (MVP).
+  author_name          String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  category     BlogCategory?        @relation(fields: [category_id], references: [id])
+  translations BlogPostTranslation[]
+  tags         BlogPostTag[]
+
   @@map("blog_posts")
+}
+
+/// Sprachabhängige Inhalte eines Blogbeitrags. DE ist immer Pflicht.
+/// Fehlende EN/ES-Einträge → Fallback auf DE im Service-Layer (fallbackUsed: true).
+model BlogPostTranslation {
+  id               String @id @default(uuid())
+  post_id          String
+  locale           Locale
+
+  title            String
+  excerpt          String
+  content          String  @db.Text
+  meta_title       String?
+  meta_description String?
+  og_title         String?
+  og_description   String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  post BlogPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@unique([post_id, locale])
+  @@map("blog_post_translations")
+}
+
+model BlogTag {
+  id   String @id @default(uuid())
+  slug String @unique
+  /// DE-Name reicht für Tags; kein eigenes Translation-Modell nötig.
+  name String
+
+  posts BlogPostTag[]
+
+  @@map("blog_tags")
+}
+
+/// Verbindungstabelle BlogPost ↔ BlogTag (n:m).
+model BlogPostTag {
+  post_id String
+  tag_id  String
+
+  post BlogPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  tag  BlogTag  @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@id([post_id, tag_id])
+  @@map("blog_post_tags")
 }
