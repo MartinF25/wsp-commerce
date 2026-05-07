@@ -13,3 +13,4 @@
  *   - apps/admin     → Typen für Tabellen und Formulare
  */
 export * from "./catalog";
+export * from "./blog";
