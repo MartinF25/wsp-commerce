@@ -146,7 +146,7 @@ export function SalesPopup() {
       role="status"
       aria-live="polite"
     >
-      <div className={`bg-white rounded-2xl shadow-xl border p-3 flex items-center gap-3 max-w-[290px] ${
+      <div className={`bg-white rounded-2xl shadow-xl border p-3 flex items-center gap-3 w-[calc(100vw-3rem)] max-w-[290px] ${
         event.action === "Projekt angefragt" ? "border-blue-100" : "border-gray-100"
       }`}>
         {/* Produktbild */}

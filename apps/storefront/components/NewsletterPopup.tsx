@@ -130,7 +130,7 @@ function PopupShell({
       role="dialog"
       aria-modal="true"
       aria-label="Newsletter"
-      className="fixed bottom-6 right-6 z-50 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-5"
+      className="fixed bottom-6 right-6 z-50 w-72 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-xl border border-gray-100 p-5"
     >
       <button
         type="button"

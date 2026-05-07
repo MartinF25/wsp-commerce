@@ -9,6 +9,7 @@ import { SalesPopup } from "@/components/SalesPopup";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Footer } from "@/components/Footer";
 import { NewsletterPopup } from "@/components/NewsletterPopup";
+import { MobileNav } from "@/components/MobileNav";
 import "../globals.css";
 
 const sora = Sora({
@@ -70,7 +71,7 @@ export default async function LocaleLayout({
           </div>
 
           {/* ── Top-Navigation ── */}
-          <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+          <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
               <Link
                 href="/"
@@ -79,32 +80,44 @@ export default async function LocaleLayout({
                 Solarzaun &amp; SkyWind
               </Link>
 
-              <nav className="flex items-center gap-5">
-                <Link href="/solarzaun" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150 hidden sm:inline">
+              {/* Desktop-Navigation – ab lg sichtbar */}
+              <nav className="hidden lg:flex items-center gap-5">
+                <Link href="/solarzaun" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150">
                   {t("solarzaun")}
                 </Link>
-                <Link href="/skywind" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150 hidden md:inline">
+                <Link href="/skywind" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150">
                   {t("skywind")}
                 </Link>
-                <Link href="/kombiloesungen" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150 hidden lg:inline">
+                <Link href="/kombiloesungen" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150">
                   {t("kombiloesungen")}
                 </Link>
                 <Link href="/products" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150">
                   {t("products")}
                 </Link>
-                <Link href="/blog" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150 hidden sm:inline">
+                <Link href="/blog" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150">
                   {t("blog")}
                 </Link>
+              </nav>
 
+              {/* Rechte Seite: immer sichtbar */}
+              <div className="flex items-center gap-3">
                 <LanguageSwitcher />
-
                 <Link
                   href="/kontakt"
                   className="text-sm font-semibold text-white bg-brand-accent px-4 py-1.5 rounded-lg hover:bg-green-600 transition-colors duration-150"
                 >
                   {t("cta")}
                 </Link>
-              </nav>
+                <MobileNav
+                  labels={{
+                    solarzaun: t("solarzaun"),
+                    skywind: t("skywind"),
+                    kombiloesungen: t("kombiloesungen"),
+                    products: t("products"),
+                    blog: t("blog"),
+                  }}
+                />
+              </div>
             </div>
           </header>
 
