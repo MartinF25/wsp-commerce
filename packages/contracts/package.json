@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepare": "tsc",
     "dev": "tsc --watch",
     "type-check": "tsc --noEmit"
   },

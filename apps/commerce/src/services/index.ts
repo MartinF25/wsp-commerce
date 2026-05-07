@@ -6,6 +6,7 @@
 
 export { ProductService } from "./productService";
 export { CategoryService } from "./categoryService";
+export { BlogService } from "./blogService";
 
 export * from "../types";
 export * from "../utils/productUtils";

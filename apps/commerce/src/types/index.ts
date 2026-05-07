@@ -8,11 +8,17 @@ import type {
   Category,
   ProductType,
   ProductStatus,
+  BlogPost,
+  BlogPostTranslation,
+  BlogCategory,
+  BlogCategoryTranslation,
+  BlogTag,
+  BlogStatus,
 } from "@prisma/client";
 import type { SortBy } from "@wsp/contracts";
 
 // Re-export Prisma enums as domain types so consumers don't import @prisma/client directly.
-export type { ProductType, ProductStatus };
+export type { ProductType, ProductStatus, BlogStatus };
 
 /** ProductVariant with its locale-specific translations loaded. */
 export type VariantWithTranslations = ProductVariant & {
@@ -81,6 +87,22 @@ export interface PriceDisplay {
   /** ISO-String – nur wenn showCountdown true und sale_ends_at vorhanden. */
   saleEndsAt?: string;
 }
+
+// ─── Blog-Domain-Typen ────────────────────────────────────────────────────────
+
+export type BlogCategoryWithTranslations = BlogCategory & {
+  translations: BlogCategoryTranslation[];
+  _count?: { posts: number };
+};
+
+/** BlogPost vollständig geladen – Translations, Category, Tags. */
+export type BlogPostWithRelations = BlogPost & {
+  translations: BlogPostTranslation[];
+  category: BlogCategoryWithTranslations | null;
+  tags: { tag: BlogTag }[];
+};
+
+// ─── CatalogError ─────────────────────────────────────────────────────────────
 
 /**
  * Typed error for catalog domain operations.
