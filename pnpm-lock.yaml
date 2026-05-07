@@ -643,7 +643,7 @@ packages:
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
 
   '@wsp/contracts@file:packages/contracts/wsp-contracts-0.0.1.tgz':
-    resolution: {integrity: sha512-dEc6m9T+/HGWQKZC2LitB6MXK2vUai+GcBgNG91pPjN5vzLFSjwVzm0QI2ADGAHqvRJ1/qe58IBbexGfITbqfA==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
+    resolution: {integrity: sha512-fJy5nC0YrC7a5U04mjs4PXvjH8djlzL03og95CQAdWz90YOaVpfG3EYTU4XUxUGCBLd9Rz5Bx1Zw1RsvbGy+cw==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
     version: 0.0.1
 
   '@wsp/types@file:packages/types/wsp-types-0.0.1.tgz':
