@@ -153,18 +153,62 @@ Auf jeder Seite prüfen:
 
 ---
 
-## 8. SEO & Meta
+## 8. Blog-System (neu)
+
+### 8a. Smoke-Test-Script
+
+```bash
+# Gegen lokales Dev
+bash scripts/smoke-blog.sh
+
+# Gegen Staging
+COMMERCE_API_URL=https://<railway-url> \
+ADMIN_KEY=<key> \
+STOREFRONT_URL=https://<vercel-url> \
+bash scripts/smoke-blog.sh
+```
+
+Erwartet: `FAIL: 0`
+
+### 8b. Admin UI (manuell)
+
+| Seite | URL | Was prüfen |
+|---|---|---|
+| Blog-Posts Liste | `/blog` | Tabelle lädt, Status-Badges sichtbar |
+| Neuen Post anlegen | `/blog/new` | Formular öffnet, DE-Tab aktiv, Slug-Autogenierung funktioniert |
+| Post bearbeiten | `/blog/<id>` | Vorhandene Felder werden geladen, Speichern-Button aktiv |
+| Kategorien Liste | `/blog/categories` | Kategorien mit Sprachabdeckung (DE/EN/ES ✓/–) |
+| Kategorie bearbeiten | `/blog/categories/<id>` | Alle Locale-Tabs laden vorhandene Inhalte |
+| Tags | `/blog/tags` | Tag-Liste lädt, Erstellen-Formular sichtbar |
+
+### 8c. Storefront Blog (manuell)
+
+| Check | URL | Erwartung |
+|---|---|---|
+| Übersichtsseite DE | `/blog` | Post-Liste mit Cover-Bild, Kategorie-Filter-Tabs |
+| Übersichtsseite EN | `/en/blog` | Englische Texte (oder DE-Fallback-Banner) |
+| Detailseite | `/blog/<slug>` | Titel, Inhalt, Byline, Tags sichtbar |
+| Fallback-Banner | `/en/blog/<slug>` (nur DE-Post) | Amber-Banner „nicht auf Deutsch verfügbar" |
+| Locale-Links | Detailseite Footer | Links auf andere Sprachversionen dargestellt |
+| JSON-LD | DevTools → `<script type="application/ld+json">` | `@type: Article`, `headline`, `datePublished` vorhanden |
+
+---
+
+## 9. SEO & Meta
 
 | Check | Erwartung |
 |---|---|
 | Homepage `<title>` | Enthält "Solarzaun" und/oder "SkyWind" |
 | Produkt-Detailseite `<title>` | Produktname im Titel |
+| Blog-Detailseite `<title>` | Post-Titel im `<title>`, `og:title` gesetzt |
+| Blog hreflang | `<link rel="alternate" hreflang="de/en/es">` auf Detailseite vorhanden |
 | `/impressum` robots | `noindex` gesetzt (kein SEO-Traffic erwünscht) |
-| Sitemap | `/sitemap.xml` antwortet (kann leer sein in Staging) |
+| `/sitemap.xml` | Antwortet 200, enthält `/blog/<slug>`-Einträge mit `<xhtml:link>` alternates |
+| `/robots.txt` | Antwortet 200, enthält `Sitemap:`-Zeile |
 
 ---
 
-## 9. Bekannte Staging-Einschränkungen (kein Blocker)
+## 10. Bekannte Staging-Einschränkungen (kein Blocker)
 
 | Punkt | Beschreibung |
 |---|---|
@@ -172,11 +216,11 @@ Auf jeder Seite prüfen:
 | `n8nStatus: "failed"` in Firestore | Wenn kein n8n aktiv — Lead ist trotzdem gespeichert |
 | Seed-Daten statt echter Produkte | Preise und Texte sind Testdaten |
 | Impressum mit echten Daten | Bereits befüllt (WSP-Solarenergie, M. Fauerbach) |
-| `/blog` leer | Wenn keine Blog-Posts in DB — leere Liste ist OK |
+| `/blog` leer | Wenn keine Blog-Posts in DB — leere Liste ist OK; smoke-blog.sh legt Test-Post an und räumt ihn wieder auf |
 
 ---
 
-## 10. Code-Review-Befunde (vor Staging gefunden)
+## 11. Code-Review-Befunde (vor Staging gefunden)
 
 | Befund | Schwere | Handlung |
 |---|---|---|
@@ -188,7 +232,7 @@ Auf jeder Seite prüfen:
 
 ---
 
-## 11. Blocker für Production-Go-Live
+## 12. Blocker für Production-Go-Live
 
 Nach erfolgreichem Staging-Smoke-Test verbleiben für Production:
 
@@ -204,7 +248,7 @@ Nach erfolgreichem Staging-Smoke-Test verbleiben für Production:
 
 ---
 
-## 12. Empfohlener nächster Task
+## 13. Empfohlener nächster Task
 
 > **Produktdaten für Production vorbereiten** — echte Produkte (Solarzaun, SkyWind, Kombilösung)  
 > als `catalog-import.wsp.json` anlegen und mit `import-products.ts` in Staging einspielen.  
