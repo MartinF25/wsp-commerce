@@ -2,7 +2,8 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
-import { submitKontaktanfrage, ANFRAGEART_VALUES, PROJEKTART_VALUES, type LeadFormState } from "./actions";
+import { submitKontaktanfrage, type LeadFormState } from "./actions";
+import { ANFRAGEART_VALUES, PROJEKTART_VALUES } from "./constants";
 
 const INPUT_CLASS =
   "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-brand-text placeholder-brand-muted bg-white focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent transition-shadow duration-150";

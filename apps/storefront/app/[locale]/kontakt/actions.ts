@@ -3,25 +3,9 @@
 import { z } from "zod";
 import { getTranslations } from "next-intl/server";
 import { env } from "@/lib/env";
+import { ANFRAGEART_VALUES, PROJEKTART_VALUES } from "./constants";
 
-// ─── Zulässige Enum-Werte (müssen mit KontaktForm.tsx übereinstimmen) ────────
-
-export const ANFRAGEART_VALUES = [
-  "Privatprojekt",
-  "Gewerbeprojekt",
-  "Landwirtschaft / Hof",
-  "Partneranfrage",
-  "Händleranfrage",
-  "Montagepartnerschaft",
-  "Allgemeine Beratung",
-] as const;
-
-export const PROJEKTART_VALUES = [
-  "Solarzaun",
-  "SkyWind",
-  "Kombilösung",
-  "Beratung gewünscht",
-] as const;
+export { ANFRAGEART_VALUES, PROJEKTART_VALUES };
 
 // ─── Validierungsschema ───────────────────────────────────────────────────────
 
