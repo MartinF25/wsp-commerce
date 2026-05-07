@@ -244,7 +244,13 @@
     "interest_h2": "Interested?",
     "interest_sub": "Get free, no-obligation advice – we'll find the right solution for your project.",
     "breadcrumb_home": "Home",
-    "breadcrumb_blog": "Blog"
+    "breadcrumb_blog": "Blog",
+    "reading_time": "{count} min read",
+    "read_more": "Read more →",
+    "all_categories": "All topics",
+    "category_label": "Category",
+    "featured_label": "Featured",
+    "fallback_notice": "This post is not yet available in English."
   },
   "kontakt": {
     "breadcrumb_home": "Home",

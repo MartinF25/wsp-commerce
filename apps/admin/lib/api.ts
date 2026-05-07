@@ -110,6 +110,90 @@ export interface ProductDetail {
   updated_at: string;
 }
 
+// ─── Blog-Typen ───────────────────────────────────────────────────────────────
+
+export type BlogStatus = "draft" | "published" | "archived";
+
+export interface BlogTag {
+  id: string;
+  slug: string;
+  name: string;
+  postCount?: number;
+}
+
+export interface BlogPostTranslation {
+  locale: Locale;
+  title: string;
+  excerpt: string;
+  content: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  ogTitle: string | null;
+  ogDescription: string | null;
+  updatedAt: string;
+}
+
+export interface BlogPostSummary {
+  id: string;
+  slug: string;
+  status: BlogStatus;
+  featured: boolean;
+  coverImageUrl: string | null;
+  publishedAt: string | null;
+  readingTimeMinutes: number | null;
+  authorName: string | null;
+  category: { id: string; slug: string } | null;
+  tags: { slug: string; name: string }[];
+  titleDe: string;
+  availableLocales: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BlogPostDetail {
+  id: string;
+  slug: string;
+  status: BlogStatus;
+  coverImageUrl: string | null;
+  coverImageAlt: string | null;
+  publishedAt: string | null;
+  readingTimeMinutes: number | null;
+  featured: boolean;
+  categoryId: string | null;
+  authorName: string | null;
+  category: { id: string; slug: string } | null;
+  tags: { id: string; slug: string; name: string }[];
+  translations: BlogPostTranslation[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BlogCategoryTranslation {
+  id: string;
+  category_id: string;
+  locale: string;
+  name: string;
+  description: string | null;
+}
+
+export interface BlogCategorySummary {
+  id: string;
+  slug: string;
+  sortOrder: number;
+  isActive: boolean;
+  nameDe: string;
+  postCount: number;
+  availableLocales: string[];
+}
+
+export interface BlogCategoryDetail {
+  id: string;
+  slug: string;
+  sort_order: number;
+  is_active: boolean;
+  translations: BlogCategoryTranslation[];
+}
+
 // ─── HTTP-Helfer ──────────────────────────────────────────────────────────────
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -213,6 +297,44 @@ export const api = {
       }
     ) => request<Variant>(`/variants/${varId}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (varId: string) => request<void>(`/variants/${varId}`, { method: "DELETE" }),
+  },
+
+  blog: {
+    posts: {
+      list: (params?: { status?: BlogStatus; limit?: number; offset?: number }) => {
+        const qs = new URLSearchParams();
+        if (params?.status) qs.set("status", params.status);
+        if (params?.limit != null) qs.set("limit", String(params.limit));
+        if (params?.offset != null) qs.set("offset", String(params.offset));
+        const q = qs.toString();
+        return request<BlogPostSummary[]>(`/blog/posts${q ? `?${q}` : ""}`);
+      },
+      get: (id: string) => request<BlogPostDetail>(`/blog/posts/${id}`),
+      create: (data: unknown) =>
+        request<BlogPostDetail>("/blog/posts", { method: "POST", body: JSON.stringify(data) }),
+      update: (id: string, data: unknown) =>
+        request<BlogPostDetail>(`/blog/posts/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+      delete: (id: string) => request<void>(`/blog/posts/${id}`, { method: "DELETE" }),
+      setStatus: (id: string, status: BlogStatus) =>
+        request<{ id: string; status: BlogStatus; publishedAt: string | null }>(`/blog/posts/${id}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status }),
+        }),
+    },
+    categories: {
+      list: () => request<BlogCategorySummary[]>("/blog/categories"),
+      get: (id: string) => request<BlogCategoryDetail>(`/blog/categories/${id}`),
+      create: (data: unknown) =>
+        request<BlogCategoryDetail>("/blog/categories", { method: "POST", body: JSON.stringify(data) }),
+      update: (id: string, data: unknown) =>
+        request<BlogCategoryDetail>(`/blog/categories/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    },
+    tags: {
+      list: () => request<BlogTag[]>("/blog/tags"),
+      create: (data: { slug: string; name: string }) =>
+        request<BlogTag>("/blog/tags", { method: "POST", body: JSON.stringify(data) }),
+      delete: (id: string) => request<void>(`/blog/tags/${id}`, { method: "DELETE" }),
+    },
   },
 
   documents: {

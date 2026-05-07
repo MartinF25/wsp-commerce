@@ -244,7 +244,13 @@
     "interest_h2": "¿Interesado?",
     "interest_sub": "Obtén asesoría gratuita y sin compromiso – encontraremos la solución adecuada para tu proyecto.",
     "breadcrumb_home": "Inicio",
-    "breadcrumb_blog": "Blog"
+    "breadcrumb_blog": "Blog",
+    "reading_time": "{count} min de lectura",
+    "read_more": "Leer más →",
+    "all_categories": "Todos los temas",
+    "category_label": "Categoría",
+    "featured_label": "Destacado",
+    "fallback_notice": "Este artículo aún no está disponible en español."
   },
   "kontakt": {
     "breadcrumb_home": "Inicio",

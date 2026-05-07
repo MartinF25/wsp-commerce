@@ -244,7 +244,13 @@
     "interest_h2": "Interesse geweckt?",
     "interest_sub": "Lassen Sie sich kostenlos und unverbindlich beraten – wir finden die passende Lösung für Ihr Projekt.",
     "breadcrumb_home": "Start",
-    "breadcrumb_blog": "Blog"
+    "breadcrumb_blog": "Blog",
+    "reading_time": "{count} Min. Lesezeit",
+    "read_more": "Weiterlesen →",
+    "all_categories": "Alle Themen",
+    "category_label": "Kategorie",
+    "featured_label": "Empfohlen",
+    "fallback_notice": "Dieser Beitrag ist noch nicht auf Deutsch verfügbar."
   },
   "kontakt": {
     "breadcrumb_home": "Start",

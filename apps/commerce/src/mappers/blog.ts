@@ -21,18 +21,11 @@ export function toBlogCategorySummary(
 
 // ─── BlogPostSummary-Mapper ───────────────────────────────────────────────────
 
-/**
- * Wandelt einen vollständig geladenen BlogPost in den öffentlichen BlogPostSummary um.
- * Niemals rohe Prisma-Objekte zurückgeben — immer durch diesen Mapper.
- */
-export function toBlogPostSummary(post: BlogPostWithRelations, locale: string): BlogPostSummary {
-  const resolved = resolveLocale(post.translations, locale);
-
-  // Sollte durch Admin-Pflichtvalidierung nie auftreten, aber defensiv abfangen.
-  if (!resolved) {
-    throw new Error(`Keine DE-Übersetzung für Blogpost ${post.slug}`);
-  }
-
+function buildPostSummary(
+  post: BlogPostWithRelations,
+  locale: string,
+  resolved: { value: { title: string; excerpt: string }; fallbackUsed: boolean }
+): BlogPostSummary {
   const categoryResolved = post.category
     ? resolveLocale(post.category.translations, locale)
     : null;
@@ -62,22 +55,20 @@ export function toBlogPostSummary(post: BlogPostWithRelations, locale: string): 
   };
 }
 
+export function toBlogPostSummary(post: BlogPostWithRelations, locale: string): BlogPostSummary {
+  const resolved = resolveLocale(post.translations, locale);
+  if (!resolved) throw new Error(`Keine DE-Übersetzung für Blogpost ${post.slug}`);
+  return buildPostSummary(post, locale, resolved);
+}
+
 // ─── BlogPostDetail-Mapper ────────────────────────────────────────────────────
 
-/**
- * Wandelt einen vollständig geladenen BlogPost in den öffentlichen BlogPostDetail um.
- * availableLocales steuert hreflang-Tags: nur Locales mit echter Übersetzung werden gelistet.
- */
 export function toBlogPostDetail(post: BlogPostWithRelations, locale: string): BlogPostDetail {
-  const summary = toBlogPostSummary(post, locale);
   const resolved = resolveLocale(post.translations, locale);
-
-  if (!resolved) {
-    throw new Error(`Keine DE-Übersetzung für Blogpost ${post.slug}`);
-  }
+  if (!resolved) throw new Error(`Keine DE-Übersetzung für Blogpost ${post.slug}`);
 
   return {
-    ...summary,
+    ...buildPostSummary(post, locale, resolved),
     content: resolved.value.content,
     metaTitle: resolved.value.meta_title,
     metaDescription: resolved.value.meta_description,

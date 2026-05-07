@@ -942,9 +942,7 @@ adminRoutes.get("/blog/posts", async (c) => {
           ? { id: p.category.id, slug: p.category.slug }
           : null,
         tags: p.tags.map((pt) => ({ slug: pt.tag.slug, name: pt.tag.name })),
-        // DE-Titel für Listendarstellung im Admin
         titleDe: de?.title ?? p.slug,
-        // Vorhandene Locales als Übersicht
         availableLocales: p.translations.map((t) => t.locale),
         createdAt: p.created_at.toISOString(),
         updatedAt: p.updated_at.toISOString(),
@@ -1079,33 +1077,34 @@ adminRoutes.patch("/blog/posts/:id", async (c) => {
     if (conflict) throw new CatalogError("SLUG_CONFLICT", 409, `Slug bereits vergeben: ${data.slug}`);
   }
 
-  // Translations upsert (@@unique[post_id, locale])
   if (data.translations) {
-    for (const t of data.translations) {
-      await prisma.blogPostTranslation.upsert({
-        where: { post_id_locale: { post_id: id, locale: t.locale } },
-        create: {
-          post_id: id,
-          locale: t.locale,
-          title: t.title,
-          excerpt: t.excerpt,
-          content: t.content,
-          meta_title: t.metaTitle ?? null,
-          meta_description: t.metaDescription ?? null,
-          og_title: t.ogTitle ?? null,
-          og_description: t.ogDescription ?? null,
-        },
-        update: {
-          title: t.title,
-          excerpt: t.excerpt,
-          content: t.content,
-          meta_title: t.metaTitle ?? null,
-          meta_description: t.metaDescription ?? null,
-          og_title: t.ogTitle ?? null,
-          og_description: t.ogDescription ?? null,
-        },
-      });
-    }
+    await Promise.all(
+      data.translations.map((t) =>
+        prisma.blogPostTranslation.upsert({
+          where: { post_id_locale: { post_id: id, locale: t.locale } },
+          create: {
+            post_id: id,
+            locale: t.locale,
+            title: t.title,
+            excerpt: t.excerpt,
+            content: t.content,
+            meta_title: t.metaTitle ?? null,
+            meta_description: t.metaDescription ?? null,
+            og_title: t.ogTitle ?? null,
+            og_description: t.ogDescription ?? null,
+          },
+          update: {
+            title: t.title,
+            excerpt: t.excerpt,
+            content: t.content,
+            meta_title: t.metaTitle ?? null,
+            meta_description: t.metaDescription ?? null,
+            og_title: t.ogTitle ?? null,
+            og_description: t.ogDescription ?? null,
+          },
+        })
+      )
+    );
   }
 
   // Tags: Replace-All (deleteMany + createMany) in einer Transaction
@@ -1118,13 +1117,12 @@ adminRoutes.patch("/blog/posts/:id", async (c) => {
     ]);
   }
 
-  // published_at nur setzen wenn Status auf published wechselt und noch nicht gesetzt
-  const newPublishedAt =
-    data.status === "published" && !existing.published_at
-      ? new Date()
-      : data.publishedAt
-        ? new Date(data.publishedAt)
-        : undefined;
+  let newPublishedAt: Date | undefined;
+  if (data.status === "published" && !existing.published_at) {
+    newPublishedAt = new Date();
+  } else if (data.publishedAt) {
+    newPublishedAt = new Date(data.publishedAt);
+  }
 
   const updated = await prisma.blogPost.update({
     where: { id },
@@ -1237,6 +1235,20 @@ adminRoutes.get("/blog/categories", async (c) => {
   });
 });
 
+adminRoutes.get("/blog/categories/:id", async (c) => {
+  const id = c.req.param("id");
+  const prisma = getPrismaClient();
+
+  const category = await prisma.blogCategory.findUnique({
+    where: { id },
+    include: { translations: { orderBy: { locale: "asc" } } },
+  });
+
+  if (!category) throw new CatalogError("CATEGORY_NOT_FOUND", 404, `Blog-Kategorie nicht gefunden: ${id}`);
+
+  return c.json({ data: category });
+});
+
 adminRoutes.post("/blog/categories", async (c) => {
   let body: unknown;
   try {
@@ -1310,13 +1322,15 @@ adminRoutes.patch("/blog/categories/:id", async (c) => {
   }
 
   if (data.translations) {
-    for (const t of data.translations) {
-      await prisma.blogCategoryTranslation.upsert({
-        where: { category_id_locale: { category_id: id, locale: t.locale } },
-        create: { category_id: id, locale: t.locale, name: t.name, description: t.description ?? null },
-        update: { name: t.name, description: t.description ?? null },
-      });
-    }
+    await Promise.all(
+      data.translations.map((t) =>
+        prisma.blogCategoryTranslation.upsert({
+          where: { category_id_locale: { category_id: id, locale: t.locale } },
+          create: { category_id: id, locale: t.locale, name: t.name, description: t.description ?? null },
+          update: { name: t.name, description: t.description ?? null },
+        })
+      )
+    );
   }
 
   const updated = await prisma.blogCategory.update({

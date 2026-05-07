@@ -1,27 +1,59 @@
+/**
+ * Fetcher-Layer für die Blog-API.
+ *
+ * Typen spiegeln den BlogPostSummary / BlogPostDetail Contract wider,
+ * ohne direkt von @wsp/contracts zur Laufzeit abzuhängen (tgz-Paket).
+ * Alle Felder sind camelCase – analog zur Commerce-API-Antwort.
+ */
+
 import { env } from "./env";
+
+// ─── Typen ────────────────────────────────────────────────────────────────────
+
+export type BlogLocale = "de" | "en" | "es";
+
+export type BlogTagSummary = {
+  slug: string;
+  name: string;
+};
+
+export type BlogCategoryRef = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
+export type BlogCategorySummary = BlogCategoryRef & {
+  description: string | null;
+  postCount: number;
+};
 
 export type BlogPostSummary = {
   id: string;
   slug: string;
+  status: "draft" | "published" | "archived";
+  coverImageUrl: string | null;
+  coverImageAlt: string | null;
+  publishedAt: string | null;
+  readingTimeMinutes: number | null;
+  featured: boolean;
+  authorName: string | null;
+  locale: BlogLocale;
+  fallbackUsed: boolean;
   title: string;
-  excerpt: string | null;
-  cover_image: string | null;
-  author: string | null;
-  tags: string[];
-  published_at: string | null;
-  created_at: string;
+  excerpt: string;
+  category: BlogCategoryRef | null;
+  tags: BlogTagSummary[];
 };
 
 export type BlogPostDetail = BlogPostSummary & {
   content: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  ogTitle: string | null;
+  ogDescription: string | null;
+  availableLocales: BlogLocale[];
 };
-
-type ApiListResponse<T> = {
-  data: T[];
-  meta: { total: number; limit: number; offset: number };
-};
-
-type ApiDetailResponse<T> = { data: T };
 
 export type BlogListResult = {
   items: BlogPostSummary[];
@@ -30,16 +62,44 @@ export type BlogListResult = {
   offset: number;
 };
 
+// ─── Interne Envelope-Typen ───────────────────────────────────────────────────
+
+type ApiListResponse<T> = {
+  data: T[];
+  meta: { total: number; limit: number; offset: number };
+};
+
+type ApiDetailResponse<T> = { data: T };
+
+// ─── Query-Builder ────────────────────────────────────────────────────────────
+
+function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== "") p.set(k, String(v));
+  }
+  const s = p.toString();
+  return s ? `?${s}` : "";
+}
+
+// ─── Fetcher ──────────────────────────────────────────────────────────────────
+
 export async function fetchBlogPosts(opts?: {
+  locale?: BlogLocale;
   limit?: number;
   offset?: number;
+  category?: string;
   tag?: string;
+  featured?: boolean;
 }): Promise<BlogListResult> {
-  const params = new URLSearchParams();
-  if (opts?.limit) params.set("limit", String(opts.limit));
-  if (opts?.offset) params.set("offset", String(opts.offset));
-  if (opts?.tag) params.set("tag", opts.tag);
-  const qs = params.toString() ? `?${params}` : "";
+  const qs = buildQuery({
+    locale: opts?.locale ?? "de",
+    limit: opts?.limit,
+    offset: opts?.offset,
+    category: opts?.category,
+    tag: opts?.tag,
+    featured: opts?.featured,
+  });
 
   const res = await fetch(`${env.COMMERCE_API_URL}/api/blog/posts${qs}`, {
     next: { revalidate: 60 },
@@ -48,12 +108,21 @@ export async function fetchBlogPosts(opts?: {
   if (!res.ok) throw new Error(`fetchBlogPosts: ${res.status}`);
 
   const body = (await res.json()) as ApiListResponse<BlogPostSummary>;
-  return { items: body.data, total: body.meta.total, limit: body.meta.limit, offset: body.meta.offset };
+  return {
+    items: body.data,
+    total: body.meta.total,
+    limit: body.meta.limit,
+    offset: body.meta.offset,
+  };
 }
 
-export async function fetchBlogPost(slug: string): Promise<BlogPostDetail | null> {
+export async function fetchBlogPost(
+  slug: string,
+  locale?: BlogLocale
+): Promise<BlogPostDetail | null> {
+  const qs = locale ? `?locale=${locale}` : "";
   const res = await fetch(
-    `${env.COMMERCE_API_URL}/api/blog/posts/${encodeURIComponent(slug)}`,
+    `${env.COMMERCE_API_URL}/api/blog/posts/${encodeURIComponent(slug)}${qs}`,
     { next: { revalidate: 60 } }
   );
 
@@ -61,5 +130,17 @@ export async function fetchBlogPost(slug: string): Promise<BlogPostDetail | null
   if (!res.ok) throw new Error(`fetchBlogPost: ${res.status}`);
 
   const body = (await res.json()) as ApiDetailResponse<BlogPostDetail>;
+  return body.data;
+}
+
+export async function fetchBlogCategories(locale?: BlogLocale): Promise<BlogCategorySummary[]> {
+  const qs = locale ? `?locale=${locale}` : "";
+  const res = await fetch(`${env.COMMERCE_API_URL}/api/blog/categories${qs}`, {
+    next: { revalidate: 300 },
+  });
+
+  if (!res.ok) return [];
+
+  const body = (await res.json()) as { data: BlogCategorySummary[] };
   return body.data;
 }
