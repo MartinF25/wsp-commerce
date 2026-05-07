@@ -36,6 +36,13 @@ import type { MiddlewareHandler } from "hono";
 import { Prisma } from "@prisma/client";
 import { getPrismaClient } from "../../lib/prisma";
 import { CatalogError } from "../../types";
+import { BlogService } from "../../services/blogService";
+import {
+  BlogPostInputSchema,
+  BlogPostStatusInputSchema,
+  BlogCategoryInputSchema,
+  BlogTagInputSchema,
+} from "@wsp/contracts";
 
 // ─── Hilfsfunktionen ─────────────────────────────────────────────────────────
 
@@ -904,6 +911,485 @@ adminRoutes.delete("/documents/:docId", async (c) => {
   if (!existing) throw new CatalogError("DOCUMENT_NOT_FOUND", 404, `Dokument nicht gefunden: ${docId}`);
 
   await prisma.productDocument.delete({ where: { id: docId } });
+  return new Response(null, { status: 204 });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BLOG – BEITRÄGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+adminRoutes.get("/blog/posts", async (c) => {
+  const limit = Math.min(Number(c.req.query("limit") ?? 50), 100);
+  const offset = Number(c.req.query("offset") ?? 0);
+  const status = c.req.query("status") as "draft" | "published" | "archived" | undefined;
+  const category = c.req.query("category");
+
+  const [posts, total] = await BlogService.listAllPosts({ limit, offset, status, categorySlug: category });
+
+  return c.json({
+    data: posts.map((p) => {
+      const de = p.translations.find((t) => t.locale === "de");
+      return {
+        id: p.id,
+        slug: p.slug,
+        status: p.status,
+        featured: p.featured,
+        coverImageUrl: p.cover_image_url,
+        publishedAt: p.published_at?.toISOString() ?? null,
+        readingTimeMinutes: p.reading_time_minutes,
+        authorName: p.author_name,
+        category: p.category
+          ? { id: p.category.id, slug: p.category.slug }
+          : null,
+        tags: p.tags.map((pt) => ({ slug: pt.tag.slug, name: pt.tag.name })),
+        // DE-Titel für Listendarstellung im Admin
+        titleDe: de?.title ?? p.slug,
+        // Vorhandene Locales als Übersicht
+        availableLocales: p.translations.map((t) => t.locale),
+        createdAt: p.created_at.toISOString(),
+        updatedAt: p.updated_at.toISOString(),
+      };
+    }),
+    meta: { total, limit, offset },
+  });
+});
+
+adminRoutes.post("/blog/posts", async (c) => {
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
+  }
+
+  const parsed = BlogPostInputSchema.safeParse(body);
+  if (!parsed.success) {
+    throw new CatalogError(
+      "INVALID_BODY",
+      422,
+      parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")
+    );
+  }
+
+  const data = parsed.data;
+  const prisma = getPrismaClient();
+
+  const existing = await prisma.blogPost.findUnique({ where: { slug: data.slug }, select: { id: true } });
+  if (existing) throw new CatalogError("SLUG_CONFLICT", 409, `Slug bereits vergeben: ${data.slug}`);
+
+  const post = await prisma.blogPost.create({
+    data: {
+      slug: data.slug,
+      status: data.status,
+      cover_image_url: data.coverImageUrl ?? null,
+      cover_image_alt: data.coverImageAlt ?? null,
+      reading_time_minutes: data.readingTimeMinutes ?? null,
+      featured: data.featured,
+      category_id: data.categoryId ?? null,
+      author_name: data.authorName ?? null,
+      published_at: data.status === "published" ? (data.publishedAt ? new Date(data.publishedAt) : new Date()) : null,
+      translations: {
+        create: data.translations.map((t) => ({
+          locale: t.locale,
+          title: t.title,
+          excerpt: t.excerpt,
+          content: t.content,
+          meta_title: t.metaTitle ?? null,
+          meta_description: t.metaDescription ?? null,
+          og_title: t.ogTitle ?? null,
+          og_description: t.ogDescription ?? null,
+        })),
+      },
+      tags: {
+        create: data.tagIds.map((tagId) => ({ tag_id: tagId })),
+      },
+    },
+    include: {
+      translations: { orderBy: { locale: "asc" } },
+      category: { include: { translations: true } },
+      tags: { include: { tag: true } },
+    },
+  });
+
+  return c.json({ data: post }, 201);
+});
+
+adminRoutes.get("/blog/posts/:id", async (c) => {
+  const id = c.req.param("id");
+  const post = await BlogService.requirePostById(id);
+
+  return c.json({
+    data: {
+      id: post.id,
+      slug: post.slug,
+      status: post.status,
+      coverImageUrl: post.cover_image_url,
+      coverImageAlt: post.cover_image_alt,
+      publishedAt: post.published_at?.toISOString() ?? null,
+      readingTimeMinutes: post.reading_time_minutes,
+      featured: post.featured,
+      categoryId: post.category_id,
+      authorName: post.author_name,
+      category: post.category ? { id: post.category.id, slug: post.category.slug } : null,
+      tags: post.tags.map((pt) => ({ id: pt.tag.id, slug: pt.tag.slug, name: pt.tag.name })),
+      translations: post.translations.map((t) => ({
+        locale: t.locale,
+        title: t.title,
+        excerpt: t.excerpt,
+        content: t.content,
+        metaTitle: t.meta_title,
+        metaDescription: t.meta_description,
+        ogTitle: t.og_title,
+        ogDescription: t.og_description,
+        updatedAt: t.updated_at.toISOString(),
+      })),
+      createdAt: post.created_at.toISOString(),
+      updatedAt: post.updated_at.toISOString(),
+    },
+  });
+});
+
+adminRoutes.patch("/blog/posts/:id", async (c) => {
+  const id = c.req.param("id");
+  const prisma = getPrismaClient();
+
+  const existing = await BlogService.requirePostById(id);
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
+  }
+
+  const parsed = BlogPostInputSchema.partial().safeParse(body);
+  if (!parsed.success) {
+    throw new CatalogError(
+      "INVALID_BODY",
+      422,
+      parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")
+    );
+  }
+
+  const data = parsed.data;
+
+  // Slug-Konflikt nur prüfen wenn Slug sich ändert
+  if (data.slug && data.slug !== existing.slug) {
+    const conflict = await prisma.blogPost.findUnique({ where: { slug: data.slug }, select: { id: true } });
+    if (conflict) throw new CatalogError("SLUG_CONFLICT", 409, `Slug bereits vergeben: ${data.slug}`);
+  }
+
+  // Translations upsert (@@unique[post_id, locale])
+  if (data.translations) {
+    for (const t of data.translations) {
+      await prisma.blogPostTranslation.upsert({
+        where: { post_id_locale: { post_id: id, locale: t.locale } },
+        create: {
+          post_id: id,
+          locale: t.locale,
+          title: t.title,
+          excerpt: t.excerpt,
+          content: t.content,
+          meta_title: t.metaTitle ?? null,
+          meta_description: t.metaDescription ?? null,
+          og_title: t.ogTitle ?? null,
+          og_description: t.ogDescription ?? null,
+        },
+        update: {
+          title: t.title,
+          excerpt: t.excerpt,
+          content: t.content,
+          meta_title: t.metaTitle ?? null,
+          meta_description: t.metaDescription ?? null,
+          og_title: t.ogTitle ?? null,
+          og_description: t.ogDescription ?? null,
+        },
+      });
+    }
+  }
+
+  // Tags: Replace-All (deleteMany + createMany) in einer Transaction
+  if (data.tagIds !== undefined) {
+    await prisma.$transaction([
+      prisma.blogPostTag.deleteMany({ where: { post_id: id } }),
+      prisma.blogPostTag.createMany({
+        data: data.tagIds.map((tagId) => ({ post_id: id, tag_id: tagId })),
+      }),
+    ]);
+  }
+
+  // published_at nur setzen wenn Status auf published wechselt und noch nicht gesetzt
+  const newPublishedAt =
+    data.status === "published" && !existing.published_at
+      ? new Date()
+      : data.publishedAt
+        ? new Date(data.publishedAt)
+        : undefined;
+
+  const updated = await prisma.blogPost.update({
+    where: { id },
+    data: {
+      ...(data.slug && { slug: data.slug }),
+      ...(data.status && { status: data.status }),
+      ...(data.coverImageUrl !== undefined && { cover_image_url: data.coverImageUrl ?? null }),
+      ...(data.coverImageAlt !== undefined && { cover_image_alt: data.coverImageAlt ?? null }),
+      ...(data.readingTimeMinutes !== undefined && { reading_time_minutes: data.readingTimeMinutes ?? null }),
+      ...(data.featured !== undefined && { featured: data.featured }),
+      ...(data.categoryId !== undefined && { category_id: data.categoryId ?? null }),
+      ...(data.authorName !== undefined && { author_name: data.authorName ?? null }),
+      ...(newPublishedAt && { published_at: newPublishedAt }),
+    },
+    include: {
+      translations: { orderBy: { locale: "asc" } },
+      category: { include: { translations: true } },
+      tags: { include: { tag: true } },
+    },
+  });
+
+  return c.json({ data: updated });
+});
+
+adminRoutes.patch("/blog/posts/:id/status", async (c) => {
+  const id = c.req.param("id");
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
+  }
+
+  const parsed = BlogPostStatusInputSchema.safeParse(body);
+  if (!parsed.success) {
+    throw new CatalogError(
+      "INVALID_STATUS",
+      422,
+      `Ungültiger Status. Erlaubt: draft | published | archived.`
+    );
+  }
+
+  const { status } = parsed.data;
+  const prisma = getPrismaClient();
+
+  const existing = await BlogService.requirePostById(id);
+
+  const updated = await prisma.blogPost.update({
+    where: { id },
+    data: {
+      status,
+      // published_at beim ersten Veröffentlichen automatisch setzen
+      ...(status === "published" && !existing.published_at && { published_at: new Date() }),
+    },
+    select: {
+      id: true,
+      slug: true,
+      status: true,
+      published_at: true,
+      updated_at: true,
+      translations: { where: { locale: "de" }, select: { title: true } },
+    },
+  });
+
+  console.info(`[admin] Blog-Post-Status: ${updated.slug} ${existing.status} → ${updated.status}`);
+
+  return c.json({
+    data: {
+      id: updated.id,
+      slug: updated.slug,
+      status: updated.status,
+      publishedAt: updated.published_at?.toISOString() ?? null,
+      titleDe: updated.translations[0]?.title ?? updated.slug,
+      updatedAt: updated.updated_at.toISOString(),
+    },
+  });
+});
+
+adminRoutes.delete("/blog/posts/:id", async (c) => {
+  const id = c.req.param("id");
+  const prisma = getPrismaClient();
+
+  await BlogService.requirePostById(id); // wirft 404 wenn nicht vorhanden
+
+  await prisma.blogPost.delete({ where: { id } });
+  return new Response(null, { status: 204 });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BLOG – KATEGORIEN
+// ═══════════════════════════════════════════════════════════════════════════════
+
+adminRoutes.get("/blog/categories", async (c) => {
+  const categories = await BlogService.listAllCategories();
+
+  return c.json({
+    data: categories.map((cat) => {
+      const de = cat.translations.find((t) => t.locale === "de");
+      return {
+        id: cat.id,
+        slug: cat.slug,
+        sortOrder: cat.sort_order,
+        isActive: cat.is_active,
+        nameDe: de?.name ?? cat.slug,
+        postCount: cat._count?.posts ?? 0,
+        availableLocales: cat.translations.map((t) => t.locale),
+      };
+    }),
+  });
+});
+
+adminRoutes.post("/blog/categories", async (c) => {
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
+  }
+
+  const parsed = BlogCategoryInputSchema.safeParse(body);
+  if (!parsed.success) {
+    throw new CatalogError(
+      "INVALID_BODY",
+      422,
+      parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")
+    );
+  }
+
+  const data = parsed.data;
+  const prisma = getPrismaClient();
+
+  const existing = await prisma.blogCategory.findUnique({ where: { slug: data.slug }, select: { id: true } });
+  if (existing) throw new CatalogError("SLUG_CONFLICT", 409, `Slug bereits vergeben: ${data.slug}`);
+
+  const category = await prisma.blogCategory.create({
+    data: {
+      slug: data.slug,
+      sort_order: data.sortOrder,
+      is_active: data.isActive,
+      translations: {
+        create: data.translations.map((t) => ({
+          locale: t.locale,
+          name: t.name,
+          description: t.description ?? null,
+        })),
+      },
+    },
+    include: { translations: { orderBy: { locale: "asc" } } },
+  });
+
+  return c.json({ data: category }, 201);
+});
+
+adminRoutes.patch("/blog/categories/:id", async (c) => {
+  const id = c.req.param("id");
+  const prisma = getPrismaClient();
+
+  const existing = await prisma.blogCategory.findUnique({ where: { id }, select: { id: true, slug: true } });
+  if (!existing) throw new CatalogError("CATEGORY_NOT_FOUND", 404, `Blog-Kategorie nicht gefunden: ${id}`);
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
+  }
+
+  const parsed = BlogCategoryInputSchema.partial().safeParse(body);
+  if (!parsed.success) {
+    throw new CatalogError(
+      "INVALID_BODY",
+      422,
+      parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")
+    );
+  }
+
+  const data = parsed.data;
+
+  if (data.slug && data.slug !== existing.slug) {
+    const conflict = await prisma.blogCategory.findUnique({ where: { slug: data.slug }, select: { id: true } });
+    if (conflict) throw new CatalogError("SLUG_CONFLICT", 409, `Slug bereits vergeben: ${data.slug}`);
+  }
+
+  if (data.translations) {
+    for (const t of data.translations) {
+      await prisma.blogCategoryTranslation.upsert({
+        where: { category_id_locale: { category_id: id, locale: t.locale } },
+        create: { category_id: id, locale: t.locale, name: t.name, description: t.description ?? null },
+        update: { name: t.name, description: t.description ?? null },
+      });
+    }
+  }
+
+  const updated = await prisma.blogCategory.update({
+    where: { id },
+    data: {
+      ...(data.slug && { slug: data.slug }),
+      ...(data.sortOrder !== undefined && { sort_order: data.sortOrder }),
+      ...(data.isActive !== undefined && { is_active: data.isActive }),
+    },
+    include: { translations: { orderBy: { locale: "asc" } } },
+  });
+
+  return c.json({ data: updated });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BLOG – TAGS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+adminRoutes.get("/blog/tags", async (c) => {
+  const prisma = getPrismaClient();
+
+  const tags = await prisma.blogTag.findMany({
+    orderBy: { name: "asc" },
+    include: { _count: { select: { posts: true } } },
+  });
+
+  return c.json({
+    data: tags.map((t) => ({
+      id: t.id,
+      slug: t.slug,
+      name: t.name,
+      postCount: t._count.posts,
+    })),
+  });
+});
+
+adminRoutes.post("/blog/tags", async (c) => {
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
+  }
+
+  const parsed = BlogTagInputSchema.safeParse(body);
+  if (!parsed.success) {
+    throw new CatalogError(
+      "INVALID_BODY",
+      422,
+      parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")
+    );
+  }
+
+  const { slug, name } = parsed.data;
+  const prisma = getPrismaClient();
+
+  const existing = await prisma.blogTag.findUnique({ where: { slug }, select: { id: true } });
+  if (existing) throw new CatalogError("SLUG_CONFLICT", 409, `Tag-Slug bereits vergeben: ${slug}`);
+
+  const tag = await prisma.blogTag.create({ data: { slug, name } });
+
+  return c.json({ data: tag }, 201);
+});
+
+adminRoutes.delete("/blog/tags/:id", async (c) => {
+  const id = c.req.param("id");
+  const prisma = getPrismaClient();
+
+  const existing = await prisma.blogTag.findUnique({ where: { id }, select: { id: true } });
+  if (!existing) throw new CatalogError("TAG_NOT_FOUND", 404, `Tag nicht gefunden: ${id}`);
+
+  await prisma.blogTag.delete({ where: { id } });
   return new Response(null, { status: 204 });
 });
 
