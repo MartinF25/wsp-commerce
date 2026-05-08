@@ -18,10 +18,10 @@ export const BlogPostTranslationInputSchema = z.object({
   title: z.string().min(1, "Titel ist Pflichtfeld").max(200),
   excerpt: z.string().min(1, "Auszug ist Pflichtfeld").max(500),
   content: z.string().min(1, "Inhalt ist Pflichtfeld"),
-  metaTitle: z.string().max(70).optional(),
-  metaDescription: z.string().max(160).optional(),
-  ogTitle: z.string().max(70).optional(),
-  ogDescription: z.string().max(200).optional(),
+  metaTitle: z.string().max(70).nullish(),
+  metaDescription: z.string().max(160).nullish(),
+  ogTitle: z.string().max(70).nullish(),
+  ogDescription: z.string().max(200).nullish(),
 });
 export type BlogPostTranslationInput = z.infer<typeof BlogPostTranslationInputSchema>;
 
@@ -44,13 +44,13 @@ export const BlogPostInputSchema = z.object({
     .max(200)
     .regex(/^[a-z0-9-]+$/, "Slug darf nur Kleinbuchstaben, Ziffern und Bindestriche enthalten"),
   status: BlogStatusSchema.default("draft"),
-  coverImageUrl: z.string().url("Ungültige URL").optional(),
-  coverImageAlt: z.string().max(200).optional(),
-  publishedAt: z.string().datetime().optional(),
-  readingTimeMinutes: z.number().int().min(1).max(60).optional(),
+  coverImageUrl: z.string().url("Ungültige URL").nullish(),
+  coverImageAlt: z.string().max(200).nullish(),
+  publishedAt: z.string().datetime().nullish(),
+  readingTimeMinutes: z.number().int().min(1).max(60).nullish(),
   featured: z.boolean().default(false),
-  categoryId: z.string().uuid().optional(),
-  authorName: z.string().max(100).optional(),
+  categoryId: z.string().uuid().nullish(),
+  authorName: z.string().max(100).nullish(),
   tagIds: z.array(z.string().uuid()).default([]),
   translations: z
     .array(BlogPostTranslationInputSchema)
@@ -88,7 +88,7 @@ export const BlogCategoryInputSchema = z.object({
       z.object({
         locale: LocaleSchema,
         name: z.string().min(1).max(100),
-        description: z.string().max(500).optional(),
+        description: z.string().max(500).nullish(),
       })
     )
     .min(1, "Mindestens eine Übersetzung erforderlich")
