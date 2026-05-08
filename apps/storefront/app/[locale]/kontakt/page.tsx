@@ -286,10 +286,10 @@ export default async function KontaktPage({ params }: Props) {
                   href={`/blog/${post.slug}`}
                   className="group flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow duration-200"
                 >
-                  {post.cover_image ? (
+                  {post.coverImageUrl ? (
                     <div className="aspect-[16/9] overflow-hidden">
                       <img
-                        src={post.cover_image}
+                        src={post.coverImageUrl}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
