@@ -50,16 +50,16 @@ export default async function HomePage({
   return (
     <main>
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden min-h-[88vh] flex items-center">
+      <section className="relative overflow-hidden min-h-[60vh] sm:min-h-[88vh] flex items-center">
         <Image src="/images/hero-bg.png" alt="Modernes Haus mit SkyWind" fill className="object-cover object-center" priority sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
-        <div className="relative w-full flex items-center min-h-[88vh]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 w-full">
+        <div className="relative w-full flex items-center min-h-[60vh] sm:min-h-[88vh]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-20 w-full">
             <div className="max-w-xl">
-              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-4">
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3 sm:mb-4">
                 {t("hero_eyebrow")}
               </p>
-              <h1 className="font-display text-4xl sm:text-5xl font-bold text-white leading-tight mb-5">
+              <h1 className="font-display text-3xl sm:text-5xl font-bold text-white leading-tight mb-4 sm:mb-5">
                 {t("hero_h1_line1")}<br />
                 <span className="text-brand-accent">{t("hero_h1_line2")}</span>
               </h1>
@@ -100,9 +100,9 @@ export default async function HomePage({
       </div>
 
       {/* ── Products ── */}
-      <section className="py-16 sm:py-20">
+      <section className="py-10 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-10">
+          <div className="flex items-end justify-between mb-6 sm:mb-10">
             <div>
               <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("products_eyebrow")}</p>
               <h2 className="font-display text-3xl font-bold text-brand-text">{t("products_h2")}</h2>
