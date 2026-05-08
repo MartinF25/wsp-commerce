@@ -305,8 +305,8 @@ export default async function KontaktPage({ params }: Props) {
                     {post.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         {post.tags.slice(0, 2).map((tag) => (
-                          <span key={tag} className="text-xs font-medium text-brand-accent bg-green-50 px-2 py-0.5 rounded-full">
-                            {tag}
+                          <span key={tag.slug} className="text-xs font-medium text-brand-accent bg-green-50 px-2 py-0.5 rounded-full">
+                            {tag.name}
                           </span>
                         ))}
                       </div>
@@ -315,7 +315,7 @@ export default async function KontaktPage({ params }: Props) {
                       {post.title}
                     </h3>
                     <div className="flex items-center justify-between text-xs text-brand-muted mt-3 pt-3 border-t border-gray-100">
-                      <span>{post.published_at ? formatDate(post.published_at, params.locale) : ""}</span>
+                      <span>{post.publishedAt ? formatDate(post.publishedAt, params.locale) : ""}</span>
                       <span className="font-medium text-brand-accent group-hover:underline">{t("marketing_blog_read")} →</span>
                     </div>
                   </div>
