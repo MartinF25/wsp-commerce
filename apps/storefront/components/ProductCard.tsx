@@ -151,12 +151,16 @@ export function ProductCard({ product, showCategory = true }: Props) {
           <ProductImagePlaceholder categorySlug={product.category?.slug ?? null} />
         )}
 
-        {/* Angebots-Badge */}
-        {priceDisplay.isOnSale && (
+        {/* Affiliate-Badge — schließt sich mit Angebots-Badge aus */}
+        {product.product_type === "affiliate_external" ? (
+          <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full shadow-sm">
+            {t("affiliate_badge")}
+          </span>
+        ) : priceDisplay.isOnSale ? (
           <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-white bg-orange-500 px-2.5 py-1 rounded-full shadow-sm">
             {priceDisplay.saleLabel ?? "Angebot"}
           </span>
-        )}
+        ) : null}
       </Link>
 
       {/* Inhalt */}
@@ -213,12 +217,18 @@ export function ProductCard({ product, showCategory = true }: Props) {
         <div className="mt-auto flex items-center justify-between gap-3">
           <span
             className={
-              product.purchasable
+              product.product_type === "affiliate_external"
+                ? "inline-block text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full whitespace-nowrap"
+                : product.purchasable
                 ? "inline-block text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full whitespace-nowrap"
                 : "inline-block text-xs font-medium text-brand-muted bg-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap"
             }
           >
-            {product.purchasable ? t("available") : t("on_request")}
+            {product.product_type === "affiliate_external"
+              ? t("affiliate_badge")
+              : product.purchasable
+              ? t("available")
+              : t("on_request")}
           </span>
 
           <Link

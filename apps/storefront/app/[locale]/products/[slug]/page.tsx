@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { fetchProduct, fetchProducts } from "@/lib/catalog";
 import { VariantSelector } from "@/components/VariantSelector";
 import { PaymentOptions } from "@/components/PaymentOptions";
+import { AffiliateButton } from "@/components/AffiliateButton";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductImageGallery } from "@/components/ProductImageGallery";
 import { ShareButtons } from "@/components/ShareButtons";
@@ -86,7 +87,9 @@ export default async function ProductDetailPage({ params }: Props) {
             url: `${STOREFRONT_URL}/products/${p.slug}`,
             ...(p.images[0] && { image: p.images[0].url }),
             ...(p.category && { category: p.category.name }),
-            offers: p.priceDisplay.minCents
+            // Affiliate-Produkte: kein eigenes Preisangebot in JSON-LD –
+            // Preis und Verfügbarkeit liegen bei Amazon, nicht bei uns.
+            offers: p.priceDisplay.minCents && p.product_type !== "affiliate_external"
               ? {
                   "@type": "Offer",
                   priceCurrency: p.priceDisplay.currencyCode,
@@ -187,20 +190,30 @@ export default async function ProductDetailPage({ params }: Props) {
               />
             )}
 
-            <VariantSelector
-              variants={p.variants}
-              productType={p.product_type}
-              productPriceDisplay={p.priceDisplay}
-            />
+            {p.product_type !== "affiliate_external" && (
+              <VariantSelector
+                variants={p.variants}
+                productType={p.product_type}
+                productPriceDisplay={p.priceDisplay}
+              />
+            )}
 
-            {p.purchasable && (
+            {p.product_type === "affiliate_external" && p.affiliateEnabled && p.affiliateUrl ? (
+              <AffiliateButton
+                productId={p.id}
+                affiliateUrl={p.affiliateUrl}
+                buttonLabel={p.affiliateButtonLabel ?? t("affiliate_cta")}
+                disclosureText={p.affiliateDisclosure ?? t("affiliate_disclosure")}
+                locale={params.locale}
+              />
+            ) : p.product_type !== "affiliate_external" && p.purchasable ? (
               <div className="mb-6">
                 <PaymentOptions
                   paypalUrl={p.paypal_url}
                   stripeUrl={p.stripe_url}
                 />
               </div>
-            )}
+            ) : null}
 
             {deliveryHint && (
               <p className="text-xs text-brand-muted mb-6">{deliveryHint}</p>
@@ -215,12 +228,14 @@ export default async function ProductDetailPage({ params }: Props) {
               ))}
             </div>
 
-            <div className="flex items-center gap-2 mb-6">
-              <span className={`inline-block w-2 h-2 rounded-full ${p.purchasable ? "bg-emerald-500" : "bg-amber-400"}`} />
-              <span className="text-sm text-brand-muted">
-                {p.purchasable ? t("available") : t("on_request")}
-              </span>
-            </div>
+            {p.product_type !== "affiliate_external" && (
+              <div className="flex items-center gap-2 mb-6">
+                <span className={`inline-block w-2 h-2 rounded-full ${p.purchasable ? "bg-emerald-500" : "bg-amber-400"}`} />
+                <span className="text-sm text-brand-muted">
+                  {p.purchasable ? t("available") : t("on_request")}
+                </span>
+              </div>
+            )}
 
             <ShareButtons
               url={`${STOREFRONT_URL}/products/${p.slug}`}
@@ -325,6 +340,7 @@ function getDeliveryHint(product_type: ProductType, t: any): string | null {
     case "direct_purchase": return t("delivery_direct");
     case "configurable": return t("delivery_configurable");
     case "inquiry_only": return t("delivery_inquiry");
+    case "affiliate_external": return null;
   }
 }
 
@@ -334,6 +350,7 @@ function getTrustBadges(product_type: ProductType, t: any): string[] {
     case "direct_purchase": return t.raw("trust_direct") as string[];
     case "configurable": return t.raw("trust_configurable") as string[];
     case "inquiry_only": return t.raw("trust_inquiry") as string[];
+    case "affiliate_external": return t.raw("trust_affiliate_external") as string[];
   }
 }
 

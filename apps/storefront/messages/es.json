@@ -162,6 +162,7 @@
     "browse_categories": "Explorar por categoría →",
     "view_product": "Ver →",
     "view_aria": "Ver {name}",
+    "affiliate_badge": "Enlace de afiliado",
     "empty_state_text": "Aún no hay productos activos publicados en esta categoría.",
     "empty_cta_primary": "Consultar proyecto",
     "empty_cta_secondary": "Ver todos los productos",
@@ -230,7 +231,12 @@
     "spec_power": "Potencia",
     "spec_rotor": "Diámetro del rotor",
     "spec_target": "Adecuado para",
-    "spec_note": "Nota"
+    "spec_note": "Nota",
+    "affiliate_badge": "Enlace de afiliado",
+    "affiliate_cta": "Ver en Amazon",
+    "affiliate_disclosure": "Enlace de afiliado: podemos ganar una comisión si realizas una compra a través de este enlace. Como asociado de Amazon, ganamos con las compras que cumplan los requisitos.",
+    "trust_affiliate_external": ["Enlace de afiliado a Amazon", "Claramente indicado como afiliado", "Sin pago propio"],
+    "delivery_affiliate_external": ""
   },
   "blog": {
     "meta_title": "Blog – Energía Renovable | Valla Solar & SkyWind",

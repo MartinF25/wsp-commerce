@@ -162,6 +162,7 @@
     "browse_categories": "Browse by category →",
     "view_product": "View →",
     "view_aria": "View {name}",
+    "affiliate_badge": "Partner link",
     "empty_state_text": "No active products have been published in this category yet.",
     "empty_cta_primary": "Request Project",
     "empty_cta_secondary": "View All Products",
@@ -230,7 +231,12 @@
     "spec_power": "Power",
     "spec_rotor": "Rotor Diameter",
     "spec_target": "Suitable for",
-    "spec_note": "Note"
+    "spec_note": "Note",
+    "affiliate_badge": "Partner link",
+    "affiliate_cta": "View on Amazon",
+    "affiliate_disclosure": "Affiliate link: We may earn a commission if you make a purchase through this link. As an Amazon Associate we earn from qualifying purchases.",
+    "trust_affiliate_external": ["Partner link to Amazon", "Clearly disclosed as affiliate", "No own checkout"],
+    "delivery_affiliate_external": ""
   },
   "blog": {
     "meta_title": "Blog – Renewable Energy | Solar Fence & SkyWind",
