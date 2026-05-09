@@ -14,6 +14,7 @@ const TYPE_LABELS: Record<ProductType, string> = {
   direct_purchase: "Direktkauf",
   configurable: "Konfigurierbar",
   inquiry_only: "Nur Anfrage",
+  affiliate_external: "Affiliate (extern)",
 };
 
 export default async function ProductsPage() {

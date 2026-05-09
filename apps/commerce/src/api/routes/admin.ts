@@ -53,7 +53,7 @@ function isValidStatus(value: unknown): value is ProductStatusValue {
   return typeof value === "string" && (VALID_STATUSES as readonly string[]).includes(value);
 }
 
-const VALID_PRODUCT_TYPES = ["direct_purchase", "configurable", "inquiry_only"] as const;
+const VALID_PRODUCT_TYPES = ["direct_purchase", "configurable", "inquiry_only", "affiliate_external"] as const;
 type ProductTypeValue = (typeof VALID_PRODUCT_TYPES)[number];
 
 function isValidProductType(value: unknown): value is ProductTypeValue {
@@ -448,6 +448,24 @@ adminRoutes.put("/products/:id", async (c) => {
   }
   if ("show_countdown" in b) {
     productData.show_countdown = typeof b.show_countdown === "boolean" ? b.show_countdown : false;
+  }
+  if ("affiliate_provider" in b) {
+    productData.affiliate_provider = strOrNull(b.affiliate_provider);
+  }
+  if ("affiliate_url" in b) {
+    productData.affiliate_url = strOrNull(b.affiliate_url);
+  }
+  if ("affiliate_asin" in b) {
+    productData.affiliate_asin = strOrNull(b.affiliate_asin);
+  }
+  if ("affiliate_button_label" in b) {
+    productData.affiliate_button_label = strOrNull(b.affiliate_button_label);
+  }
+  if ("affiliate_disclosure" in b) {
+    productData.affiliate_disclosure = strOrNull(b.affiliate_disclosure);
+  }
+  if ("affiliate_enabled" in b) {
+    productData.affiliate_enabled = typeof b.affiliate_enabled === "boolean" ? b.affiliate_enabled : false;
   }
 
   // Translations upsert

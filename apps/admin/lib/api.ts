@@ -10,7 +10,7 @@ const ADMIN_KEY = process.env.ADMIN_API_KEY ?? "";
 
 export type Locale = "de" | "en" | "es";
 
-export type ProductType = "direct_purchase" | "configurable" | "inquiry_only";
+export type ProductType = "direct_purchase" | "configurable" | "inquiry_only" | "affiliate_external";
 export type ProductStatus = "draft" | "active" | "archived";
 
 export interface Category {
@@ -105,6 +105,12 @@ export interface ProductDetail {
   sale_ends_at: string | null;
   sale_label: string | null;
   show_countdown: boolean;
+  affiliate_provider: string | null;
+  affiliate_url: string | null;
+  affiliate_asin: string | null;
+  affiliate_button_label: string | null;
+  affiliate_disclosure: string | null;
+  affiliate_enabled: boolean;
   translations: Translation[];
   variants: Variant[];
   images: ProductImage[];
@@ -263,6 +269,12 @@ export const api = {
         sale_ends_at?: string | null;
         sale_label?: string | null;
         show_countdown?: boolean;
+        affiliate_provider?: string | null;
+        affiliate_url?: string | null;
+        affiliate_asin?: string | null;
+        affiliate_button_label?: string | null;
+        affiliate_disclosure?: string | null;
+        affiliate_enabled?: boolean;
         translations?: Partial<Record<Locale, Partial<Translation>>>;
       }
     ) => request<ProductDetail>(`/products/${id}`, { method: "PUT", body: JSON.stringify(data) }),

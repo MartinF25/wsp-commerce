@@ -67,6 +67,14 @@ export default function ProductForm({ product, categories }: Props) {
   const [paypalUrl, setPaypalUrl] = useState(product?.paypal_url ?? "");
   const [stripeUrl, setStripeUrl] = useState(product?.stripe_url ?? "");
 
+  // ── Affiliate
+  const [affiliateProvider, setAffiliateProvider] = useState(product?.affiliate_provider ?? "amazon");
+  const [affiliateUrl, setAffiliateUrl] = useState(product?.affiliate_url ?? "");
+  const [affiliateAsin, setAffiliateAsin] = useState(product?.affiliate_asin ?? "");
+  const [affiliateButtonLabel, setAffiliateButtonLabel] = useState(product?.affiliate_button_label ?? "");
+  const [affiliateDisclosure, setAffiliateDisclosure] = useState(product?.affiliate_disclosure ?? "");
+  const [affiliateEnabled, setAffiliateEnabled] = useState(product?.affiliate_enabled ?? false);
+
   // ── Angebot
   const [saleStartsAt, setSaleStartsAt] = useState(
     product?.sale_starts_at ? product.sale_starts_at.slice(0, 16) : ""
@@ -172,6 +180,12 @@ export default function ProductForm({ product, categories }: Props) {
         sale_ends_at: saleEndsAt.trim() ? new Date(saleEndsAt).toISOString() : null,
         sale_label: saleLabel.trim() || null,
         show_countdown: showCountdown && saleEndsAt.trim() !== "",
+        affiliate_provider: affiliateProvider.trim() || null,
+        affiliate_url: affiliateUrl.trim() || null,
+        affiliate_asin: affiliateAsin.trim() || null,
+        affiliate_button_label: affiliateButtonLabel.trim() || null,
+        affiliate_disclosure: affiliateDisclosure.trim() || null,
+        affiliate_enabled: affiliateEnabled,
         translations: buildTranslationsPayload(),
       };
 
@@ -458,6 +472,7 @@ export default function ProductForm({ product, categories }: Props) {
               <option value="inquiry_only">Nur Anfrage</option>
               <option value="direct_purchase">Direktkauf</option>
               <option value="configurable">Konfigurierbar</option>
+              <option value="affiliate_external">Affiliate (extern)</option>
             </select>
           </div>
           <div>
@@ -520,6 +535,91 @@ export default function ProductForm({ product, categories }: Props) {
           </div>
         </div>
       </div>
+
+      {/* ── Affiliate ── */}
+      {productType === "affiliate_external" && (
+        <div className="form-card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ marginTop: 0 }}>Affiliate-Link</div>
+          <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+            Produkt wird mit einem externen Partnerlink angezeigt. Kein eigener Checkout.
+            Der Link muss den korrekten Amazon-Partnertag enthalten.
+          </p>
+
+          {status === "active" && (!affiliateUrl.trim() || !affiliateEnabled) && (
+            <div className="alert alert-error" style={{ marginBottom: 12 }}>
+              Produkt ist aktiv, aber der Affiliate-Link ist leer oder deaktiviert.
+              Bitte Link eintragen und aktivieren, oder Status auf Entwurf setzen.
+            </div>
+          )}
+
+          <div className="form-row form-row-2">
+            <div>
+              <label>Affiliate-Link <span className="req">*</span></label>
+              <input
+                type="url"
+                value={affiliateUrl}
+                onChange={(e) => setAffiliateUrl(e.target.value)}
+                placeholder="https://www.amazon.de/dp/...?tag=PARTNER-21"
+              />
+            </div>
+            <div>
+              <label>Anbieter <span className="opt">(optional)</span></label>
+              <input
+                type="text"
+                value={affiliateProvider}
+                onChange={(e) => setAffiliateProvider(e.target.value)}
+                placeholder="amazon"
+              />
+            </div>
+          </div>
+
+          <div className="form-row form-row-2">
+            <div>
+              <label>ASIN <span className="opt">(optional, für spätere Statistiken)</span></label>
+              <input
+                type="text"
+                value={affiliateAsin}
+                onChange={(e) => setAffiliateAsin(e.target.value)}
+                placeholder="B09XYZABC1"
+              />
+            </div>
+            <div>
+              <label>Button-Label <span className="opt">(optional)</span></label>
+              <input
+                type="text"
+                value={affiliateButtonLabel}
+                onChange={(e) => setAffiliateButtonLabel(e.target.value)}
+                placeholder="Bei Amazon ansehen"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div>
+              <label>Disclosure-Text <span className="opt">(optional, überschreibt Standard)</span></label>
+              <input
+                type="text"
+                value={affiliateDisclosure}
+                onChange={(e) => setAffiliateDisclosure(e.target.value)}
+                placeholder="Partnerlink: Beim Kauf erhalten wir ggf. eine Provision."
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={affiliateEnabled}
+                  onChange={(e) => setAffiliateEnabled(e.target.checked)}
+                />
+                Affiliate-Link aktiv (Produkt wird mit Partnerlink angezeigt)
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Angebot ── */}
       <div className="form-card" style={{ marginBottom: 16 }}>
