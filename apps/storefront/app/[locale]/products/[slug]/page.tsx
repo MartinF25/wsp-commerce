@@ -24,21 +24,29 @@ const CATEGORY_IMAGES: Record<string, { src: string; alt: string }> = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const product = await fetchProduct(params.slug);
+  const product = await fetchProduct(params.slug, params.locale);
   if (!product) return { title: "Not found" };
 
-  const title = `${product.name} – Solarzaun & SkyWind`;
-  const description = product.short_description ?? product.description ?? "";
-  const url = `${STOREFRONT_URL}/products/${params.slug}`;
+  const title = product.meta_title ?? `${product.name} – Solarzaun & SkyWind`;
+  const description = product.meta_description ?? product.short_description ?? product.description ?? "";
+  const canonicalUrl = `${STOREFRONT_URL}/products/${params.slug}`;
   const image = product.images[0]?.url ?? null;
 
   return {
     title,
     description,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        de: `${STOREFRONT_URL}/products/${params.slug}`,
+        en: `${STOREFRONT_URL}/en/products/${params.slug}`,
+        es: `${STOREFRONT_URL}/es/products/${params.slug}`,
+      },
+    },
     openGraph: {
       title,
       description,
-      url,
+      url: canonicalUrl,
       type: "website",
       ...(image && { images: [{ url: image, alt: product.name }] }),
     },

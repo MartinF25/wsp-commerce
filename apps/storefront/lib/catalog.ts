@@ -89,8 +89,8 @@ export async function fetchProducts(
  * Gibt null zurück wenn das Produkt nicht gefunden wird (404).
  * Wirft bei anderen HTTP-Fehlern.
  */
-export async function fetchProduct(slug: string): Promise<ProductDetail | null> {
-  const url = `${env.COMMERCE_API_URL}/api/catalog/products/${encodeURIComponent(slug)}`;
+export async function fetchProduct(slug: string, locale = "de"): Promise<ProductDetail | null> {
+  const url = `${env.COMMERCE_API_URL}/api/catalog/products/${encodeURIComponent(slug)}?locale=${locale}`;
 
   const res = await fetch(url, { cache: "no-store" });
 

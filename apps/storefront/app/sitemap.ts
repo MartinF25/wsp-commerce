@@ -23,6 +23,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: new Date(),
           changeFrequency: "weekly" as const,
           priority: 0.8,
+          alternates: {
+            languages: {
+              de: `${BASE}/products/${p.slug}`,
+              en: `${BASE}/en/products/${p.slug}`,
+              es: `${BASE}/es/products/${p.slug}`,
+            },
+          },
         }))
       : [];
 
