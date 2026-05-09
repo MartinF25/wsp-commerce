@@ -52,6 +52,7 @@ function buildPostSummary(
         }
       : null,
     tags: post.tags.map((pt) => ({ slug: pt.tag.slug, name: pt.tag.name })),
+    availableLocales: post.translations.map((t) => t.locale as Locale),
   };
 }
 

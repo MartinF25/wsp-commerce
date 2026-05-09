@@ -44,6 +44,7 @@ export type BlogPostSummary = {
   excerpt: string;
   category: BlogCategoryRef | null;
   tags: BlogTagSummary[];
+  availableLocales: BlogLocale[];
 };
 
 export type BlogPostDetail = BlogPostSummary & {

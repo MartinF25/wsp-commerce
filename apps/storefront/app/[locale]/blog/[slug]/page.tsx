@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Link } from "@/i18n/navigation";
 import { fetchBlogPost } from "@/lib/blog";
 import type { BlogLocale } from "@/lib/blog";
@@ -177,10 +179,9 @@ export default async function BlogPostPage({ params }: Props) {
         )}
 
         {/* ── Body ── */}
-        <div
-          className="prose prose-lg max-w-none text-brand-text prose-headings:font-display prose-headings:text-brand-text prose-a:text-brand-accent prose-strong:text-brand-text prose-img:rounded-xl"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        <div className="prose prose-lg max-w-none text-brand-text prose-headings:font-display prose-headings:text-brand-text prose-a:text-brand-accent prose-strong:text-brand-text prose-img:rounded-xl">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
+        </div>
 
         {/* ── Available in other locales ── */}
         {post.availableLocales.length > 1 && (

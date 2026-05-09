@@ -87,7 +87,11 @@
     "cta_h2_line2": "mit einem Gespräch.",
     "cta_sub": "Schildern Sie uns Ihre Idee. Wir zeigen Ihnen die passende Lösung – individuell und ohne Standardversprechen.",
     "cta_primary": "Beratung anfragen",
-    "cta_secondary": "Produkte ansehen"
+    "cta_secondary": "Produkte ansehen",
+    "blog_eyebrow": "Wissen & Ratgeber",
+    "blog_h2": "Aus unserem Blog.",
+    "blog_all": "Alle Beiträge →",
+    "blog_read_more": "Weiterlesen →"
   },
   "skywind": {
     "meta_title": "SkyWind – Kleinwindanlagen für private und gewerbliche Standorte",

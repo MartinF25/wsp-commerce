@@ -3,6 +3,8 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { fetchProducts } from "@/lib/catalog";
+import { fetchBlogPosts } from "@/lib/blog";
+import type { BlogPostSummary } from "@/lib/blog";
 import type { Locale } from "@/i18n/routing";
 import type { ProductSummary, CategorySummary } from "@wsp/types";
 import { OfferCountdown } from "@/components/storefront/offer-countdown";
@@ -20,6 +22,19 @@ export default async function HomePage({
     products = result.items;
   } catch {
     // show page anyway
+  }
+
+  let blogPosts: BlogPostSummary[] = [];
+  try {
+    const blogResult = await fetchBlogPosts({ locale: params.locale as "de" | "en" | "es", limit: 3, featured: true });
+    if (blogResult.items.length === 0) {
+      const fallback = await fetchBlogPosts({ locale: params.locale as "de" | "en" | "es", limit: 3 });
+      blogPosts = fallback.items;
+    } else {
+      blogPosts = blogResult.items;
+    }
+  } catch {
+    // show page without blog section
   }
 
   // Kategorien aus Produkten ableiten — kein separater API-Call nötig
@@ -194,6 +209,31 @@ export default async function HomePage({
         </div>
       </section>
 
+      {/* ── Blog Teaser ── */}
+      {blogPosts.length > 0 && (
+        <section className="py-16 sm:py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-end justify-between mb-8 sm:mb-10">
+              <div>
+                <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("blog_eyebrow")}</p>
+                <h2 className="font-display text-3xl font-bold text-brand-text">{t("blog_h2")}</h2>
+              </div>
+              <Link href="/blog" className="text-sm font-semibold text-brand-muted hover:text-brand-accent transition-colors duration-150 hidden sm:block">
+                {t("blog_all")}
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blogPosts.map((post) => (
+                <BlogTeaserCard key={post.id} post={post} readMoreLabel={t("blog_read_more")} />
+              ))}
+            </div>
+            <div className="mt-6 sm:hidden">
+              <Link href="/blog" className="text-sm font-semibold text-brand-muted hover:text-brand-accent">{t("blog_all")}</Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Contact CTA ── */}
       <section className="bg-brand-text py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -212,6 +252,44 @@ export default async function HomePage({
         </div>
       </section>
     </main>
+  );
+}
+
+// ─── Blog Teaser Card ─────────────────────────────────────────────────────────
+
+function BlogTeaserCard({ post, readMoreLabel }: { post: BlogPostSummary; readMoreLabel: string }) {
+  return (
+    <article className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden hover:shadow-md transition-shadow duration-200 group">
+      {post.coverImageUrl && (
+        <Link href={`/blog/${post.slug}`} className="block">
+          <div className="relative w-full h-44 overflow-hidden bg-gray-50">
+            <Image
+              src={post.coverImageUrl}
+              alt={post.coverImageAlt ?? post.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          </div>
+        </Link>
+      )}
+      <div className="p-5 flex flex-col gap-2 flex-1">
+        {post.category && (
+          <p className="text-xs font-medium text-brand-accent uppercase tracking-widest">{post.category.name}</p>
+        )}
+        <h3 className="font-display font-semibold text-base text-brand-text leading-snug">
+          <Link href={`/blog/${post.slug}`} className="hover:text-brand-accent transition-colors duration-150 line-clamp-2">
+            {post.title}
+          </Link>
+        </h3>
+        <p className="text-sm text-brand-muted leading-relaxed line-clamp-2 flex-1">{post.excerpt}</p>
+        <div className="mt-auto pt-3">
+          <Link href={`/blog/${post.slug}`} className="text-sm font-semibold text-brand-accent hover:text-green-700 transition-colors duration-150">
+            {readMoreLabel}
+          </Link>
+        </div>
+      </div>
+    </article>
   );
 }
 

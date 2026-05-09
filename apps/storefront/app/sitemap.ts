@@ -38,19 +38,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const blogUrls: MetadataRoute.Sitemap =
     blogResult.status === "fulfilled"
-      ? blogResult.value.items.map((p) => ({
-          url: localeUrl("de", `/blog/${p.slug}`),
-          lastModified: p.publishedAt ? new Date(p.publishedAt) : new Date(),
-          changeFrequency: "monthly" as const,
-          priority: 0.7,
-          alternates: {
-            languages: {
-              de: localeUrl("de", `/blog/${p.slug}`),
-              en: localeUrl("en", `/blog/${p.slug}`),
-              es: localeUrl("es", `/blog/${p.slug}`),
-            },
-          },
-        }))
+      ? blogResult.value.items.map((p) => {
+          const languages: Record<string, string> = {};
+          for (const loc of p.availableLocales) {
+            languages[loc] = localeUrl(loc, `/blog/${p.slug}`);
+          }
+          return {
+            url: localeUrl("de", `/blog/${p.slug}`),
+            lastModified: p.publishedAt ? new Date(p.publishedAt) : new Date(),
+            changeFrequency: "monthly" as const,
+            priority: 0.7,
+            alternates: { languages },
+          };
+        })
       : [];
 
   return [

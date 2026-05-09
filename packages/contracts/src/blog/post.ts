@@ -35,7 +35,7 @@ export type BlogCategorySummary = z.infer<typeof BlogCategorySummarySchema>;
  * - Kein SEO-Felder (nur für Detailseite relevant)
  * - locale: tatsächlich gelieferte Sprache (kann von der angefragten abweichen)
  * - fallbackUsed: true wenn EN/ES fehlte und auf DE zurückgefallen wurde
- * - availableLocales fehlt hier bewusst (nur auf Detailseite für hreflang nötig)
+ * - availableLocales: vorhandene Sprachversionen (für Sitemap-hreflang und Locale-Switcher)
  */
 export const BlogPostSummarySchema = z.object({
   id: z.string().uuid(),
@@ -56,6 +56,8 @@ export const BlogPostSummarySchema = z.object({
   // Relationen
   category: BlogCategorySummarySchema.pick({ id: true, slug: true, name: true }).nullable(),
   tags: z.array(BlogTagSummarySchema),
+  // Verfügbare Sprachversionen
+  availableLocales: z.array(LocaleSchema),
 });
 export type BlogPostSummary = z.infer<typeof BlogPostSummarySchema>;
 
