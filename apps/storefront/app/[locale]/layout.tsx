@@ -38,6 +38,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "home" });
   return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000"),
     title: t("meta_title"),
     description: t("meta_description"),
   };
