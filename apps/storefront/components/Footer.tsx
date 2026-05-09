@@ -112,6 +112,11 @@ export function Footer() {
           <p className="text-xs text-gray-600">{t("made_in")}</p>
         </div>
 
+        {/* Affiliate-Disclosure */}
+        <p className="mt-4 text-xs text-gray-600 leading-relaxed">
+          {t("affiliate_notice")}
+        </p>
+
       </div>
     </footer>
   );

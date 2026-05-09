@@ -7,7 +7,8 @@
  *   1. Kontaktformular → Firestore (Firebase) → n8n
  *   2. Hosting (Vercel Inc.)
  *   3. Schriftarten (next/font – lokal ausgeliefert, kein Google-Tracking)
- *   4. Keine Cookies / kein Tracking-Script aktuell eingebunden
+ *   4. Affiliate-Links (Amazon-Partnerprogramm) – anonyme Klickzählung
+ *   5. Keine Cookies / kein Tracking-Script (außer s.o.)
  *
  * Nicht abgedeckt (ggf. bei späterer Einführung ergänzen):
  *   - Google Analytics / Matomo / Plausible
@@ -46,7 +47,7 @@ export default function DatenschutzPage() {
           </h1>
           <p className="text-sm text-brand-muted mb-12">
             Informationen gemäß Art. 13 und 14 der Datenschutz-Grundverordnung
-            (DSGVO) · Stand: April 2026
+            (DSGVO) · Stand: Mai 2026
           </p>
 
           {/* ── 1. Verantwortliche Stelle ─────────────────────────────────────── */}
@@ -240,15 +241,87 @@ export default function DatenschutzPage() {
               erforderlich sind.
             </p>
             <p className="text-sm text-brand-muted leading-relaxed">
-              Sollte zu einem späteren Zeitpunkt ein Analyse- oder
-              Tracking-Dienst eingesetzt werden, wird diese Datenschutzerklärung
-              entsprechend aktualisiert und ggf. ein Cookie-Consent-Banner
-              implementiert.
+              Eine cookiefreie, anonyme Klickzählung für Affiliate-Links (ohne
+              Personenbezug) ist in Abschnitt 8 beschrieben.
             </p>
           </Section>
 
-          {/* ── 8. Ihre Rechte ───────────────────────────────────────────────── */}
-          <Section title="8. Ihre Rechte als betroffene Person">
+          {/* ── 8. Affiliate-Links ───────────────────────────────────────────── */}
+          <Section title="8. Affiliate-Links und anonyme Klickzählung">
+            <p className="text-sm text-brand-muted leading-relaxed mb-3">
+              Einige Produkte auf dieser Website werden als sogenannte
+              Affiliate-Links zu Amazon.de dargestellt. Das bedeutet: Wenn Sie
+              auf einen solchen Link klicken und anschließend bei Amazon einkaufen,
+              erhalten wir ggf. eine Provision. Für Sie entstehen dabei{" "}
+              <strong className="text-brand-text font-medium">keine zusätzlichen Kosten</strong>.
+              Alle Affiliate-Links sind auf der Website deutlich als
+              „Partnerlink" gekennzeichnet.
+            </p>
+
+            <Subsection title="Anonyme Klickzählung">
+              <p className="text-sm text-brand-muted leading-relaxed mb-3">
+                Beim Klick auf einen Affiliate-Link erfassen wir intern einen
+                anonymen Klick-Datensatz. Dieser dient ausschließlich dazu,
+                nachzuvollziehen, welche Partnerprodukte auf Interesse stoßen.
+              </p>
+              <p className="text-sm text-brand-muted leading-relaxed mb-2">
+                <strong className="text-brand-text font-medium">Gespeicherte Daten:</strong>
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm text-brand-muted mb-3">
+                <li>Zeitstempel des Klicks</li>
+                <li>URL-Pfad der Seite, von der der Klick kam (z. B. <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">/products/solarzaun-pro</code>)</li>
+                <li>Spracheinstellung der Sitzung (de / en / es)</li>
+              </ul>
+              <p className="text-sm text-brand-muted leading-relaxed mb-2">
+                <strong className="text-brand-text font-medium">Ausdrücklich nicht gespeichert:</strong>
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm text-brand-muted">
+                <li>IP-Adresse</li>
+                <li>Browser- oder Geräte-Fingerprint</li>
+                <li>Cookies oder sonstige Identifikatoren</li>
+                <li>Personenbezogene Daten jeglicher Art</li>
+              </ul>
+            </Subsection>
+
+            <Subsection title="Rechtsgrundlage">
+              <p className="text-sm text-brand-muted leading-relaxed">
+                Die Speicherung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f
+                DSGVO (berechtigtes Interesse). Unser berechtigtes Interesse
+                besteht darin, das Nutzerinteresse an Partnerprodukten
+                aggregiert auszuwerten, um das Angebot zu verbessern. Da
+                keinerlei Personenbezug besteht, überwiegen die Interessen
+                der betroffenen Personen nicht.
+              </p>
+            </Subsection>
+
+            <Subsection title="Speicherdauer">
+              <p className="text-sm text-brand-muted leading-relaxed">
+                Die anonymen Klick-Datensätze werden nach 24 Monaten automatisch
+                gelöscht.
+              </p>
+            </Subsection>
+
+            <Subsection title="Datenverarbeitung bei Amazon">
+              <p className="text-sm text-brand-muted leading-relaxed">
+                Nach dem Klick auf einen Partnerlink verlassen Sie unsere
+                Website. Für die anschließende Datenverarbeitung auf Amazon.de
+                ist Amazon Europe Core S.à r.l. verantwortlich. Bitte beachten
+                Sie die{" "}
+                <a
+                  href="https://www.amazon.de/gp/help/customer/display.html?nodeId=GX7NJQ4ZB8MHFRNJ"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150"
+                >
+                  Datenschutzerklärung von Amazon
+                </a>
+                .
+              </p>
+            </Subsection>
+          </Section>
+
+          {/* ── 9. Ihre Rechte ───────────────────────────────────────────────── */}
+          <Section title="9. Ihre Rechte als betroffene Person">
             <p className="text-sm text-brand-muted leading-relaxed mb-5">
               Sie haben gegenüber uns folgende Rechte hinsichtlich der Sie
               betreffenden personenbezogenen Daten:
@@ -294,10 +367,10 @@ export default function DatenschutzPage() {
             </p>
           </Section>
 
-          {/* ── 9. Aktualität ────────────────────────────────────────────────── */}
-          <Section title="9. Aktualität und Änderung dieser Datenschutzerklärung">
+          {/* ── 10. Aktualität ───────────────────────────────────────────────── */}
+          <Section title="10. Aktualität und Änderung dieser Datenschutzerklärung">
             <p className="text-sm text-brand-muted leading-relaxed">
-              Diese Datenschutzerklärung ist aktuell gültig (Stand: April 2026).
+              Diese Datenschutzerklärung ist aktuell gültig (Stand: Mai 2026).
               Durch die Weiterentwicklung unserer Website oder aufgrund geänderter
               gesetzlicher bzw. behördlicher Vorgaben kann es notwendig werden,
               diese Datenschutzerklärung zu ändern. Die jeweils aktuelle Version
