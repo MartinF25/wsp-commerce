@@ -5,6 +5,7 @@ import { CatalogError } from "../types";
 import { catalogRoutes } from "./routes";
 import { adminRoutes } from "./routes/admin";
 import { blogRoutes } from "./routes/blog";
+import { affiliateRoutes } from "./routes/affiliate";
 
 /**
  * Hono-App-Factory
@@ -45,6 +46,7 @@ export function createApp() {
   app.route("/api/catalog", catalogRoutes);
   app.route("/api/blog", blogRoutes);
   app.route("/api/admin", adminRoutes);
+  app.route("/api/affiliate", affiliateRoutes);
 
   // ─── 404-Handler ────────────────────────────────────────────────────────────
 
