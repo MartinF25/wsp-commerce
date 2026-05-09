@@ -14,13 +14,15 @@ datasource db {
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 /// Steuert Kauf- vs. Anfragelogik an der Domain-Grenze.
-/// direct_purchase  → Warenkorb + Checkout möglich
-/// configurable     → Variantenauswahl, dann Warenkorb
-/// inquiry_only     → kein Warenkorb, nur Lead-Formular
+/// direct_purchase    → Warenkorb + Checkout möglich
+/// configurable       → Variantenauswahl, dann Warenkorb
+/// inquiry_only       → kein Warenkorb, nur Lead-Formular
+/// affiliate_external → kein eigener Checkout, externer Partnerlink (z. B. Amazon)
 enum ProductType {
   direct_purchase
   configurable
   inquiry_only
+  affiliate_external
 }
 
 enum ProductStatus {
@@ -82,16 +84,45 @@ model Product {
   /// Countdown nur anzeigen wenn sale_ends_at gesetzt ist.
   show_countdown   Boolean   @default(false)
 
-  category     Category?            @relation(fields: [category_id], references: [id])
-  translations ProductTranslation[]
-  variants     ProductVariant[]
-  images       ProductImage[]
-  documents    ProductDocument[]
+  /// Affiliate-Konfiguration – nur relevant wenn product_type = affiliate_external.
+  /// affiliate_url muss den korrekten Partner-Tag des Anbieters enthalten.
+  /// Kein eigener Checkout, kein Warenkorb für Produkte dieses Typs.
+  affiliate_provider     String?
+  affiliate_url          String?
+  affiliate_asin         String?
+  affiliate_button_label String?
+  affiliate_disclosure   String?
+  affiliate_enabled      Boolean @default(false)
+
+  category         Category?            @relation(fields: [category_id], references: [id])
+  translations     ProductTranslation[]
+  variants         ProductVariant[]
+  images           ProductImage[]
+  documents        ProductDocument[]
+  affiliate_clicks AffiliateClick[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@map("products")
+}
+
+/// Datensparsames Klick-Event für Affiliate-Statistiken.
+/// Kein Bezug zu Nutzerprofilen – keine IP, kein User-Agent, keine personenbezogenen Daten.
+model AffiliateClick {
+  id            String   @id @default(uuid())
+  product_id    String
+  clicked_at    DateTime @default(now())
+  /// Pfad der Quellseite (z. B. "/de/products/solar-panel-x200")
+  referrer_path String?
+  /// Sprachversion der Seite zum Zeitpunkt des Klicks
+  locale        String?
+
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id])
+  @@index([clicked_at])
+  @@map("affiliate_clicks")
 }
 
 /// Sprachabhängige Texte eines Produkts. DE ist immer Pflicht.

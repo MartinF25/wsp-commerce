@@ -12,11 +12,14 @@ export type Locale = z.infer<typeof LocaleSchema>;
 /**
  * Produkttyp-Enum – spiegelt das Prisma-Schema wider, ohne davon abzuhängen.
  * Steuert Kauf- vs. Anfragelogik in allen Schichten (API, Storefront, Admin).
+ *
+ * affiliate_external → kein eigener Checkout, externer Partnerlink (z. B. Amazon)
  */
 export const ProductTypeSchema = z.enum([
   "direct_purchase",
   "configurable",
   "inquiry_only",
+  "affiliate_external",
 ]);
 export type ProductType = z.infer<typeof ProductTypeSchema>;
 

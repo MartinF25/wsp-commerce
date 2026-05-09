@@ -13,6 +13,10 @@ export function isInquiryOnly(productType: string): boolean {
   return productType === "inquiry_only";
 }
 
+export function isAffiliateExternal(productType: string): boolean {
+  return productType === "affiliate_external";
+}
+
 function formatCurrency(cents: number, currency: string): string {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
@@ -162,6 +166,26 @@ export function calculatePriceDisplay(
       currencyCode: currency,
       displayText: `ab ${formatCurrency(minCents, currency)} (Richtpreis)`,
       ...saleFields,
+    };
+  }
+
+  if (isAffiliateExternal(product.product_type)) {
+    const pricesInCents = variants
+      .map((v) => v.price_cents)
+      .filter((p): p is number => p !== null);
+
+    if (pricesInCents.length === 0) {
+      return { currencyCode: currency, displayText: "Preis bei Amazon", isOnSale: false, showCountdown: false };
+    }
+
+    // Manuell gepflegter Richtpreis – kein Anspruch auf Aktualität gegenüber Amazon-Preis
+    const minCents = Math.min(...pricesInCents);
+    return {
+      minCents,
+      currencyCode: currency,
+      displayText: `ca. ${formatCurrency(minCents, currency)} (Preis variiert)`,
+      isOnSale: false,
+      showCountdown: false,
     };
   }
 

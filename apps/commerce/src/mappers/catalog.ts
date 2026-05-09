@@ -6,7 +6,7 @@ import type {
   CategoryTreeNode,
   PriceDisplay,
 } from "@wsp/contracts";
-import { isDirectlyPurchasable, isConfigurable, calculatePriceDisplay, computeSaleStatus } from "../utils/productUtils";
+import { isDirectlyPurchasable, isConfigurable, isAffiliateExternal, calculatePriceDisplay, computeSaleStatus } from "../utils/productUtils";
 import { resolveTranslation, resolveVariantTranslation } from "../utils/localeUtils";
 import type { ProductWithVariants, CategoryWithProducts } from "../types";
 
@@ -52,6 +52,8 @@ export function toProductSummary(product: ProductWithVariants, locale = "de"): P
     priceDisplay,
     coverImageUrl: coverImage?.url ?? null,
     coverImageAlt: coverImage?.alt ?? null,
+    affiliateEnabled: product.affiliate_enabled,
+    affiliateProvider: product.affiliate_provider ?? null,
   };
 }
 
@@ -129,6 +131,15 @@ export function toProductDetail(product: ProductWithVariants, locale = "de"): Pr
         sort_order: doc.sort_order,
       })),
     priceDisplay,
+    affiliateEnabled: product.affiliate_enabled,
+    affiliateProvider: product.affiliate_provider ?? null,
+    // affiliateUrl nur ausgeben wenn Affiliate aktiv und URL gepflegt – verhindert leere Buttons
+    affiliateUrl:
+      product.affiliate_enabled && product.affiliate_url
+        ? product.affiliate_url
+        : null,
+    affiliateButtonLabel: product.affiliate_button_label ?? null,
+    affiliateDisclosure: product.affiliate_disclosure ?? null,
   };
 }
 

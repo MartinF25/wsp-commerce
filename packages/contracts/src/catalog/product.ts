@@ -87,6 +87,7 @@ export type ProductDocument = z.infer<typeof ProductDocumentSchema>;
  * - Kein variants-Array (nur priceDisplay für die Preisanzeige)
  * - purchasable als abgeleitetes Boolean (keine Enum-Kenntnis nötig)
  * - coverImageUrl: erstes Bild aus images[], null wenn keine Bilder
+ * - affiliateUrl ist bewusst nicht enthalten – nur in ProductDetail verfügbar
  */
 export const ProductSummarySchema = z.object({
   id: z.string().uuid(),
@@ -104,6 +105,8 @@ export const ProductSummarySchema = z.object({
   priceDisplay: PriceDisplaySchema,
   coverImageUrl: z.string().nullable(),
   coverImageAlt: z.string().nullable(),
+  affiliateEnabled: z.boolean(),
+  affiliateProvider: z.string().nullable(),
 });
 export type ProductSummary = z.infer<typeof ProductSummarySchema>;
 
@@ -114,8 +117,12 @@ export type ProductSummary = z.infer<typeof ProductSummarySchema>;
  *
  * Enthält description, alle Varianten und alle Bilder.
  * product_type + purchasable ermöglichen dem Storefront zu entscheiden:
- *   purchasable=true  → Variantenauswahl + Warenkorb-Button
- *   purchasable=false → Lead-Formular-Button ("Beratung anfragen")
+ *   purchasable=true         → Variantenauswahl + Warenkorb-Button
+ *   purchasable=false        → Lead-Formular-Button ("Beratung anfragen")
+ *   affiliate_external       → Affiliate-CTA, kein Warenkorb, kein Checkout
+ *
+ * affiliateUrl ist nur hier enthalten (nicht in ProductSummary),
+ * da er nur auf der Detailseite für den CTA-Button benötigt wird.
  */
 export const ProductDetailSchema = z.object({
   id: z.string().uuid(),
@@ -144,8 +151,28 @@ export const ProductDetailSchema = z.object({
   images: z.array(ProductImageSchema),
   documents: z.array(ProductDocumentSchema),
   priceDisplay: PriceDisplaySchema,
+  affiliateEnabled: z.boolean(),
+  affiliateProvider: z.string().nullable(),
+  affiliateUrl: z.string().nullable(),
+  affiliateButtonLabel: z.string().nullable(),
+  affiliateDisclosure: z.string().nullable(),
 });
 export type ProductDetail = z.infer<typeof ProductDetailSchema>;
+
+// ─── AffiliateClickStats – Admin-only ────────────────────────────────────────
+
+/**
+ * Aggregierte Klickstatistik für ein Affiliate-Produkt (Admin-Verwendung).
+ * Wird nie als Teil von ProductSummary oder ProductDetail ausgeliefert.
+ */
+export const AffiliateClickStatsSchema = z.object({
+  productId: z.string().uuid(),
+  totalClicks: z.number().int().nonnegative(),
+  clicksLast7Days: z.number().int().nonnegative(),
+  clicksLast30Days: z.number().int().nonnegative(),
+  lastClickedAt: z.string().datetime().nullable(),
+});
+export type AffiliateClickStats = z.infer<typeof AffiliateClickStatsSchema>;
 
 // ─── Paginiertes Listenergebnis ───────────────────────────────────────────────
 
