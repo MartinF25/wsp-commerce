@@ -16,6 +16,9 @@ export default function CategoryForm({ category, parentOptions }: Props) {
   const [name, setName] = useState(category?.name ?? "");
   const [slug, setSlug] = useState(category?.slug ?? "");
   const [description, setDescription] = useState(category?.description ?? "");
+  const [imageUrl, setImageUrl] = useState(category?.image_url ?? "");
+  const [metaTitle, setMetaTitle] = useState(category?.meta_title ?? "");
+  const [metaDescription, setMetaDescription] = useState(category?.meta_description ?? "");
   const [isActive, setIsActive] = useState(category?.is_active ?? true);
   const [parentId, setParentId] = useState(category?.parent_id ?? "");
   const [saving, setSaving] = useState(false);
@@ -32,6 +35,9 @@ export default function CategoryForm({ category, parentOptions }: Props) {
         name,
         slug: slug.trim() || undefined,
         description: description.trim() || null,
+        image_url: imageUrl.trim() || null,
+        meta_title: metaTitle.trim() || null,
+        meta_description: metaDescription.trim() || null,
         is_active: isActive,
         parent_id: parentId || null,
       };
@@ -137,6 +143,68 @@ export default function CategoryForm({ category, parentOptions }: Props) {
               />
               Aktiv (in der Storefront sichtbar)
             </label>
+          </div>
+        </div>
+
+        <hr style={{ margin: "24px 0", borderColor: "#e5e7eb" }} />
+        <h3 style={{ marginBottom: 16, fontSize: 14, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Bild</h3>
+
+        <div className="form-row">
+          <div>
+            <label>Kategorie-Bild URL <span className="opt">(optional)</span></label>
+            <input
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://..."
+            />
+            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+              Eigenes Bild für diese Kategorie. Leer lassen → automatisch erstes Produktbild.
+            </p>
+            {imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl}
+                alt="Vorschau"
+                style={{ marginTop: 8, maxHeight: 120, borderRadius: 8, objectFit: "cover", border: "1px solid #e5e7eb" }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            )}
+          </div>
+        </div>
+
+        <hr style={{ margin: "24px 0", borderColor: "#e5e7eb" }} />
+        <h3 style={{ marginBottom: 16, fontSize: 14, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>SEO</h3>
+
+        <div className="form-row">
+          <div>
+            <label>Meta-Titel <span className="opt">(optional, max. 60 Zeichen)</span></label>
+            <input
+              type="text"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              placeholder={name ? `${name} – Solarzaun & SkyWind` : "SEO-Titel der Kategorieseite"}
+              maxLength={120}
+            />
+            <p style={{ fontSize: 12, color: metaTitle.length > 60 ? "#ef4444" : "#9ca3af", marginTop: 4 }}>
+              {metaTitle.length}/60 Zeichen {metaTitle.length > 60 ? "— zu lang für Google" : ""}
+            </p>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div>
+            <label>Meta-Beschreibung <span className="opt">(optional, max. 160 Zeichen)</span></label>
+            <textarea
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              placeholder={name ? `Alle ${name}-Produkte im Überblick.` : "Kurze Beschreibung für Suchmaschinen"}
+              maxLength={320}
+              rows={3}
+            />
+            <p style={{ fontSize: 12, color: metaDescription.length > 160 ? "#ef4444" : "#9ca3af", marginTop: 4 }}>
+              {metaDescription.length}/160 Zeichen {metaDescription.length > 160 ? "— zu lang für Google" : ""}
+            </p>
           </div>
         </div>
 

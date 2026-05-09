@@ -29,8 +29,8 @@ categoryRoutes.get("/", async (c) => {
   const categories = await CategoryService.listAllCategories();
 
   const summaries = categories.map((cat) => {
-    const coverImageUrl = cat.products?.[0]?.images?.[0]?.url ?? null;
-    return toCategorySummary(cat, cat._count.products, coverImageUrl);
+    const fallbackImageUrl = cat.products?.[0]?.images?.[0]?.url ?? null;
+    return toCategorySummary(cat, cat._count.products, fallbackImageUrl);
   });
 
   return c.json({ data: summaries });

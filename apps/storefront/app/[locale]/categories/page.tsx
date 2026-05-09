@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CategorySummary } from "@wsp/types";
 import { getTranslations } from "next-intl/server";
+import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { fetchCategories } from "@/lib/catalog";
 
@@ -60,15 +61,34 @@ export default async function CategoriesPage({ params }: Props) {
 }
 
 function CategoryCard({ category }: { category: CategorySummary }) {
+  const imageUrl = category.imageUrl ?? category.coverImageUrl;
+
   return (
     <Link
       href={`/categories/${category.slug}`}
-      className="group block bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md hover:border-brand-accent transition-all duration-200"
+      className="group block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-accent transition-all duration-200 overflow-hidden"
     >
-      <h2 className="font-display font-semibold text-lg text-brand-text group-hover:text-brand-accent transition-colors duration-150 mb-1">
-        {category.name}
-      </h2>
-      <p className="text-sm text-brand-muted">{category.productCount}</p>
+      {imageUrl ? (
+        <div className="relative w-full h-40 overflow-hidden">
+          <Image
+            src={imageUrl}
+            alt={category.name}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        </div>
+      ) : (
+        <div className="w-full h-40 bg-gray-50 flex items-center justify-center">
+          <span className="text-4xl text-gray-200">📦</span>
+        </div>
+      )}
+      <div className="p-6">
+        <h2 className="font-display font-semibold text-lg text-brand-text group-hover:text-brand-accent transition-colors duration-150 mb-1">
+          {category.name}
+        </h2>
+        <p className="text-sm text-brand-muted">{category.productCount}</p>
+      </div>
     </Link>
   );
 }

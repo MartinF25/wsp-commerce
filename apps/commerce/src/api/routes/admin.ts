@@ -131,6 +131,9 @@ adminRoutes.get("/categories", async (c) => {
       slug: cat.slug,
       name: cat.name,
       description: cat.description ?? null,
+      image_url: cat.image_url ?? null,
+      meta_title: cat.meta_title ?? null,
+      meta_description: cat.meta_description ?? null,
       is_active: cat.is_active,
       parent_id: cat.parent_id ?? null,
       productCount: cat._count.products,
@@ -146,7 +149,7 @@ adminRoutes.post("/categories", async (c) => {
     throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
   }
 
-  const { name, slug, description, is_active, parent_id } = body as Record<string, unknown>;
+  const { name, slug, description, image_url, meta_title, meta_description, is_active, parent_id } = body as Record<string, unknown>;
 
   if (typeof name !== "string" || !name.trim()) {
     throw new CatalogError("INVALID_BODY", 422, "name ist ein Pflichtfeld.");
@@ -165,6 +168,9 @@ adminRoutes.post("/categories", async (c) => {
       name: name.trim(),
       slug: finalSlug,
       description: typeof description === "string" ? description.trim() || null : null,
+      image_url: typeof image_url === "string" ? image_url.trim() || null : null,
+      meta_title: typeof meta_title === "string" ? meta_title.trim() || null : null,
+      meta_description: typeof meta_description === "string" ? meta_description.trim() || null : null,
       is_active: typeof is_active === "boolean" ? is_active : true,
       parent_id: typeof parent_id === "string" && parent_id ? parent_id : null,
     },
@@ -190,6 +196,9 @@ adminRoutes.get("/categories/:id", async (c) => {
       slug: category.slug,
       name: category.name,
       description: category.description ?? null,
+      image_url: category.image_url ?? null,
+      meta_title: category.meta_title ?? null,
+      meta_description: category.meta_description ?? null,
       is_active: category.is_active,
       parent_id: category.parent_id ?? null,
       productCount: category._count.products,
@@ -211,7 +220,7 @@ adminRoutes.put("/categories/:id", async (c) => {
     throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
   }
 
-  const { name, slug, description, is_active, parent_id } = body as Record<string, unknown>;
+  const { name, slug, description, image_url, meta_title, meta_description, is_active, parent_id } = body as Record<string, unknown>;
 
   const updateData: Record<string, unknown> = {};
   if (typeof name === "string" && name.trim()) updateData.name = name.trim();
@@ -221,6 +230,9 @@ adminRoutes.put("/categories/:id", async (c) => {
     updateData.slug = slug.trim();
   }
   if (typeof description === "string") updateData.description = description.trim() || null;
+  if (image_url === null || typeof image_url === "string") updateData.image_url = typeof image_url === "string" ? image_url.trim() || null : null;
+  if (meta_title === null || typeof meta_title === "string") updateData.meta_title = typeof meta_title === "string" ? meta_title.trim() || null : null;
+  if (meta_description === null || typeof meta_description === "string") updateData.meta_description = typeof meta_description === "string" ? meta_description.trim() || null : null;
   if (typeof is_active === "boolean") updateData.is_active = is_active;
   if (parent_id === null || (typeof parent_id === "string" && parent_id)) {
     updateData.parent_id = parent_id || null;

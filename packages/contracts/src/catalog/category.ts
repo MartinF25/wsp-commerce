@@ -14,6 +14,9 @@ export const CategorySummarySchema = z.object({
   parent_id: z.string().uuid().nullable(),
   productCount: z.number().int().nonnegative(),
   coverImageUrl: z.string().nullable(),
+  imageUrl: z.string().nullable(),
+  metaTitle: z.string().nullable(),
+  metaDescription: z.string().nullable(),
 });
 export type CategorySummary = z.infer<typeof CategorySummarySchema>;
 
@@ -29,7 +32,11 @@ export const CategoryDetailSchema = z.object({
   id: z.string().uuid(),
   slug: z.string(),
   name: z.string(),
+  description: z.string().nullable(),
   parent_id: z.string().uuid().nullable(),
+  imageUrl: z.string().nullable(),
+  metaTitle: z.string().nullable(),
+  metaDescription: z.string().nullable(),
   products: z.array(ProductSummarySchema),
   children: z.array(CategorySummarySchema),
 });

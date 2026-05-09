@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { fetchCategory } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
@@ -14,9 +15,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await fetchCategory(params.slug);
   if (!category) return { title: t("category_not_found") };
 
+  const title = category.metaTitle ?? `${category.name} – Solarzaun & SkyWind`;
+  const description = category.metaDescription ?? category.description ?? category.name;
+
   return {
-    title: `${category.name} – Solarzaun & SkyWind`,
-    description: `${category.name}`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(category.imageUrl ? { images: [{ url: category.imageUrl, alt: category.name }] } : {}),
+    },
   };
 }
 
@@ -41,8 +50,23 @@ export default async function CategoryDetailPage({ params }: Props) {
 
       {/* Kategoriekopf */}
       <header className="mb-10">
+        {category.imageUrl && (
+          <div className="relative w-full h-48 sm:h-64 rounded-2xl overflow-hidden mb-6">
+            <Image
+              src={category.imageUrl}
+              alt={category.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 1280px"
+              priority
+            />
+          </div>
+        )}
         <h1 className="font-display text-3xl font-bold text-brand-text mb-1">{category.name}</h1>
-        <p className="text-sm text-brand-muted">
+        {category.description && (
+          <p className="text-brand-muted mt-2 max-w-2xl">{category.description}</p>
+        )}
+        <p className="text-sm text-brand-muted mt-1">
           {category.products.length === 0 ? "" : `${category.products.length}`}
         </p>
       </header>

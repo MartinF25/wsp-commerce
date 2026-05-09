@@ -18,6 +18,9 @@ export interface Category {
   slug: string;
   name: string;
   description: string | null;
+  image_url: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
   is_active: boolean;
   parent_id: string | null;
   productCount?: number;

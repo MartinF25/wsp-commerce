@@ -139,7 +139,7 @@ export function toProductDetail(product: ProductWithVariants, locale = "de"): Pr
  * productCount muss vom Aufrufer übergeben werden (voraggregiert, kein N+1).
  */
 export function toCategorySummary(
-  category: { id: string; slug: string; name: string; parent_id: string | null },
+  category: { id: string; slug: string; name: string; parent_id: string | null; image_url?: string | null; meta_title?: string | null; meta_description?: string | null },
   productCount: number,
   coverImageUrl: string | null = null
 ): CategorySummary {
@@ -149,7 +149,10 @@ export function toCategorySummary(
     name: category.name,
     parent_id: category.parent_id ?? null,
     productCount,
-    coverImageUrl,
+    coverImageUrl: category.image_url ?? coverImageUrl,
+    imageUrl: category.image_url ?? null,
+    metaTitle: category.meta_title ?? null,
+    metaDescription: category.meta_description ?? null,
   };
 }
 
@@ -163,7 +166,11 @@ export function toCategoryDetail(category: CategoryWithProducts, locale = "de"):
     id: category.id,
     slug: category.slug,
     name: category.name,
+    description: category.description ?? null,
     parent_id: category.parent_id ?? null,
+    imageUrl: category.image_url ?? null,
+    metaTitle: category.meta_title ?? null,
+    metaDescription: category.meta_description ?? null,
     products: category.products.map((p) => toProductSummary(p, locale)),
     children: category.children.map((child) =>
       toCategorySummary(child, child.products?.length ?? 0)
@@ -186,7 +193,10 @@ export function toCategoryTreeNode(
     name: category.name,
     parent_id: category.parent_id ?? null,
     productCount: category.products?.length ?? 0,
-    coverImageUrl: coverImage?.url ?? null,
+    coverImageUrl: category.image_url ?? coverImage?.url ?? null,
+    imageUrl: category.image_url ?? null,
+    metaTitle: category.meta_title ?? null,
+    metaDescription: category.meta_description ?? null,
     children: category.children.map(toCategoryTreeNode),
   };
 }

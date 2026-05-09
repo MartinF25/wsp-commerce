@@ -46,12 +46,15 @@ enum Locale {
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Category {
-  id          String  @id @default(uuid())
-  slug        String  @unique
-  name        String
-  description String?
-  is_active   Boolean @default(true)
-  parent_id   String?
+  id               String  @id @default(uuid())
+  slug             String  @unique
+  name             String
+  description      String?
+  image_url        String?
+  meta_title       String?
+  meta_description String?
+  is_active        Boolean @default(true)
+  parent_id        String?
 
   parent   Category?  @relation("CategoryHierarchy", fields: [parent_id], references: [id])
   children Category[] @relation("CategoryHierarchy")
