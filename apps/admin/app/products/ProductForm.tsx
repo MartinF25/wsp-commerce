@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ProductDetail, Locale, ProductType, ProductStatus, Variant, ProductImage, ProductDocument } from "@/lib/api";
+import type { ProductDetail, Locale, ProductType, ProductStatus, Variant, ProductImage, ProductDocument, AffiliateStats } from "@/lib/api";
 import UploadButton from "@/components/UploadButton";
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
@@ -51,11 +51,12 @@ function translationFromApi(t: ProductDetail["translations"][number] | undefined
 interface Props {
   product?: ProductDetail;
   categories: { id: string; name: string }[];
+  affiliateStats?: AffiliateStats | null;
 }
 
 // ─── Haupt-Komponente ─────────────────────────────────────────────────────────
 
-export default function ProductForm({ product, categories }: Props) {
+export default function ProductForm({ product, categories, affiliateStats }: Props) {
   const router = useRouter();
   const isNew = !product;
 
@@ -618,6 +619,33 @@ export default function ProductForm({ product, categories }: Props) {
               </label>
             </div>
           </div>
+
+          {affiliateStats && (
+            <div style={{ marginTop: 16, padding: "12px 16px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Klickstatistik
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: "#0f172a", lineHeight: 1 }}>{affiliateStats.clicksLast7Days}</div>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Letzte 7 Tage</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: "#0f172a", lineHeight: 1 }}>{affiliateStats.clicksLast30Days}</div>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Letzte 30 Tage</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: "#0f172a", lineHeight: 1 }}>{affiliateStats.totalClicks}</div>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Gesamt</div>
+                </div>
+              </div>
+              {affiliateStats.lastClickedAt && (
+                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 10, textAlign: "center" }}>
+                  Letzter Klick: {new Date(affiliateStats.lastClickedAt).toLocaleString("de-DE")}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

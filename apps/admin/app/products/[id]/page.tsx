@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
+import type { AffiliateStats } from "@/lib/api";
 import ProductForm from "../ProductForm";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,11 @@ export default async function EditProductPage({ params }: Props) {
     throw e;
   }
 
+  let affiliateStats: AffiliateStats | null = null;
+  if (product.product_type === "affiliate_external") {
+    affiliateStats = await api.products.getAffiliateStats(params.id).catch(() => null);
+  }
+
   return (
     <>
       <div className="page-header">
@@ -32,7 +38,7 @@ export default async function EditProductPage({ params }: Props) {
         </h1>
         <Link href="/products" className="btn btn-secondary">← Zurück</Link>
       </div>
-      <ProductForm product={product} categories={categories} />
+      <ProductForm product={product} categories={categories} affiliateStats={affiliateStats} />
     </>
   );
 }

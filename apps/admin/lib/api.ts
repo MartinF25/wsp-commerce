@@ -119,6 +119,14 @@ export interface ProductDetail {
   updated_at: string;
 }
 
+export interface AffiliateStats {
+  productId: string;
+  totalClicks: number;
+  clicksLast7Days: number;
+  clicksLast30Days: number;
+  lastClickedAt: string | null;
+}
+
 // ─── Blog-Typen ───────────────────────────────────────────────────────────────
 
 export type BlogStatus = "draft" | "published" | "archived";
@@ -279,6 +287,7 @@ export const api = {
       }
     ) => request<ProductDetail>(`/products/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (id: string) => request<void>(`/products/${id}`, { method: "DELETE" }),
+    getAffiliateStats: (id: string) => request<AffiliateStats>(`/products/${id}/affiliate-stats`),
     setStatus: (id: string, status: ProductStatus) =>
       request<{ id: string; status: ProductStatus }>(`/products/${id}/status`, {
         method: "PATCH",

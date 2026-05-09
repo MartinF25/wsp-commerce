@@ -536,6 +536,42 @@ adminRoutes.delete("/products/:id", async (c) => {
   return new Response(null, { status: 204 });
 });
 
+adminRoutes.get("/products/:id/affiliate-stats", async (c) => {
+  const id = c.req.param("id");
+  const prisma = getPrismaClient();
+
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: { id: true, product_type: true },
+  });
+  if (!product) throw new CatalogError("PRODUCT_NOT_FOUND", 404, `Produkt nicht gefunden: ${id}`);
+
+  const now = new Date();
+  const minus7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const minus30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const [totalClicks, clicksLast7Days, clicksLast30Days, lastClick] = await Promise.all([
+    prisma.affiliateClick.count({ where: { product_id: id } }),
+    prisma.affiliateClick.count({ where: { product_id: id, clicked_at: { gte: minus7 } } }),
+    prisma.affiliateClick.count({ where: { product_id: id, clicked_at: { gte: minus30 } } }),
+    prisma.affiliateClick.findFirst({
+      where: { product_id: id },
+      orderBy: { clicked_at: "desc" },
+      select: { clicked_at: true },
+    }),
+  ]);
+
+  return c.json({
+    data: {
+      productId: id,
+      totalClicks,
+      clicksLast7Days,
+      clicksLast30Days,
+      lastClickedAt: lastClick?.clicked_at ?? null,
+    },
+  });
+});
+
 adminRoutes.patch("/products/:id/status", async (c) => {
   const id = c.req.param("id");
 
