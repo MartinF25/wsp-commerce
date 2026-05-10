@@ -8,7 +8,19 @@ import type { ProductSummary } from "@wsp/types";
 
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "solarzaun" });
-  return { title: t("meta_title"), description: t("meta_desc") };
+  const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/solarzaun` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/${params.locale}/solarzaun`;
+  return { 
+    title: t("meta_title"), 
+    description: t("meta_desc"),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/solarzaun`,
+        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/en/solarzaun`,
+        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/es/solarzaun`,
+      },
+    },
+  };
 }
 
 export default async function SolarzaunPage({ params }: { params: { locale: string } }) {
@@ -27,6 +39,24 @@ export default async function SolarzaunPage({ params }: { params: { locale: stri
 
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqItems.map((item) => ({
+              "@type": "Question",
+              name: item.q,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: item.a,
+              },
+            })),
+          }),
+        }}
+      />
+
       <SolutionHero
         breadcrumbHome={t("breadcrumb_home")}
         breadcrumbLabel="Solarzaun"

@@ -6,7 +6,19 @@ type Props = { params: { locale: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "gewerbe_b2b" });
-  return { title: t("meta_title"), description: t("meta_desc") };
+  const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/gewerbe-b2b` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/${params.locale}/gewerbe-b2b`;
+  return { 
+    title: t("meta_title"), 
+    description: t("meta_desc"),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/gewerbe-b2b`,
+        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/en/gewerbe-b2b`,
+        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/es/gewerbe-b2b`,
+      },
+    },
+  };
 }
 
 export default async function GewerbeB2BPage({ params }: Props) {

@@ -64,6 +64,60 @@ export default async function HomePage({
 
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "WSP Solarenergie",
+            url: "https://wsp-solar.de",
+            logo: "https://wsp-solar.de/images/logo.png",
+            description: "Experte für Solarzaun und SkyWind Kleinwindanlagen – nachhaltige Energie für Privat und Gewerbe.",
+            address: {
+              "@type": "PostalAddress",
+              addressCountry: "DE",
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              telephone: "+49-XXX-XXXXXXX", // Platzhalter, anpassen
+              contactType: "customer service",
+              availableLanguage: ["German", "English", "Spanish"],
+            },
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "WSP Solarenergie",
+            url: "https://wsp-solar.de",
+            description: "Solarzaun und SkyWind Kleinwindanlagen – nachhaltige Energie für Ihr Zuhause und Gewerbe.",
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ProfessionalService",
+            name: "WSP Solarenergie",
+            description: "Beratung und Installation von Solarzaun und SkyWind Kleinwindanlagen für nachhaltige Energie.",
+            url: "https://wsp-solar.de",
+            address: {
+              "@type": "PostalAddress",
+              addressCountry: "DE",
+            },
+            serviceType: "Solarenergie-Beratung",
+            areaServed: "Deutschland",
+          }),
+        }}
+      />
+
       {/* ── Hero ── */}
       <section className="relative overflow-hidden min-h-[60vh] sm:min-h-[88vh] flex items-center">
         <Image src="/images/hero-bg.png" alt="Modernes Haus mit SkyWind" fill className="object-cover object-center" priority sizes="100vw" />

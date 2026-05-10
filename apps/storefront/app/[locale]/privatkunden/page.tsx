@@ -6,7 +6,19 @@ type Props = { params: { locale: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "privatkunden" });
-  return { title: t("meta_title"), description: t("meta_desc") };
+  const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/privatkunden` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/${params.locale}/privatkunden`;
+  return { 
+    title: t("meta_title"), 
+    description: t("meta_desc"),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/privatkunden`,
+        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/en/privatkunden`,
+        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/es/privatkunden`,
+      },
+    },
+  };
 }
 
 export default async function PrivatkundenPage({ params }: Props) {

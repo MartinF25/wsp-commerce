@@ -7,7 +7,19 @@ type Props = { params: { locale: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "faq" });
-  return { title: t("meta_title"), description: t("meta_desc") };
+  const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/faq` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/${params.locale}/faq`;
+  return { 
+    title: t("meta_title"), 
+    description: t("meta_desc"),
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/faq`,
+        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/en/faq`,
+        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/es/faq`,
+      },
+    },
+  };
 }
 
 export default async function FAQPage({ params }: Props) {
@@ -15,6 +27,24 @@ export default async function FAQPage({ params }: Props) {
 
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqItems.map((item) => ({
+              "@type": "Question",
+              name: item.q,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: item.a,
+              },
+            })),
+          }),
+        }}
+      />
+
       {/* ── Hero ── */}
       <section className="py-20 sm:py-24 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

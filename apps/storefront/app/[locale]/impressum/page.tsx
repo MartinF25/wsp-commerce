@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "Impressum – Solarzaun & SkyWind",
   description: "Anbieterkennzeichnung gemäß § 5 TMG.",
   robots: { index: false },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/impressum`,
+  },
 };
 
 // ─── Seite ────────────────────────────────────────────────────────────────────

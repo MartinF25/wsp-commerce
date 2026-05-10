@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "Datenschutzerklärung – Solarzaun & SkyWind",
   description: "Informationen zur Verarbeitung personenbezogener Daten gemäß DSGVO.",
   robots: { index: false },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/datenschutz`,
+  },
 };
 
 // ─── Seite ────────────────────────────────────────────────────────────────────

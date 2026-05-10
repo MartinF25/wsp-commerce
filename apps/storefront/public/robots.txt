@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Block admin and internal routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+
+# Allow sitemap
+Allow: /sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://wsp-solar.de/sitemap.xml
