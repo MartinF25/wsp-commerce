@@ -152,6 +152,9 @@ export async function submitKontaktanfrage(
         console.error(`[submitKontaktanfrage] n8n Error ${res.status}`);
         throw new Error(`n8n-Webhook antwortete mit Status ${res.status}`);
       }
+    } else if (env.RESEND_API_KEY) {
+      // Einfacher E-Mail-Fallback via Resend
+      await sendLeadEmail(data, env.RESEND_API_KEY, env.LEAD_TO_EMAIL);
     } else {
       // Kein Endpunkt konfiguriert
       if (process.env.NODE_ENV === "development") {
@@ -172,5 +175,72 @@ export async function submitKontaktanfrage(
       status: "error",
       message: t("error_submit"),
     };
+  }
+}
+
+// ─── Resend E-Mail-Versand ────────────────────────────────────────────────────
+
+type LeadData = {
+  vorname: string;
+  nachname: string;
+  firma?: string;
+  email: string;
+  telefon?: string;
+  anfrageart: string;
+  projektart?: string;
+  nachricht: string;
+};
+
+async function sendLeadEmail(
+  data: LeadData,
+  apiKey: string,
+  toEmail: string
+): Promise<void> {
+  const subject = `Neue Anfrage: ${data.anfrageart} – ${data.vorname} ${data.nachname}`;
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1C1C1E">
+      <h2 style="color:#22C55E;margin-bottom:4px">Neue Kontaktanfrage</h2>
+      <p style="color:#6B7280;margin-top:0;font-size:14px">WSP-Solarenergie Webshop</p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0"/>
+
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <tr><td style="padding:6px 0;color:#6B7280;width:140px">Name</td><td style="padding:6px 0"><strong>${data.vorname} ${data.nachname}</strong></td></tr>
+        ${data.firma ? `<tr><td style="padding:6px 0;color:#6B7280">Firma</td><td style="padding:6px 0">${data.firma}</td></tr>` : ""}
+        <tr><td style="padding:6px 0;color:#6B7280">E-Mail</td><td style="padding:6px 0"><a href="mailto:${data.email}" style="color:#22C55E">${data.email}</a></td></tr>
+        ${data.telefon ? `<tr><td style="padding:6px 0;color:#6B7280">Telefon</td><td style="padding:6px 0"><a href="tel:${data.telefon}" style="color:#22C55E">${data.telefon}</a></td></tr>` : ""}
+        <tr><td style="padding:6px 0;color:#6B7280">Anfrageart</td><td style="padding:6px 0">${data.anfrageart}</td></tr>
+        ${data.projektart ? `<tr><td style="padding:6px 0;color:#6B7280">Projektart</td><td style="padding:6px 0">${data.projektart}</td></tr>` : ""}
+      </table>
+
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0"/>
+      <p style="font-size:14px;color:#6B7280;margin-bottom:4px">Nachricht:</p>
+      <p style="font-size:14px;line-height:1.6;white-space:pre-wrap">${data.nachricht.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0"/>
+      <p style="font-size:12px;color:#9CA3AF">Eingegangen: ${new Date().toLocaleString("de-DE", { timeZone: "Europe/Berlin" })}</p>
+    </div>
+  `;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "WSP Kontaktformular <onboarding@resend.dev>",
+      to: [toEmail],
+      reply_to: [data.email],
+      subject,
+      html,
+    }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(`[sendLeadEmail] Resend Error ${res.status}:`, body);
+    throw new Error(`E-Mail-Versand fehlgeschlagen (Status ${res.status})`);
   }
 }
