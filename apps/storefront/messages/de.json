@@ -1,4 +1,9 @@
 {
+  "not_found": {
+    "title": "Seite nicht gefunden",
+    "description": "Die aufgerufene Seite existiert nicht oder wurde verschoben.",
+    "cta": "Zur Startseite"
+  },
   "nav": {
     "solarzaun": "Solarzaun",
     "skywind": "SkyWind",

@@ -34,8 +34,23 @@ export default async function CategoryDetailPage({ params }: Props) {
   const category = await fetchCategory(params.slug);
   if (!category) notFound();
 
+  const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://wsp-solar.de";
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: t("page_title"), item: `${BASE}/categories` },
+              { "@type": "ListItem", position: 2, name: category.name, item: `${BASE}/categories/${category.slug}` },
+            ],
+          }),
+        }}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-brand-muted mb-8">
         <Link

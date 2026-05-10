@@ -80,6 +80,23 @@ export default async function BlogPostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: t("breadcrumb_home"), item: STOREFRONT_URL },
+              { "@type": "ListItem", position: 2, name: t("breadcrumb_blog"), item: `${STOREFRONT_URL}/blog` },
+              ...(post.category
+                ? [{ "@type": "ListItem", position: 3, name: post.category.name, item: `${STOREFRONT_URL}/blog?category=${post.category.slug}` },
+                   { "@type": "ListItem", position: 4, name: post.title, item: `${STOREFRONT_URL}/${locale === "de" ? "" : `${locale}/`}blog/${post.slug}` }]
+                : [{ "@type": "ListItem", position: 3, name: post.title, item: `${STOREFRONT_URL}/${locale === "de" ? "" : `${locale}/`}blog/${post.slug}` }]),
+            ],
+          }),
+        }}
+      />
 
       {/* ── Breadcrumb ── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">

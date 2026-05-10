@@ -111,6 +111,23 @@ export default async function ProductDetailPage({ params }: Props) {
           }),
         }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: t("breadcrumb_home"), item: STOREFRONT_URL },
+              { "@type": "ListItem", position: 2, name: t("breadcrumb_products"), item: `${STOREFRONT_URL}/products` },
+              ...(p.category
+                ? [{ "@type": "ListItem", position: 3, name: p.category.name, item: `${STOREFRONT_URL}/categories/${p.category.slug}` },
+                   { "@type": "ListItem", position: 4, name: p.name, item: `${STOREFRONT_URL}/products/${p.slug}` }]
+                : [{ "@type": "ListItem", position: 3, name: p.name, item: `${STOREFRONT_URL}/products/${p.slug}` }]),
+            ],
+          }),
+        }}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <nav className="flex items-center gap-2 text-sm text-brand-muted flex-wrap">

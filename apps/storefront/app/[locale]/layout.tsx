@@ -50,6 +50,28 @@ export async function generateMetadata({
         es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/es`,
       },
     },
+    openGraph: {
+      title: t("meta_title"),
+      description: t("meta_description"),
+      url: canonicalUrl,
+      siteName: "Solarzaun & SkyWind",
+      locale: params.locale === "de" ? "de_DE" : params.locale === "en" ? "en_US" : "es_ES",
+      type: "website",
+      images: [
+        {
+          url: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/images/hero-bg.png`,
+          width: 1200,
+          height: 630,
+          alt: t("meta_title"),
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("meta_title"),
+      description: t("meta_description"),
+      images: [`${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/images/hero-bg.png`],
+    },
   };
 }
 

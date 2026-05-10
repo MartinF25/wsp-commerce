@@ -1,4 +1,9 @@
 {
+  "not_found": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe o ha sido movida.",
+    "cta": "Volver al inicio"
+  },
   "nav": {
     "solarzaun": "Valla Solar",
     "skywind": "SkyWind",

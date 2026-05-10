@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "WSP Solarenergie",
+  "name_for_model": "wsp_solarenergie",
+  "description_for_human": "Solarzaun, SkyWind und Kombilösungen – nachhaltige Energielösungen für Privat, Gewerbe und Landwirtschaft.",
+  "description_for_model": "WSP Solarenergie verkauft und berät zu Solarzaun (Solarmodule als Zaunelemente), SkyWind (Kleinwindanlagen) und Kombilösungen. Zielgruppen sind Privatkunden, Gewerbe, Landwirtschaft und B2B-Partner in Deutschland. Keine Standardprodukte – individuelle Projektberatung und Anfragenerfassung.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://wsp-solar.de/api/openapi.json"
+  },
+  "logo_url": "https://wsp-solar.de/images/logo.png",
+  "contact_email": "info@wsp-solar.de",
+  "legal_info_url": "https://wsp-solar.de/impressum"
+}
