@@ -3,6 +3,7 @@ import { Sora, Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import Script from "next/script";
 import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
 import { SalesPopup } from "@/components/SalesPopup";
@@ -11,6 +12,8 @@ import { Footer } from "@/components/Footer";
 import { NewsletterPopup } from "@/components/NewsletterPopup";
 import { MobileNav } from "@/components/MobileNav";
 import "../globals.css";
+
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 const sora = Sora({
   subsets: ["latin"],
@@ -160,6 +163,18 @@ export default async function LocaleLayout({
           <Footer />
 
         </NextIntlClientProvider>
+
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga-init" strategy="afterInteractive">
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{page_path:window.location.pathname});`}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
