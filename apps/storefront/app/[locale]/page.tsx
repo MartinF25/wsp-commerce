@@ -55,6 +55,9 @@ export default async function HomePage({
         parent_id: null,
         productCount: matching.length,
         coverImageUrl: matching[0]?.coverImageUrl ?? null,
+        metaTitle: null,
+        metaDescription: null,
+        imageUrl: null,
       };
     });
   })();
