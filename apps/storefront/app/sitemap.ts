@@ -40,6 +40,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: new Date(),
           changeFrequency: "weekly" as const,
           priority: 0.6,
+          alternates: {
+            languages: {
+              de: `${BASE}/categories/${c.slug}`,
+              en: `${BASE}/en/categories/${c.slug}`,
+              es: `${BASE}/es/categories/${c.slug}`,
+            },
+          },
         }))
       : [];
 

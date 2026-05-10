@@ -52,8 +52,34 @@ export default async function KontaktPage({ params }: Props) {
     offset: 0,
   }));
 
+  const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://wsp-solar.de";
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            name: "WSP Solarenergie",
+            url: BASE,
+            description: "Beratung und Installation von Solarzaun und SkyWind Kleinwindanlagen für nachhaltige Energie.",
+            address: {
+              "@type": "PostalAddress",
+              addressCountry: "DE",
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              contactType: "customer service",
+              url: `${BASE}/kontakt`,
+              availableLanguage: ["German", "English", "Spanish"],
+            },
+            areaServed: "Deutschland",
+            serviceType: ["Solarzaun", "SkyWind Kleinwindanlagen", "Kombilösungen"],
+          }),
+        }}
+      />
 
       {/* ── Hero ── */}
       <section className="py-16 sm:py-20 border-b border-gray-100">

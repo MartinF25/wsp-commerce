@@ -15,16 +15,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await fetchCategory(params.slug);
   if (!category) return { title: t("category_not_found") };
 
+  const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://wsp-solar.de";
+  const localePrefix = params.locale === "de" ? "" : `/${params.locale}`;
+  const canonicalUrl = `${BASE}${localePrefix}/categories/${params.slug}`;
+
   const title = category.metaTitle ?? `${category.name} – Solarzaun & SkyWind`;
   const description = category.metaDescription ?? category.description ?? category.name;
 
   return {
     title,
     description,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        de: `${BASE}/categories/${params.slug}`,
+        en: `${BASE}/en/categories/${params.slug}`,
+        es: `${BASE}/es/categories/${params.slug}`,
+      },
+    },
     openGraph: {
       title,
       description,
+      url: canonicalUrl,
+      type: "website",
       ...(category.imageUrl ? { images: [{ url: category.imageUrl, alt: category.name }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(category.imageUrl ? { images: [category.imageUrl] } : {}),
     },
   };
 }

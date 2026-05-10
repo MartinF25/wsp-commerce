@@ -80,9 +80,9 @@ export default async function HomePage({
             },
             contactPoint: {
               "@type": "ContactPoint",
-              telephone: "+49-XXX-XXXXXXX", // Platzhalter, anpassen
               contactType: "customer service",
               availableLanguage: ["German", "English", "Spanish"],
+              url: "https://wsp-solar.de/kontakt",
             },
           }),
         }}

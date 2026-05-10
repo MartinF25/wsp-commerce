@@ -25,6 +25,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function FAQPage({ params }: Props) {
   const t = await getTranslations({ locale: params.locale, namespace: "faq" });
 
+  const faqJsonLd = FAQ_SECTIONS.flatMap((section) =>
+    section.items
+      .filter((item): item is { question: string; answer: string } => typeof item.answer === "string")
+      .map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: { "@type": "Answer", text: item.answer },
+      }))
+  );
+
   return (
     <main>
       <script
@@ -33,14 +43,7 @@ export default async function FAQPage({ params }: Props) {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "FAQPage",
-            mainEntity: faqItems.map((item) => ({
-              "@type": "Question",
-              name: item.q,
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: item.a,
-              },
-            })),
+            mainEntity: faqJsonLd,
           }),
         }}
       />
