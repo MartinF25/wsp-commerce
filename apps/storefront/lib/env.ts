@@ -17,7 +17,7 @@ function getCommerceApiUrl(): string {
         "Bitte .env.local anlegen (Vorlage: .env.example)."
     );
   }
-  return url.replace(/\/$/, "");
+  return url.trim().replace(/\/$/, "");
 }
 
 export const env = {

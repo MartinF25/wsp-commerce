@@ -6,6 +6,7 @@ import type {
   ProductImage,
   ProductDocument,
   Category,
+  CategoryTranslation,
   ProductType,
   ProductStatus,
   BlogPost,
@@ -45,6 +46,7 @@ export type ProductWithVariants = Product & {
  * children werden in-memory aus einer Flat-Query aufgebaut, nicht per Prisma-Relation.
  */
 export type CategoryWithProducts = Category & {
+  translations: CategoryTranslation[];
   products: ProductWithVariants[];
   children: CategoryWithProducts[];
 };

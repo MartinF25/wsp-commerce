@@ -176,7 +176,9 @@
     "categories_h2": "Nach Kategorien kaufen",
     "result_count": "{count} Produkte",
     "category_no_products": "Keine Produkte",
-    "category_product_count": "{count} Produkte"
+    "category_product_count": "{count} Produkte",
+    "countdown_label": "Angebot endet in",
+    "countdown_expired": "Dieses Angebot ist abgelaufen."
   },
   "product": {
     "breadcrumb_home": "Start",

@@ -121,7 +121,10 @@ adminRoutes.get("/categories", async (c) => {
   const prisma = getPrismaClient();
 
   const categories = await prisma.category.findMany({
-    include: { _count: { select: { products: true } } },
+    include: {
+      _count: { select: { products: true } },
+      translations: { orderBy: { locale: "asc" } },
+    },
     orderBy: { name: "asc" },
   });
 
@@ -137,6 +140,7 @@ adminRoutes.get("/categories", async (c) => {
       is_active: cat.is_active,
       parent_id: cat.parent_id ?? null,
       productCount: cat._count.products,
+      translations: cat.translations,
     })),
   });
 });
@@ -296,6 +300,84 @@ adminRoutes.patch("/categories/:id/visibility", async (c) => {
   );
 
   return c.json({ data: updated });
+});
+
+// ─── GET /categories/:id/translations ────────────────────────────────────────
+
+adminRoutes.get("/categories/:id/translations", async (c) => {
+  const id = c.req.param("id");
+  const prisma = getPrismaClient();
+
+  const category = await prisma.category.findUnique({
+    where: { id },
+    include: { translations: { orderBy: { locale: "asc" } } },
+  });
+
+  if (!category) throw new CatalogError("CATEGORY_NOT_FOUND", 404, `Kategorie nicht gefunden: ${id}`);
+
+  return c.json({ data: category.translations });
+});
+
+// ─── PUT /categories/:id/translations/:locale ─────────────────────────────────
+
+adminRoutes.put("/categories/:id/translations/:locale", async (c) => {
+  const id = c.req.param("id");
+  const locale = c.req.param("locale") as "de" | "en" | "es";
+
+  if (!["de", "en", "es"].includes(locale)) {
+    throw new CatalogError("INVALID_LOCALE", 422, `Ungültige Locale: ${locale}. Erlaubt: de, en, es`);
+  }
+
+  const prisma = getPrismaClient();
+  const category = await prisma.category.findUnique({ where: { id }, select: { id: true } });
+  if (!category) throw new CatalogError("CATEGORY_NOT_FOUND", 404, `Kategorie nicht gefunden: ${id}`);
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
+  }
+
+  const { name, description, meta_title, meta_description } = body as Record<string, unknown>;
+
+  if (typeof name !== "string" || !name.trim()) {
+    throw new CatalogError("INVALID_BODY", 422, "name ist ein Pflichtfeld.");
+  }
+
+  const translation = await prisma.categoryTranslation.upsert({
+    where: { category_id_locale: { category_id: id, locale } },
+    update: {
+      name: name.trim(),
+      description: typeof description === "string" ? description.trim() || null : null,
+      meta_title: typeof meta_title === "string" ? meta_title.trim() || null : null,
+      meta_description: typeof meta_description === "string" ? meta_description.trim() || null : null,
+    },
+    create: {
+      category_id: id,
+      locale,
+      name: name.trim(),
+      description: typeof description === "string" ? description.trim() || null : null,
+      meta_title: typeof meta_title === "string" ? meta_title.trim() || null : null,
+      meta_description: typeof meta_description === "string" ? meta_description.trim() || null : null,
+    },
+  });
+
+  return c.json({ data: translation });
+});
+
+// ─── DELETE /categories/:id/translations/:locale ──────────────────────────────
+
+adminRoutes.delete("/categories/:id/translations/:locale", async (c) => {
+  const id = c.req.param("id");
+  const locale = c.req.param("locale");
+  const prisma = getPrismaClient();
+
+  await prisma.categoryTranslation.deleteMany({
+    where: { category_id: id, locale: locale as "de" | "en" | "es" },
+  });
+
+  return new Response(null, { status: 204 });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════

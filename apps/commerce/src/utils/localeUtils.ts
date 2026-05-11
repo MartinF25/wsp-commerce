@@ -1,4 +1,4 @@
-import type { ProductTranslation, ProductVariantTranslation } from "@prisma/client";
+import type { ProductTranslation, ProductVariantTranslation, CategoryTranslation } from "@prisma/client";
 
 // ─── Generisch ────────────────────────────────────────────────────────────────
 
@@ -30,6 +30,22 @@ export function resolveTranslation(
   locale: string,
   fallback = "de"
 ): ProductTranslation | null {
+  return (
+    translations.find((t) => t.locale === locale) ??
+    translations.find((t) => t.locale === fallback) ??
+    null
+  );
+}
+
+/**
+ * Resolves the best matching category translation for the requested locale.
+ * Falls back to the DE entry if the requested locale has no entry.
+ */
+export function resolveCategoryTranslation(
+  translations: CategoryTranslation[],
+  locale: string,
+  fallback = "de"
+): CategoryTranslation | null {
   return (
     translations.find((t) => t.locale === locale) ??
     translations.find((t) => t.locale === fallback) ??

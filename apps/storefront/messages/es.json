@@ -176,7 +176,9 @@
     "categories_h2": "Comprar por categoría.",
     "result_count": "{count} Productos",
     "category_no_products": "Sin productos",
-    "category_product_count": "{count} Productos"
+    "category_product_count": "{count} Productos",
+    "countdown_label": "La oferta termina en",
+    "countdown_expired": "Esta oferta ha expirado."
   },
   "product": {
     "breadcrumb_home": "Inicio",

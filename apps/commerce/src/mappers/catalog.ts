@@ -7,8 +7,9 @@ import type {
   PriceDisplay,
 } from "@wsp/contracts";
 import { isDirectlyPurchasable, isConfigurable, isAffiliateExternal, calculatePriceDisplay, computeSaleStatus } from "../utils/productUtils";
-import { resolveTranslation, resolveVariantTranslation } from "../utils/localeUtils";
+import { resolveTranslation, resolveVariantTranslation, resolveCategoryTranslation } from "../utils/localeUtils";
 import type { ProductWithVariants, CategoryWithProducts } from "../types";
+import type { CategoryTranslation } from "@prisma/client";
 
 function toRecordOrNull(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -150,20 +151,31 @@ export function toProductDetail(product: ProductWithVariants, locale = "de"): Pr
  * productCount muss vom Aufrufer übergeben werden (voraggregiert, kein N+1).
  */
 export function toCategorySummary(
-  category: { id: string; slug: string; name: string; parent_id: string | null; image_url?: string | null; meta_title?: string | null; meta_description?: string | null },
+  category: {
+    id: string;
+    slug: string;
+    name: string;
+    parent_id: string | null;
+    image_url?: string | null;
+    meta_title?: string | null;
+    meta_description?: string | null;
+    translations?: CategoryTranslation[];
+  },
   productCount: number,
-  coverImageUrl: string | null = null
+  coverImageUrl: string | null = null,
+  locale = "de"
 ): CategorySummary {
+  const t = category.translations ? resolveCategoryTranslation(category.translations, locale) : null;
   return {
     id: category.id,
     slug: category.slug,
-    name: category.name,
+    name: t?.name ?? category.name,
     parent_id: category.parent_id ?? null,
     productCount,
     coverImageUrl: category.image_url ?? coverImageUrl,
     imageUrl: category.image_url ?? null,
-    metaTitle: category.meta_title ?? null,
-    metaDescription: category.meta_description ?? null,
+    metaTitle: t?.meta_title ?? category.meta_title ?? null,
+    metaDescription: t?.meta_description ?? category.meta_description ?? null,
   };
 }
 
@@ -173,18 +185,19 @@ export function toCategorySummary(
  * children werden als CategorySummary ohne Tiefe abgebildet (nicht rekursiv).
  */
 export function toCategoryDetail(category: CategoryWithProducts, locale = "de"): CategoryDetail {
+  const t = resolveCategoryTranslation(category.translations ?? [], locale);
   return {
     id: category.id,
     slug: category.slug,
-    name: category.name,
-    description: category.description ?? null,
+    name: t?.name ?? category.name,
+    description: t?.description ?? category.description ?? null,
     parent_id: category.parent_id ?? null,
     imageUrl: category.image_url ?? null,
-    metaTitle: category.meta_title ?? null,
-    metaDescription: category.meta_description ?? null,
+    metaTitle: t?.meta_title ?? category.meta_title ?? null,
+    metaDescription: t?.meta_description ?? category.meta_description ?? null,
     products: category.products.map((p) => toProductSummary(p, locale)),
     children: category.children.map((child) =>
-      toCategorySummary(child, child.products?.length ?? 0)
+      toCategorySummary(child, child.products?.length ?? 0, null, locale)
     ),
   };
 }
@@ -195,19 +208,21 @@ export function toCategoryDetail(category: CategoryWithProducts, locale = "de"):
  * Rekursiv – spiegelt die Tiefe des Originalbaums.
  */
 export function toCategoryTreeNode(
-  category: CategoryWithProducts
+  category: CategoryWithProducts,
+  locale = "de"
 ): CategoryTreeNode {
   const coverImage = category.products?.[0]?.images?.[0] ?? null;
+  const t = resolveCategoryTranslation(category.translations ?? [], locale);
   return {
     id: category.id,
     slug: category.slug,
-    name: category.name,
+    name: t?.name ?? category.name,
     parent_id: category.parent_id ?? null,
     productCount: category.products?.length ?? 0,
     coverImageUrl: category.image_url ?? coverImage?.url ?? null,
     imageUrl: category.image_url ?? null,
-    metaTitle: category.meta_title ?? null,
-    metaDescription: category.meta_description ?? null,
-    children: category.children.map(toCategoryTreeNode),
+    metaTitle: t?.meta_title ?? category.meta_title ?? null,
+    metaDescription: t?.meta_description ?? category.meta_description ?? null,
+    children: category.children.map((child) => toCategoryTreeNode(child, locale)),
   };
 }

@@ -110,8 +110,8 @@ export async function fetchProduct(slug: string, locale = "de"): Promise<Product
  * Alle Kategorien als flache Liste mit voraggregierten Produktzählern.
  * Geeignet für Navigation und Filter-Sidebars.
  */
-export async function fetchCategories(): Promise<CategorySummary[]> {
-  const url = `${env.COMMERCE_API_URL}/api/catalog/categories`;
+export async function fetchCategories(locale = "de"): Promise<CategorySummary[]> {
+  const url = `${env.COMMERCE_API_URL}/api/catalog/categories?locale=${locale}`;
 
   const res = await fetch(url, { cache: "no-store" });
 
@@ -130,8 +130,8 @@ export async function fetchCategories(): Promise<CategorySummary[]> {
  * Gibt null zurück wenn die Kategorie nicht gefunden wird (404).
  * Wirft bei anderen HTTP-Fehlern.
  */
-export async function fetchCategory(slug: string): Promise<CategoryDetail | null> {
-  const url = `${env.COMMERCE_API_URL}/api/catalog/categories/${encodeURIComponent(slug)}`;
+export async function fetchCategory(slug: string, locale = "de"): Promise<CategoryDetail | null> {
+  const url = `${env.COMMERCE_API_URL}/api/catalog/categories/${encodeURIComponent(slug)}?locale=${locale}`;
 
   const res = await fetch(url, { cache: "no-store" });
 

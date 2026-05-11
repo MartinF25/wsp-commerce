@@ -176,7 +176,9 @@
     "categories_h2": "Shop by Category.",
     "result_count": "{count} Products",
     "category_no_products": "No products",
-    "category_product_count": "{count} Products"
+    "category_product_count": "{count} Products",
+    "countdown_label": "Offer ends in",
+    "countdown_expired": "This offer has expired."
   },
   "product": {
     "breadcrumb_home": "Home",

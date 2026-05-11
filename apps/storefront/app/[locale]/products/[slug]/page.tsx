@@ -23,21 +23,13 @@ const CATEGORY_IMAGES: Record<string, { src: string; alt: string }> = {
   "kombilösung": { src: "/images/skywind-rooftop.png", alt: "SkyWind auf Hausdach mit Solar" },
 };
 
-export async function generateStaticParams() {
-  try {
-    const result = await fetchProducts({ locale: "de", limit: 200 });
-    return result.items.flatMap((p) => [
-      { locale: "de", slug: p.slug },
-      { locale: "en", slug: p.slug },
-      { locale: "es", slug: p.slug },
-    ]);
-  } catch {
-    return [];
-  }
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const product = await fetchProduct(params.slug, params.locale);
+  let product: Awaited<ReturnType<typeof fetchProduct>>;
+  try {
+    product = await fetchProduct(params.slug, params.locale);
+  } catch {
+    return { title: "Not found" };
+  }
   if (!product) return { title: "Not found" };
 
   const title = product.meta_title ?? `${product.name} – Solarzaun & SkyWind`;

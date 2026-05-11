@@ -19,6 +19,7 @@ export class CategoryService {
     return prisma.category.findMany({
       where: { parent_id: null, is_active: true },
       orderBy: { name: "asc" },
+      include: { translations: true },
     });
   }
 
@@ -35,6 +36,7 @@ export class CategoryService {
       where: { is_active: true },
       orderBy: { name: "asc" },
       include: {
+        translations: true,
         _count: { select: { products: { where: { status: "active" } } } },
         products: {
           where: { status: "active" },
@@ -56,6 +58,7 @@ export class CategoryService {
     const category = await prisma.category.findUnique({
       where: { slug, is_active: true },
       include: {
+        translations: true,
         products: {
           where: { status: "active" },
           include: {
@@ -99,8 +102,9 @@ export class CategoryService {
     const category = await prisma.category.findUnique({
       where: { id },
       include: {
+        translations: true,
         products: true,
-        children: true,
+        children: { include: { translations: true } },
       },
     });
 
@@ -118,10 +122,13 @@ export class CategoryService {
   static async buildCategoryHierarchy(): Promise<CategoryWithProducts[]> {
     const prisma = getPrismaClient();
 
-    // Einzige DB-Abfrage: aktive Kategorien + ihre aktiven Produkte
+    // Einzige DB-Abfrage: aktive Kategorien + ihre aktiven Produkte + Übersetzungen
     const all = await prisma.category.findMany({
       where: { is_active: true },
-      include: { products: { where: { status: "active" } } },
+      include: {
+        translations: true,
+        products: { where: { status: "active" } },
+      },
       orderBy: { name: "asc" },
     });
 

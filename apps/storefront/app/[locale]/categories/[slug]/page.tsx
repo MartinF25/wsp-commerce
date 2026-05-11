@@ -12,7 +12,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "categories" });
-  const category = await fetchCategory(params.slug);
+  const category = await fetchCategory(params.slug, params.locale);
   if (!category) return { title: t("category_not_found") };
 
   const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://wsp-solar.de";
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CategoryDetailPage({ params }: Props) {
   const t = await getTranslations({ locale: params.locale, namespace: "categories" });
-  const category = await fetchCategory(params.slug);
+  const category = await fetchCategory(params.slug, params.locale);
   if (!category) notFound();
 
   const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://wsp-solar.de";

@@ -46,6 +46,18 @@ async function upsertVariantTranslation(variant_id: string, name: string) {
   });
 }
 
+async function upsertCategoryTranslation(
+  category_id: string,
+  locale: Locale,
+  data: { name: string; description?: string; meta_title?: string; meta_description?: string }
+) {
+  await prisma.categoryTranslation.upsert({
+    where: { category_id_locale: { category_id, locale } },
+    update: data,
+    create: { category_id, locale, ...data },
+  });
+}
+
 async function main() {
   console.log("🌱 Seed startet …");
 
@@ -78,6 +90,68 @@ async function main() {
     where: { slug: "kombiloesung" },
     update: { name: "Kombilösung" },
     create: { slug: "kombiloesung", name: "Kombilösung" },
+  });
+
+  // ─── Kategorie-Übersetzungen ────────────────────────────────────────────────
+
+  // Solarzaun
+  await upsertCategoryTranslation(catSolarzaun.id, Locale.de, {
+    name: "Solarzaun",
+    description: "Solarmodule integriert in Zaunelemente – Einfriedung und Stromerzeugung in einem System.",
+    meta_title: "Solarzaun – Photovoltaik & Einfriedung kaufen | WSP Solar",
+    meta_description: "Solarzaun direkt kaufen: Solarmodule und Einfriedung in einem. Für Privat, Gewerbe und Landwirtschaft. Jetzt Produkte entdecken.",
+  });
+  await upsertCategoryTranslation(catSolarzaun.id, Locale.en, {
+    name: "Solar Fence",
+    description: "Solar modules integrated into fence elements – fencing and power generation in one system.",
+    meta_title: "Solar Fence – Buy Photovoltaic Fencing | WSP Solar",
+    meta_description: "Buy solar fence systems: solar modules and fencing combined. For residential, commercial and agricultural use. Explore products now.",
+  });
+  await upsertCategoryTranslation(catSolarzaun.id, Locale.es, {
+    name: "Valla Solar",
+    description: "Módulos solares integrados en elementos de valla – cercado y generación eléctrica en un solo sistema.",
+    meta_title: "Valla Solar – Comprar Vallado Fotovoltaico | WSP Solar",
+    meta_description: "Compra sistemas de valla solar: módulos solares y cercado combinados. Para uso residencial, comercial y agrícola.",
+  });
+
+  // SkyWind
+  await upsertCategoryTranslation(catSkywind.id, Locale.de, {
+    name: "SkyWind",
+    description: "Kleine Windkraftanlagen für private und gewerbliche Nutzung – leise, wartungsarm, effizient.",
+    meta_title: "SkyWind Kleinwindanlagen kaufen | WSP Solar",
+    meta_description: "Kleinwindanlagen von SkyWind: 1 kW bis 5 kW für Privat, Gewerbe und Landwirtschaft. Jetzt Anlage konfigurieren.",
+  });
+  await upsertCategoryTranslation(catSkywind.id, Locale.en, {
+    name: "SkyWind",
+    description: "Small wind turbines for residential and commercial use – quiet, low-maintenance, efficient.",
+    meta_title: "Buy SkyWind Small Wind Turbines | WSP Solar",
+    meta_description: "SkyWind small wind turbines: 1 kW to 5 kW for residential, commercial and agricultural use. Configure your system now.",
+  });
+  await upsertCategoryTranslation(catSkywind.id, Locale.es, {
+    name: "SkyWind",
+    description: "Pequeñas turbinas eólicas para uso residencial y comercial – silenciosas, de bajo mantenimiento y eficientes.",
+    meta_title: "Comprar Aerogeneradores SkyWind | WSP Solar",
+    meta_description: "Aerogeneradores SkyWind: de 1 kW a 5 kW para uso residencial, comercial y agrícola. Configura tu sistema ahora.",
+  });
+
+  // Kombilösung
+  await upsertCategoryTranslation(catKombi.id, Locale.de, {
+    name: "Kombilösung",
+    description: "Solar und Wind kombiniert – maximale Autarkie durch ganzjährige Stromerzeugung bei jedem Wetter.",
+    meta_title: "Kombilösung Solar & Wind | WSP Solar",
+    meta_description: "Solar und Wind in einem System: Kombilösungen für maximale Autarkie. Individuelle Planung für Privat und Gewerbe.",
+  });
+  await upsertCategoryTranslation(catKombi.id, Locale.en, {
+    name: "Combo Solution",
+    description: "Solar and wind combined – maximum energy independence through year-round power generation in any weather.",
+    meta_title: "Combo Solution Solar & Wind | WSP Solar",
+    meta_description: "Solar and wind in one system: combo solutions for maximum energy independence. Custom planning for residential and commercial use.",
+  });
+  await upsertCategoryTranslation(catKombi.id, Locale.es, {
+    name: "Solución Combinada",
+    description: "Solar y eólico combinados – máxima autonomía energética con generación eléctrica todo el año con cualquier clima.",
+    meta_title: "Solución Combinada Solar y Eólica | WSP Solar",
+    meta_description: "Solar y eólico en un sistema: soluciones combinadas para máxima autonomía. Planificación personalizada para uso residencial y comercial.",
   });
 
   // ─── SOLARZAUN STANDARD ──────────────────────────────────────────────────────

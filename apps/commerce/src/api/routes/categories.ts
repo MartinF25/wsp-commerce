@@ -25,12 +25,12 @@ export const categoryRoutes = new Hono();
  *   { data: CategorySummary[] }
  */
 categoryRoutes.get("/", async (c) => {
-  // listAllCategories liefert _count.products – ein einziger DB-Roundtrip.
+  const { data: locale = "de" } = LocaleSchema.safeParse(c.req.query("locale"));
   const categories = await CategoryService.listAllCategories();
 
   const summaries = categories.map((cat) => {
     const fallbackImageUrl = cat.products?.[0]?.images?.[0]?.url ?? null;
-    return toCategorySummary(cat, cat._count.products, fallbackImageUrl);
+    return toCategorySummary(cat, cat._count.products, fallbackImageUrl, locale);
   });
 
   return c.json({ data: summaries });
