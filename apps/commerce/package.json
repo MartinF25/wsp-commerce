@@ -14,7 +14,8 @@
   "dependencies": {
     "@hono/node-server": "1.19.14",
     "@prisma/client": "5.22.0",
-    "@wsp/contracts": "file:../../packages/contracts/wsp-contracts-0.0.1.tgz",
+    "@wsp/contracts": "file:./wsp-contracts-0.0.1.tgz",
+    "zod": "^3.22.4",
     "hono": "4.12.14"
   },
   "devDependencies": {

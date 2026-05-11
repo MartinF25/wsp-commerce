@@ -26,6 +26,16 @@ export interface Category {
   productCount?: number;
 }
 
+export interface CategoryTranslation {
+  id: string;
+  category_id: string;
+  locale: Locale;
+  name: string;
+  description: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+}
+
 export interface Translation {
   id: string;
   product_id: string;
@@ -251,6 +261,17 @@ export const api = {
       request<Category>(`/categories/${id}/visibility`, {
         method: "PATCH",
         body: JSON.stringify({ is_active }),
+      }),
+    getTranslations: (id: string) =>
+      request<CategoryTranslation[]>(`/categories/${id}/translations`),
+    saveTranslation: (
+      id: string,
+      locale: Locale,
+      data: { name: string; description?: string | null; meta_title?: string | null; meta_description?: string | null }
+    ) =>
+      request<CategoryTranslation>(`/categories/${id}/translations/${locale}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
       }),
   },
 
