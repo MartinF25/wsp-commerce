@@ -10,18 +10,20 @@ type Props = {
   searchParams: { category?: string };
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "blog" });
-  const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/blog` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/${params.locale}/blog`;
-  return { 
-    title: t("meta_title"), 
+  const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
+  const canonicalUrl = params.locale === "de" ? `${BASE}/blog` : `${BASE}/${params.locale}/blog`;
+  return {
+    title: t("meta_title"),
     description: t("meta_desc"),
+    ...(searchParams.category && { robots: { index: false, follow: true } }),
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/blog`,
-        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/en/blog`,
-        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/es/blog`,
+        de: `${BASE}/blog`,
+        en: `${BASE}/en/blog`,
+        es: `${BASE}/es/blog`,
       },
     },
   };

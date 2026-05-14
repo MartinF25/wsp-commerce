@@ -8,13 +8,14 @@ import type { CategorySummary } from "@wsp/types";
 
 type Props = { params: { locale: string }; searchParams: { category?: string } };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "products" });
   const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
   const canonicalUrl = params.locale === "de" ? `${BASE}/products` : `${BASE}/${params.locale}/products`;
   return {
     title: t("meta_title"),
     description: t("meta_desc"),
+    ...(searchParams.category && { robots: { index: false, follow: true } }),
     alternates: {
       canonical: canonicalUrl,
       languages: { de: `${BASE}/products`, en: `${BASE}/en/products`, es: `${BASE}/es/products` },
