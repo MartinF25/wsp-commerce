@@ -4,10 +4,14 @@
  * onLeadSubmit (HTTP Function)
  * ─────────────────────────────
  * Empfängt Payloads von der Storefront und routet nach payload.type:
- *   type "lead"                    → leads/{leadId}
- *   type "product.waitlist.created" → product_waitlist/{entryId}
+ *   type "lead"                    → leads/{leadId}      + n8n /webhook/lead
+ *   type "product.waitlist.created" → product_waitlist/{entryId} + Resend Admin-Mail
  *
- * Beide Flows schreiben nach Firestore und triggern den n8n-Webhook.
+ * Env-Vars:
+ *   N8N_WEBHOOK_URL   – n8n-Basis-URL für Lead-Webhook
+ *   RESEND_API_KEY    – Resend API-Key (re_...)
+ *   RESEND_FROM       – Absender-Adresse (z. B. noreply@wsp-solarenergie.de)
+ *   ADMIN_EMAIL       – Empfänger der Admin-Benachrichtigung (default: verkauf@wsp-solarenergie.de)
  *
  * Firestore-Struktur: product_waitlist/{entryId}
  *   entryId      string    – UUID
@@ -26,14 +30,15 @@
  *   submittedAt  string    – ISO 8601
  *   createdAt    Timestamp
  *   notifiedAt   Timestamp | null
- *   n8nStatus    "pending" | "sent" | "failed"
- *   n8nSentAt    Timestamp | null
+ *   emailStatus  "pending" | "sent" | "failed"
+ *   emailSentAt  Timestamp | null
  */
 
 import { onRequest } from "firebase-functions/v2/https";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
+import { Resend } from "resend";
 
 // Firebase Admin einmalig initialisieren (idempotent)
 initializeApp();
@@ -110,7 +115,6 @@ export const onLeadSubmit = onRequest(
     region: "europe-west1",
   },
   async (req, res) => {
-    // ── Method Guard ─────────────────────────────────────────────────────────
     if (req.method !== "POST") {
       res.status(405).json({ error: "Method Not Allowed" });
       return;
@@ -120,9 +124,8 @@ export const onLeadSubmit = onRequest(
     const n8nBaseUrl = process.env.N8N_WEBHOOK_URL;
     const db = getFirestore();
 
-    // ── Router ───────────────────────────────────────────────────────────────
     if (isValidWaitlistPayload(payload)) {
-      await handleWaitlist(payload, db, n8nBaseUrl ?? null, res);
+      await handleWaitlist(payload, db, res);
       return;
     }
 
@@ -187,7 +190,6 @@ async function handleLead(
 async function handleWaitlist(
   payload: WaitlistPayload,
   db: ReturnType<typeof getFirestore>,
-  n8nBaseUrl: string | null,
   res: any
 ) {
   const email = payload.email.trim().toLowerCase();
@@ -231,8 +233,8 @@ async function handleWaitlist(
     submittedAt: payload.submittedAt,
     createdAt: FieldValue.serverTimestamp(),
     notifiedAt: null as Timestamp | null,
-    n8nStatus: "pending" as const,
-    n8nSentAt: null as Timestamp | null,
+    emailStatus: "pending" as const,
+    emailSentAt: null as Timestamp | null,
   };
 
   try {
@@ -244,12 +246,87 @@ async function handleWaitlist(
     return;
   }
 
-  await triggerN8n(db, "product_waitlist", entryId, n8nBaseUrl, "/webhook/waitlist", payload, "Waitlist");
+  // Admin-Benachrichtigung via Resend
+  await sendAdminWaitlistEmail(db, entryId, payload, email);
 
   res.status(200).json({ success: true, entryId });
 }
 
-// ─── n8n-Hilfsfunktion ────────────────────────────────────────────────────────
+// ─── Resend Admin-Mail ────────────────────────────────────────────────────────
+
+async function sendAdminWaitlistEmail(
+  db: ReturnType<typeof getFirestore>,
+  entryId: string,
+  payload: WaitlistPayload,
+  email: string
+) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn("[sendAdminWaitlistEmail] RESEND_API_KEY nicht gesetzt – E-Mail übersprungen.");
+    await db.collection("product_waitlist").doc(entryId).update({ emailStatus: "failed" });
+    return;
+  }
+
+  const from = process.env.RESEND_FROM ?? "WSP Solarenergie <noreply@wsp-solarenergie.de>";
+  const to = process.env.ADMIN_EMAIL ?? "verkauf@wsp-solarenergie.de";
+
+  const variantLine = payload.variantSku
+    ? `<tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">Variante</td><td style="padding:4px 0 4px 16px;font-size:13px;">${payload.variantSku}</td></tr>`
+    : "";
+
+  const nameLine = payload.firstName
+    ? `<tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">Vorname</td><td style="padding:4px 0 4px 16px;font-size:13px;">${payload.firstName}</td></tr>`
+    : "";
+
+  const html = `
+    <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;background:#fff;padding:32px 24px;border:1px solid #E5E7EB;border-radius:8px;">
+      <p style="font-size:12px;color:#6B7280;margin:0 0 16px;">WSP Solarenergie · Warteliste</p>
+      <h2 style="font-size:18px;font-weight:700;color:#1C1C1E;margin:0 0 8px;">Neue Wartelisten-Eintragung</h2>
+      <p style="font-size:14px;color:#6B7280;margin:0 0 24px;">Ein Interessent hat sich für ein nicht verfügbares Produkt eingetragen.</p>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">Produkt</td><td style="padding:4px 0 4px 16px;font-size:13px;font-weight:600;color:#1C1C1E;">${payload.productName}</td></tr>
+        <tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">Slug</td><td style="padding:4px 0 4px 16px;font-size:13px;">${payload.productSlug}</td></tr>
+        ${variantLine}
+        <tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">E-Mail</td><td style="padding:4px 0 4px 16px;font-size:13px;">${email}</td></tr>
+        ${nameLine}
+        <tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">Sprache</td><td style="padding:4px 0 4px 16px;font-size:13px;">${payload.locale.toUpperCase()}</td></tr>
+        <tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">Seite</td><td style="padding:4px 0 4px 16px;font-size:13px;">${payload.sourcePath}</td></tr>
+        <tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">Zeitpunkt</td><td style="padding:4px 0 4px 16px;font-size:13px;">${new Date(payload.submittedAt).toLocaleString("de-DE", { timeZone: "Europe/Berlin" })}</td></tr>
+        <tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">Entry-ID</td><td style="padding:4px 0 4px 16px;font-size:13px;color:#9CA3AF;">${entryId}</td></tr>
+      </table>
+    </div>
+  `;
+
+  try {
+    const resend = new Resend(apiKey);
+    const { error } = await resend.emails.send({
+      from,
+      to,
+      subject: `Warteliste: ${payload.productName}${payload.variantSku ? ` (${payload.variantSku})` : ""}`,
+      html,
+    });
+
+    if (error) {
+      console.warn(`[sendAdminWaitlistEmail] Resend-Fehler für ${entryId}:`, error);
+      await db.collection("product_waitlist").doc(entryId).update({ emailStatus: "failed" });
+    } else {
+      await db.collection("product_waitlist").doc(entryId).update({
+        emailStatus: "sent",
+        emailSentAt: FieldValue.serverTimestamp(),
+      });
+      console.info(`[sendAdminWaitlistEmail] Admin-Mail gesendet für ${entryId}`);
+    }
+  } catch (err) {
+    console.error(`[sendAdminWaitlistEmail] Unerwarteter Fehler für ${entryId}:`, err);
+    await db
+      .collection("product_waitlist")
+      .doc(entryId)
+      .update({ emailStatus: "failed" })
+      .catch(() => undefined);
+  }
+}
+
+// ─── n8n-Hilfsfunktion (für Lead-Flow) ───────────────────────────────────────
 
 async function triggerN8n(
   db: ReturnType<typeof getFirestore>,
