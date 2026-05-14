@@ -35,10 +35,13 @@
  */
 
 import { onRequest } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
 import { Resend } from "resend";
+
+const resendApiKey = defineSecret("RESEND_API_KEY");
 
 // Firebase Admin einmalig initialisieren (idempotent)
 initializeApp();
@@ -113,6 +116,7 @@ export const onLeadSubmit = onRequest(
     timeoutSeconds: 30,
     memory: "256MiB",
     region: "europe-west1",
+    secrets: [resendApiKey],
   },
   async (req, res) => {
     if (req.method !== "POST") {
@@ -260,15 +264,15 @@ async function sendAdminWaitlistEmail(
   payload: WaitlistPayload,
   email: string
 ) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = resendApiKey.value();
   if (!apiKey) {
     console.warn("[sendAdminWaitlistEmail] RESEND_API_KEY nicht gesetzt – E-Mail übersprungen.");
     await db.collection("product_waitlist").doc(entryId).update({ emailStatus: "failed" });
     return;
   }
 
-  const from = process.env.RESEND_FROM ?? "WSP Solarenergie <noreply@wsp-solarenergie.de>";
-  const to = process.env.ADMIN_EMAIL ?? "verkauf@wsp-solarenergie.de";
+  const from = "WSP Solarenergie <noreply@wsp-solarenergie.de>";
+  const to = "verkauf@wsp-solarenergie.de";
 
   const variantLine = payload.variantSku
     ? `<tr><td style="padding:4px 0;color:#6B7280;font-size:13px;">Variante</td><td style="padding:4px 0 4px 16px;font-size:13px;">${payload.variantSku}</td></tr>`
