@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useTransition } from "react";
+import { useFormState } from "react-dom";
 import { useTranslations } from "next-intl";
 import { submitWaitlist, type WaitlistFormState } from "@/app/[locale]/products/waitlist-actions";
 import { Link } from "@/i18n/navigation";
@@ -27,7 +28,8 @@ export function WaitlistForm({
   sourcePath,
 }: Props) {
   const t = useTranslations("product");
-  const [state, formAction, isPending] = useActionState(submitWaitlist, initialState);
+  const [state, formAction] = useFormState(submitWaitlist, initialState);
+  const [isPending] = useTransition();
 
   if (state.status === "success") {
     return (
