@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await fetchCategory(params.slug, params.locale);
   if (!category) return { title: t("category_not_found") };
 
-  const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://wsp-solar.de";
+  const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://webshop.wsp-solarenergie.de";
   const localePrefix = params.locale === "de" ? "" : `/${params.locale}`;
   const canonicalUrl = `${BASE}${localePrefix}/categories/${params.slug}`;
 
@@ -54,7 +54,7 @@ export default async function CategoryDetailPage({ params }: Props) {
   const category = await fetchCategory(params.slug, params.locale);
   if (!category) notFound();
 
-  const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://wsp-solar.de";
+  const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://webshop.wsp-solarenergie.de";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

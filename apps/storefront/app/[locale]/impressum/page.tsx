@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: "Anbieterkennzeichnung gemäß § 5 TMG.",
   robots: { index: false },
   alternates: {
-    canonical: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/impressum`,
+    canonical: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/impressum`,
   },
 };
 

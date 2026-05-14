@@ -56,8 +56,8 @@ export default async function HomePage({
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "WSP Solarenergie",
-            url: "https://wsp-solar.de",
-            logo: "https://wsp-solar.de/images/logo.png",
+            url: "https://webshop.wsp-solarenergie.de",
+            logo: "https://webshop.wsp-solarenergie.de/images/logo.png",
             description: "Experte für Solarzaun und SkyWind Kleinwindanlagen – nachhaltige Energie für Privat und Gewerbe.",
             address: {
               "@type": "PostalAddress",
@@ -67,7 +67,7 @@ export default async function HomePage({
               "@type": "ContactPoint",
               contactType: "customer service",
               availableLanguage: ["German", "English", "Spanish"],
-              url: "https://wsp-solar.de/kontakt",
+              url: "https://webshop.wsp-solarenergie.de/kontakt",
             },
           }),
         }}
@@ -79,7 +79,7 @@ export default async function HomePage({
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "WSP Solarenergie",
-            url: "https://wsp-solar.de",
+            url: "https://webshop.wsp-solarenergie.de",
             description: "Solarzaun und SkyWind Kleinwindanlagen – nachhaltige Energie für Ihr Zuhause und Gewerbe.",
           }),
         }}
@@ -92,7 +92,7 @@ export default async function HomePage({
             "@type": "ProfessionalService",
             name: "WSP Solarenergie",
             description: "Beratung und Installation von Solarzaun und SkyWind Kleinwindanlagen für nachhaltige Energie.",
-            url: "https://wsp-solar.de",
+            url: "https://webshop.wsp-solarenergie.de",
             address: {
               "@type": "PostalAddress",
               addressCountry: "DE",

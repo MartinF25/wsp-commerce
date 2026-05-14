@@ -67,7 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         })
       : [];
 
-  return [
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: BASE,
       lastModified: new Date(),
@@ -75,21 +75,76 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
       alternates: { languages: { de: BASE, en: `${BASE}/en`, es: `${BASE}/es` } },
     },
-    { url: `${BASE}/products`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
+    {
+      url: `${BASE}/products`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+      alternates: { languages: { de: `${BASE}/products`, en: `${BASE}/en/products`, es: `${BASE}/es/products` } },
+    },
+    {
+      url: `${BASE}/categories`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: { languages: { de: `${BASE}/categories`, en: `${BASE}/en/categories`, es: `${BASE}/es/categories` } },
+    },
     {
       url: localeUrl("de", "/blog"),
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.8,
-      alternates: {
-        languages: {
-          de: localeUrl("de", "/blog"),
-          en: localeUrl("en", "/blog"),
-          es: localeUrl("es", "/blog"),
-        },
-      },
+      alternates: { languages: { de: localeUrl("de", "/blog"), en: localeUrl("en", "/blog"), es: localeUrl("es", "/blog") } },
+    },
+    {
+      url: `${BASE}/solarzaun`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+      alternates: { languages: { de: `${BASE}/solarzaun`, en: `${BASE}/en/solarzaun`, es: `${BASE}/es/solarzaun` } },
+    },
+    {
+      url: `${BASE}/skywind`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+      alternates: { languages: { de: `${BASE}/skywind`, en: `${BASE}/en/skywind`, es: `${BASE}/es/skywind` } },
+    },
+    {
+      url: `${BASE}/kombiloesungen`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+      alternates: { languages: { de: `${BASE}/kombiloesungen`, en: `${BASE}/en/kombiloesungen`, es: `${BASE}/es/kombiloesungen` } },
+    },
+    {
+      url: `${BASE}/gewerbe-b2b`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+      alternates: { languages: { de: `${BASE}/gewerbe-b2b`, en: `${BASE}/en/gewerbe-b2b`, es: `${BASE}/es/gewerbe-b2b` } },
+    },
+    {
+      url: `${BASE}/privatkunden`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+      alternates: { languages: { de: `${BASE}/privatkunden`, en: `${BASE}/en/privatkunden`, es: `${BASE}/es/privatkunden` } },
+    },
+    {
+      url: `${BASE}/faq`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+      alternates: { languages: { de: `${BASE}/faq`, en: `${BASE}/en/faq`, es: `${BASE}/es/faq` } },
     },
     { url: `${BASE}/kontakt`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
+    { url: `${BASE}/impressum`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.2 },
+    { url: `${BASE}/datenschutz`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.2 },
+  ];
+
+  return [
+    ...staticPages,
     ...productUrls,
     ...blogUrls,
     ...categoryUrls,

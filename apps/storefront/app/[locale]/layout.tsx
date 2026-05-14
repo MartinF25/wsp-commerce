@@ -40,7 +40,7 @@ export async function generateMetadata({
   params: { locale: string };
 }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "home" });
-  const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/${params.locale}`;
+  const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/${params.locale}`;
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000"),
     title: t("meta_title"),
@@ -48,9 +48,9 @@ export async function generateMetadata({
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/`,
-        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/en`,
-        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/es`,
+        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/`,
+        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/en`,
+        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/es`,
       },
     },
     icons: {
@@ -66,7 +66,7 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/images/hero-bg.png`,
+          url: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/images/hero-bg.png`,
           width: 1200,
           height: 630,
           alt: t("meta_title"),
@@ -77,7 +77,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: t("meta_title"),
       description: t("meta_description"),
-      images: [`${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/images/hero-bg.png`],
+      images: [`${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/images/hero-bg.png`],
     },
   };
 }

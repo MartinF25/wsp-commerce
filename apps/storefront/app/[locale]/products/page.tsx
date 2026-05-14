@@ -10,17 +10,29 @@ type Props = { params: { locale: string }; searchParams: { category?: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "products" });
-  const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/products` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/${params.locale}/products`;
-  return { 
-    title: t("meta_title"), 
+  const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
+  const canonicalUrl = params.locale === "de" ? `${BASE}/products` : `${BASE}/${params.locale}/products`;
+  return {
+    title: t("meta_title"),
     description: t("meta_desc"),
     alternates: {
       canonical: canonicalUrl,
-      languages: {
-        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/products`,
-        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/en/products`,
-        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/es/products`,
-      },
+      languages: { de: `${BASE}/products`, en: `${BASE}/en/products`, es: `${BASE}/es/products` },
+    },
+    openGraph: {
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      url: canonicalUrl,
+      siteName: "Solarzaun & SkyWind",
+      locale: params.locale === "de" ? "de_DE" : params.locale === "en" ? "en_US" : "es_ES",
+      type: "website",
+      images: [{ url: `${BASE}/images/hero-bg.png`, width: 1200, height: 630, alt: t("meta_title") }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      images: [`${BASE}/images/hero-bg.png`],
     },
   };
 }
