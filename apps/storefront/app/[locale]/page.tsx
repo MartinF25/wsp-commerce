@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { fetchProducts } from "@/lib/catalog";
+import { fetchProducts, fetchCategories } from "@/lib/catalog";
 import { fetchBlogPosts } from "@/lib/blog";
 import type { BlogPostSummary } from "@/lib/blog";
 import type { Locale } from "@/i18n/routing";
@@ -37,31 +37,12 @@ export default async function HomePage({
     // show page without blog section
   }
 
-  // Kategorien aus Produkten ableiten — kein separater API-Call nötig
-  const categories: CategorySummary[] = (() => {
-    const slugs = [
-      ...new Set(
-        products
-          .map((p) => p.category?.slug)
-          .filter((s): s is string => s != null),
-      ),
-    ];
-    return slugs.map((slug) => {
-      const matching = products.filter((p) => p.category?.slug === slug);
-      return {
-        id: slug,
-        slug,
-        name: matching[0]?.category?.name ?? slug,
-        description: null,
-        parent_id: null,
-        productCount: matching.length,
-        coverImageUrl: matching[0]?.coverImageUrl ?? null,
-        metaTitle: null,
-        metaDescription: null,
-        imageUrl: null,
-      };
-    });
-  })();
+  let categories: CategorySummary[] = [];
+  try {
+    categories = await fetchCategories(params.locale);
+  } catch {
+    // show page without categories section
+  }
 
   const benefits = t.raw("benefits") as { number: string; title: string; desc: string }[];
   const faqItems = t.raw("faq_items") as { q: string; a: string }[];
