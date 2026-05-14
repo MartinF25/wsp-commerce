@@ -53,6 +53,10 @@ export async function generateMetadata({
         es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://wsp-solar.de"}/es`,
       },
     },
+    icons: {
+      icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+      shortcut: "/favicon.svg",
+    },
     openGraph: {
       title: t("meta_title"),
       description: t("meta_description"),
