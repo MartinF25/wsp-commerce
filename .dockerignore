@@ -1,0 +1,9 @@
+node_modules
+**/node_modules
+**/.next
+apps/storefront
+apps/firebase
+apps/admin
+.git
+.github
+*.md
