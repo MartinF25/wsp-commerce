@@ -14,3 +14,4 @@
  */
 export * from "./catalog";
 export * from "./blog";
+export * from "./waitlist";

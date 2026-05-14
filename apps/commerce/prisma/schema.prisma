@@ -31,6 +31,20 @@ enum ProductStatus {
   archived
 }
 
+/// Steuert die Verfügbarkeitsanzeige und Wartelisten-CTA im Storefront.
+/// in_stock       → normal kaufbar / anfragbar
+/// out_of_stock   → nicht verfügbar, Wartelisten-CTA anzeigen
+/// preorder       → Vorbestellung möglich (zukünftige Phase)
+/// discontinued   → eingestellt, kein Waitlist-CTA
+/// on_request     → immer auf Anfrage (überschreibt stock_quantity)
+enum AvailabilityStatus {
+  in_stock
+  out_of_stock
+  preorder
+  discontinued
+  on_request
+}
+
 enum BlogStatus {
   draft
   published
@@ -85,11 +99,12 @@ model CategoryTranslation {
 }
 
 model Product {
-  id           String        @id @default(uuid())
-  slug         String        @unique
-  product_type ProductType   @default(inquiry_only)
-  status       ProductStatus @default(draft)
-  category_id  String?
+  id                  String             @id @default(uuid())
+  slug                String             @unique
+  product_type        ProductType        @default(inquiry_only)
+  status              ProductStatus      @default(draft)
+  availability_status AvailabilityStatus @default(in_stock)
+  category_id         String?
   /// PayPal Payment Link (z.B. https://www.paypal.com/paypalme/... oder https://www.paypal.com/checkout/...)
   paypal_url   String?
   /// Stripe Payment Link (z.B. https://buy.stripe.com/...)

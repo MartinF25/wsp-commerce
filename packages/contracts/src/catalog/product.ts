@@ -1,6 +1,25 @@
 import { z } from "zod";
 import { ProductTypeSchema } from "./query";
 
+// ─── AvailabilityStatus ───────────────────────────────────────────────────────
+
+/**
+ * Verfügbarkeitsstatus eines Produkts – gesteuert durch Admin.
+ * in_stock     → normal kaufbar/anfragbar, kein Waitlist-CTA
+ * out_of_stock → nicht verfügbar, Waitlist-CTA anzeigen
+ * preorder     → Vorbestellung (zukünftige Phase)
+ * discontinued → eingestellt, kein Waitlist-CTA
+ * on_request   → immer auf Anfrage, kein Waitlist-CTA
+ */
+export const AvailabilityStatusSchema = z.enum([
+  "in_stock",
+  "out_of_stock",
+  "preorder",
+  "discontinued",
+  "on_request",
+]);
+export type AvailabilityStatus = z.infer<typeof AvailabilityStatusSchema>;
+
 // ─── SaleStatus ───────────────────────────────────────────────────────────────
 
 /** Abgeleitet – nie gespeichert. Berechnung: computeSaleStatus() im Commerce-Service. */
@@ -96,6 +115,9 @@ export const ProductSummarySchema = z.object({
   short_description: z.string().nullable(),
   product_type: ProductTypeSchema,
   purchasable: z.boolean(),
+  availabilityStatus: AvailabilityStatusSchema,
+  /** true wenn Produkt out_of_stock/preorder ist UND product_type Waitlist unterstützt (direct_purchase|configurable) */
+  waitlistEligible: z.boolean(),
   category: z
     .object({
       slug: z.string(),
@@ -138,6 +160,8 @@ export const ProductDetailSchema = z.object({
   project_note: z.string().nullable(),
   product_type: ProductTypeSchema,
   purchasable: z.boolean(),
+  availabilityStatus: AvailabilityStatusSchema,
+  waitlistEligible: z.boolean(),
   paypal_url: z.string().nullable(),
   stripe_url: z.string().nullable(),
   category: z

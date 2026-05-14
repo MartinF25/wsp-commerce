@@ -5,6 +5,7 @@ import type {
   CategoryDetail,
   CategoryTreeNode,
   PriceDisplay,
+  AvailabilityStatus,
 } from "@wsp/contracts";
 import { isDirectlyPurchasable, isConfigurable, isAffiliateExternal, calculatePriceDisplay, computeSaleStatus } from "../utils/productUtils";
 import { resolveTranslation, resolveVariantTranslation, resolveCategoryTranslation } from "../utils/localeUtils";
@@ -38,6 +39,13 @@ export function toProductSummary(product: ProductWithVariants, locale = "de"): P
   const coverImage = product.images?.[0] ?? null;
   const t = resolveTranslation(product.translations, locale);
 
+  const availabilityStatus = (product.availability_status ?? "in_stock") as AvailabilityStatus;
+  const isWaitlistType =
+    isDirectlyPurchasable(product.product_type) || isConfigurable(product.product_type);
+  const waitlistEligible =
+    isWaitlistType &&
+    (availabilityStatus === "out_of_stock" || availabilityStatus === "preorder");
+
   return {
     id: product.id,
     slug: product.slug,
@@ -47,6 +55,8 @@ export function toProductSummary(product: ProductWithVariants, locale = "de"): P
     purchasable:
       isDirectlyPurchasable(product.product_type) ||
       isConfigurable(product.product_type),
+    availabilityStatus,
+    waitlistEligible,
     category: product.category
       ? { slug: product.category.slug, name: product.category.name }
       : null,
@@ -71,6 +81,13 @@ export function toProductDetail(product: ProductWithVariants, locale = "de"): Pr
   const priceDisplay: PriceDisplay = calculatePriceDisplay({ ...product, variants: activeVariants });
   const t = resolveTranslation(product.translations, locale);
 
+  const availabilityStatus = (product.availability_status ?? "in_stock") as AvailabilityStatus;
+  const isWaitlistType =
+    isDirectlyPurchasable(product.product_type) || isConfigurable(product.product_type);
+  const waitlistEligible =
+    isWaitlistType &&
+    (availabilityStatus === "out_of_stock" || availabilityStatus === "preorder");
+
   return {
     id: product.id,
     slug: product.slug,
@@ -87,6 +104,8 @@ export function toProductDetail(product: ProductWithVariants, locale = "de"): Pr
     purchasable:
       isDirectlyPurchasable(product.product_type) ||
       isConfigurable(product.product_type),
+    availabilityStatus,
+    waitlistEligible,
     paypal_url: product.paypal_url ?? null,
     stripe_url: product.stripe_url ?? null,
     category: product.category

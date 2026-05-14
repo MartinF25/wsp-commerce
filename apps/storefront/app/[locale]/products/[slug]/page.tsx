@@ -226,6 +226,11 @@ export default async function ProductDetailPage({ params }: Props) {
                 variants={p.variants}
                 productType={p.product_type}
                 productPriceDisplay={p.priceDisplay}
+                waitlistEligible={p.waitlistEligible}
+                productId={p.id}
+                productSlug={p.slug}
+                productName={p.name}
+                sourcePath={`/${params.locale !== "de" ? `${params.locale}/` : ""}products/${p.slug}`}
               />
             )}
 
@@ -261,9 +266,11 @@ export default async function ProductDetailPage({ params }: Props) {
 
             {p.product_type !== "affiliate_external" && (
               <div className="flex items-center gap-2 mb-6">
-                <span className={`inline-block w-2 h-2 rounded-full ${p.purchasable ? "bg-emerald-500" : "bg-amber-400"}`} />
+                <span className={`inline-block w-2 h-2 rounded-full ${
+                  p.waitlistEligible ? "bg-orange-400" : p.purchasable ? "bg-emerald-500" : "bg-amber-400"
+                }`} />
                 <span className="text-sm text-brand-muted">
-                  {p.purchasable ? t("available") : t("on_request")}
+                  {p.waitlistEligible ? t("out_of_stock") : p.purchasable ? t("available") : t("on_request")}
                 </span>
               </div>
             )}

@@ -4,11 +4,17 @@ import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { Variant, PriceDisplay, ProductType } from "@wsp/types";
+import { WaitlistForm } from "@/components/WaitlistForm";
 
 type Props = {
   variants: Variant[];
   productType: ProductType;
   productPriceDisplay: PriceDisplay;
+  waitlistEligible?: boolean;
+  productId?: string;
+  productSlug?: string;
+  productName?: string;
+  sourcePath?: string;
 };
 
 function formatPrice(cents: number, currency: string, locale: string): string {
@@ -20,7 +26,16 @@ function formatPrice(cents: number, currency: string, locale: string): string {
   }).format(cents / 100);
 }
 
-export function VariantSelector({ variants, productType, productPriceDisplay }: Props) {
+export function VariantSelector({
+  variants,
+  productType,
+  productPriceDisplay,
+  waitlistEligible = false,
+  productId = "",
+  productSlug = "",
+  productName = "",
+  sourcePath = "",
+}: Props) {
   const t = useTranslations("product");
   const locale = useLocale();
   const [selectedId, setSelectedId] = useState<string>(variants[0]?.id ?? "");
@@ -119,10 +134,29 @@ export function VariantSelector({ variants, productType, productPriceDisplay }: 
         </p>
       )}
 
-      {/* CTA */}
-      <div className="mb-8">
-        <VariantCta productType={productType} selected={selected} />
-      </div>
+      {/* Out-of-Stock: Warteliste statt CTA */}
+      {waitlistEligible ? (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="inline-block w-2 h-2 rounded-full bg-orange-400" />
+            <span className="text-sm text-brand-muted">{t("out_of_stock")}</span>
+          </div>
+          <WaitlistForm
+            productId={productId}
+            productSlug={productSlug}
+            productName={productName}
+            variantId={selected?.id}
+            variantSku={selected?.sku}
+            locale={locale}
+            sourcePath={sourcePath}
+          />
+        </div>
+      ) : (
+        /* CTA */
+        <div className="mb-8">
+          <VariantCta productType={productType} selected={selected} />
+        </div>
+      )}
     </div>
   );
 }

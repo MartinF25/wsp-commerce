@@ -1,43 +1,33 @@
 /**
- * Firebase Cloud Functions – wsp-commerce Lead-Ingestion
+ * Firebase Cloud Functions – wsp-commerce Lead- & Waitlist-Ingestion
  *
  * onLeadSubmit (HTTP Function)
  * ─────────────────────────────
- * Empfängt einen validierten Lead-Payload von der Storefront Server Action,
- * speichert ihn in Firestore und triggert den n8n-Webhook.
+ * Empfängt Payloads von der Storefront und routet nach payload.type:
+ *   type "lead"                    → leads/{leadId}
+ *   type "product.waitlist.created" → product_waitlist/{entryId}
  *
- * Aufruf-Pfad:
- *   Storefront Server Action (submitKontaktanfrage)
- *     → POST https://<region>-<project>.cloudfunctions.net/onLeadSubmit
- *     → Firestore: leads/{leadId}
- *     → n8n: POST {N8N_WEBHOOK_URL}/webhook/lead
+ * Beide Flows schreiben nach Firestore und triggern den n8n-Webhook.
  *
- * CORS:
- *   Kein CORS nötig. Der Aufruf kommt von der Next.js Server Action
- *   (Node.js Server-seitig), nicht aus dem Browser. Browser-CORS greift
- *   nur bei direkten Browser→Firebase-Requests.
- *
- * Umgebungsvariablen (Firebase Function Config / Secret Manager):
- *   N8N_WEBHOOK_URL – Basis-URL der n8n-Instanz (z. B. https://n8n.example.com)
- *
- * Firestore-Struktur: leads/{leadId}
- *   leadId          string    – zufällige UUID (auch als Dokument-ID)
- *   type            "lead"
- *   leadType        string    – "private" | "commercial" | ... (n8n-Wert)
- *   firstName       string
- *   lastName        string
- *   company         string | null
- *   email           string
- *   phone           string | null
- *   message         string
- *   productInterest string    – "solarzaun" | "skywind" | "kombi" | "consultation"
- *   region          null      – Platzhalter; n8n kann per Geo-Lookup befüllen
- *   submittedAt     string    – ISO 8601 (vom Client übergeben)
- *   status          "new"     – initiale Status; n8n setzt auf "processing"
- *   source          "kontakt-form"
- *   createdAt       Timestamp – Server-Timestamp (unveränderlich)
- *   n8nStatus       "pending" | "sent" | "failed"
- *   n8nSentAt       Timestamp | null
+ * Firestore-Struktur: product_waitlist/{entryId}
+ *   entryId      string    – UUID
+ *   type         "product.waitlist.created"
+ *   productId    string
+ *   productSlug  string
+ *   productName  string
+ *   variantId    string | null
+ *   variantSku   string | null
+ *   email        string
+ *   firstName    string | null
+ *   locale       "de" | "en" | "es"
+ *   consentAccepted boolean
+ *   status       "pending"
+ *   sourcePath   string
+ *   submittedAt  string    – ISO 8601
+ *   createdAt    Timestamp
+ *   notifiedAt   Timestamp | null
+ *   n8nStatus    "pending" | "sent" | "failed"
+ *   n8nSentAt    Timestamp | null
  */
 
 import { onRequest } from "firebase-functions/v2/https";
@@ -50,10 +40,6 @@ initializeApp();
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
-/**
- * Payload-Shape, die die Storefront Server Action sendet.
- * Entspricht docs/n8n-webhooks.md §POST /webhook/lead.
- */
 interface LeadPayload {
   type: "lead";
   leadType: string;
@@ -68,9 +54,24 @@ interface LeadPayload {
   submittedAt: string;
 }
 
+interface WaitlistPayload {
+  type: "product.waitlist.created";
+  productId: string;
+  productSlug: string;
+  productName: string;
+  variantId?: string | null;
+  variantSku?: string | null;
+  email: string;
+  firstName?: string | null;
+  locale: "de" | "en" | "es";
+  consentAccepted: true;
+  sourcePath: string;
+  submittedAt: string;
+}
+
 // ─── Validierung ──────────────────────────────────────────────────────────────
 
-function isValidPayload(body: unknown): body is LeadPayload {
+function isValidLeadPayload(body: unknown): body is LeadPayload {
   if (!body || typeof body !== "object") return false;
   const b = body as Record<string, unknown>;
   return (
@@ -84,12 +85,26 @@ function isValidPayload(body: unknown): body is LeadPayload {
   );
 }
 
+function isValidWaitlistPayload(body: unknown): body is WaitlistPayload {
+  if (!body || typeof body !== "object") return false;
+  const b = body as Record<string, unknown>;
+  return (
+    b["type"] === "product.waitlist.created" &&
+    typeof b["productId"] === "string" && b["productId"].trim().length > 0 &&
+    typeof b["productSlug"] === "string" && b["productSlug"].trim().length > 0 &&
+    typeof b["productName"] === "string" && b["productName"].trim().length > 0 &&
+    typeof b["email"] === "string" && b["email"].includes("@") &&
+    (b["locale"] === "de" || b["locale"] === "en" || b["locale"] === "es") &&
+    b["consentAccepted"] === true &&
+    typeof b["sourcePath"] === "string" &&
+    typeof b["submittedAt"] === "string"
+  );
+}
+
 // ─── HTTP Function ────────────────────────────────────────────────────────────
 
 export const onLeadSubmit = onRequest(
   {
-    // Kein CORS: Aufruf kommt server-seitig aus der Next.js Server Action.
-    // cors: false ist der sichere Default.
     timeoutSeconds: 30,
     memory: "256MiB",
     region: "europe-west1",
@@ -101,95 +116,183 @@ export const onLeadSubmit = onRequest(
       return;
     }
 
-    // ── Payload validieren ───────────────────────────────────────────────────
     const payload = req.body as unknown;
-
-    if (!isValidPayload(payload)) {
-      console.warn("[onLeadSubmit] Ungültiger Payload:", JSON.stringify(payload));
-      res.status(400).json({ error: "Invalid payload: required fields missing or malformed." });
-      return;
-    }
-
-    const leadId = randomUUID();
+    const n8nBaseUrl = process.env.N8N_WEBHOOK_URL;
     const db = getFirestore();
 
-    // ── Firestore: Lead speichern ────────────────────────────────────────────
-    const leadDoc = {
-      leadId,
-      type: payload.type,
-      leadType: payload.leadType,
-      firstName: payload.firstName.trim(),
-      lastName: payload.lastName.trim(),
-      company: payload.company ?? null,
-      email: payload.email.trim().toLowerCase(),
-      phone: payload.phone ?? null,
-      message: payload.message.trim(),
-      productInterest: payload.productInterest,
-      region: payload.region,
-      submittedAt: payload.submittedAt,
-      status: "new",
-      source: "kontakt-form",
-      createdAt: FieldValue.serverTimestamp(),
-      n8nStatus: "pending" as const,
-      n8nSentAt: null as Timestamp | null,
-    };
-
-    try {
-      await db.collection("leads").doc(leadId).set(leadDoc);
-      console.info(`[onLeadSubmit] Lead gespeichert: ${leadId} (${payload.email})`);
-    } catch (err) {
-      console.error("[onLeadSubmit] Firestore-Fehler:", err);
-      res.status(500).json({ error: "Lead konnte nicht gespeichert werden." });
+    // ── Router ───────────────────────────────────────────────────────────────
+    if (isValidWaitlistPayload(payload)) {
+      await handleWaitlist(payload, db, n8nBaseUrl ?? null, res);
       return;
     }
 
-    // ── n8n: Webhook triggern ────────────────────────────────────────────────
-    const n8nBaseUrl = process.env.N8N_WEBHOOK_URL;
-
-    if (n8nBaseUrl) {
-      try {
-        const n8nRes = await fetch(
-          `${n8nBaseUrl.replace(/\/$/, "")}/webhook/lead`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }
-        );
-
-        if (n8nRes.ok) {
-          await db.collection("leads").doc(leadId).update({
-            n8nStatus: "sent",
-            n8nSentAt: FieldValue.serverTimestamp(),
-          });
-          console.info(`[onLeadSubmit] n8n-Webhook gesendet für Lead ${leadId}`);
-        } else {
-          const body = await n8nRes.text().catch(() => "");
-          console.warn(
-            `[onLeadSubmit] n8n antwortete mit ${n8nRes.status} für Lead ${leadId}:`,
-            body
-          );
-          await db.collection("leads").doc(leadId).update({ n8nStatus: "failed" });
-        }
-      } catch (err) {
-        // n8n-Fehler blockiert nicht die Antwort – Lead ist in Firestore gesichert.
-        console.error(`[onLeadSubmit] n8n-Webhook fehlgeschlagen für Lead ${leadId}:`, err);
-        await db
-          .collection("leads")
-          .doc(leadId)
-          .update({ n8nStatus: "failed" })
-          .catch(() => undefined); // ignorieren wenn update selbst fehlschlägt
-      }
-    } else {
-      console.warn(
-        "[onLeadSubmit] N8N_WEBHOOK_URL nicht gesetzt – n8n-Trigger übersprungen."
-      );
-      await db.collection("leads").doc(leadId).update({ n8nStatus: "failed" });
+    if (isValidLeadPayload(payload)) {
+      await handleLead(payload, db, n8nBaseUrl ?? null, res);
+      return;
     }
 
-    // ── Response ─────────────────────────────────────────────────────────────
-    // Immer 200, wenn Firestore-Schreiben erfolgreich war.
-    // n8n-Fehler sind intern (Retry-fähig) und werden nicht an den Aufrufer propagiert.
-    res.status(200).json({ success: true, leadId });
+    console.warn("[onLeadSubmit] Ungültiger Payload:", JSON.stringify(payload));
+    res.status(400).json({ error: "Invalid payload: required fields missing or malformed." });
   }
 );
+
+// ─── Lead Handler ─────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleLead(
+  payload: LeadPayload,
+  db: ReturnType<typeof getFirestore>,
+  n8nBaseUrl: string | null,
+  res: any
+) {
+  const leadId = randomUUID();
+
+  const leadDoc = {
+    leadId,
+    type: payload.type,
+    leadType: payload.leadType,
+    firstName: payload.firstName.trim(),
+    lastName: payload.lastName.trim(),
+    company: payload.company ?? null,
+    email: payload.email.trim().toLowerCase(),
+    phone: payload.phone ?? null,
+    message: payload.message.trim(),
+    productInterest: payload.productInterest,
+    region: payload.region,
+    submittedAt: payload.submittedAt,
+    status: "new",
+    source: "kontakt-form",
+    createdAt: FieldValue.serverTimestamp(),
+    n8nStatus: "pending" as const,
+    n8nSentAt: null as Timestamp | null,
+  };
+
+  try {
+    await db.collection("leads").doc(leadId).set(leadDoc);
+    console.info(`[handleLead] Lead gespeichert: ${leadId} (${payload.email})`);
+  } catch (err) {
+    console.error("[handleLead] Firestore-Fehler:", err);
+    res.status(500).json({ error: "Lead konnte nicht gespeichert werden." });
+    return;
+  }
+
+  await triggerN8n(db, "leads", leadId, n8nBaseUrl, "/webhook/lead", payload, "Lead");
+
+  res.status(200).json({ success: true, leadId });
+}
+
+// ─── Waitlist Handler ─────────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleWaitlist(
+  payload: WaitlistPayload,
+  db: ReturnType<typeof getFirestore>,
+  n8nBaseUrl: string | null,
+  res: any
+) {
+  const email = payload.email.trim().toLowerCase();
+
+  // Duplicate check: same email + productId already pending/notified
+  try {
+    const existing = await db
+      .collection("product_waitlist")
+      .where("email", "==", email)
+      .where("productId", "==", payload.productId)
+      .limit(1)
+      .get();
+
+    if (!existing.empty) {
+      console.info(`[handleWaitlist] Duplikat: ${email} für Produkt ${payload.productId}`);
+      res.status(409).json({ error: "Already on waitlist." });
+      return;
+    }
+  } catch (err) {
+    console.error("[handleWaitlist] Firestore-Duplikatprüfung fehlgeschlagen:", err);
+    res.status(500).json({ error: "Waitlist-Prüfung fehlgeschlagen." });
+    return;
+  }
+
+  const entryId = randomUUID();
+
+  const entryDoc = {
+    entryId,
+    type: payload.type,
+    productId: payload.productId,
+    productSlug: payload.productSlug,
+    productName: payload.productName,
+    variantId: payload.variantId ?? null,
+    variantSku: payload.variantSku ?? null,
+    email,
+    firstName: payload.firstName ?? null,
+    locale: payload.locale,
+    consentAccepted: true,
+    status: "pending",
+    sourcePath: payload.sourcePath,
+    submittedAt: payload.submittedAt,
+    createdAt: FieldValue.serverTimestamp(),
+    notifiedAt: null as Timestamp | null,
+    n8nStatus: "pending" as const,
+    n8nSentAt: null as Timestamp | null,
+  };
+
+  try {
+    await db.collection("product_waitlist").doc(entryId).set(entryDoc);
+    console.info(`[handleWaitlist] Eintrag gespeichert: ${entryId} (${email}, Produkt: ${payload.productSlug})`);
+  } catch (err) {
+    console.error("[handleWaitlist] Firestore-Fehler:", err);
+    res.status(500).json({ error: "Wartelisten-Eintrag konnte nicht gespeichert werden." });
+    return;
+  }
+
+  await triggerN8n(db, "product_waitlist", entryId, n8nBaseUrl, "/webhook/waitlist", payload, "Waitlist");
+
+  res.status(200).json({ success: true, entryId });
+}
+
+// ─── n8n-Hilfsfunktion ────────────────────────────────────────────────────────
+
+async function triggerN8n(
+  db: ReturnType<typeof getFirestore>,
+  collection: string,
+  docId: string,
+  n8nBaseUrl: string | null,
+  path: string,
+  payload: unknown,
+  label: string
+) {
+  if (!n8nBaseUrl) {
+    console.warn(`[${label}] N8N_WEBHOOK_URL nicht gesetzt – n8n-Trigger übersprungen.`);
+    await db.collection(collection).doc(docId).update({ n8nStatus: "failed" });
+    return;
+  }
+
+  try {
+    const n8nRes = await fetch(
+      `${n8nBaseUrl.replace(/\/$/, "")}${path}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (n8nRes.ok) {
+      await db.collection(collection).doc(docId).update({
+        n8nStatus: "sent",
+        n8nSentAt: FieldValue.serverTimestamp(),
+      });
+      console.info(`[${label}] n8n-Webhook gesendet für ${docId}`);
+    } else {
+      const body = await n8nRes.text().catch(() => "");
+      console.warn(`[${label}] n8n antwortete mit ${n8nRes.status} für ${docId}:`, body);
+      await db.collection(collection).doc(docId).update({ n8nStatus: "failed" });
+    }
+  } catch (err) {
+    console.error(`[${label}] n8n-Webhook fehlgeschlagen für ${docId}:`, err);
+    await db
+      .collection(collection)
+      .doc(docId)
+      .update({ n8nStatus: "failed" })
+      .catch(() => undefined);
+  }
+}

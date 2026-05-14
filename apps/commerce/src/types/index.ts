@@ -9,6 +9,7 @@ import type {
   CategoryTranslation,
   ProductType,
   ProductStatus,
+  AvailabilityStatus,
   BlogPost,
   BlogPostTranslation,
   BlogCategory,
@@ -19,7 +20,7 @@ import type {
 import type { SortBy } from "@wsp/contracts";
 
 // Re-export Prisma enums as domain types so consumers don't import @prisma/client directly.
-export type { ProductType, ProductStatus, BlogStatus };
+export type { ProductType, ProductStatus, AvailabilityStatus, BlogStatus };
 
 /** ProductVariant with its locale-specific translations loaded. */
 export type VariantWithTranslations = ProductVariant & {

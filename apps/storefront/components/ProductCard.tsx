@@ -219,6 +219,8 @@ export function ProductCard({ product, showCategory = true }: Props) {
             className={
               product.product_type === "affiliate_external"
                 ? "inline-block text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full whitespace-nowrap"
+                : product.waitlistEligible
+                ? "inline-block text-xs font-medium text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-full whitespace-nowrap"
                 : product.purchasable
                 ? "inline-block text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full whitespace-nowrap"
                 : "inline-block text-xs font-medium text-brand-muted bg-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap"
@@ -226,6 +228,8 @@ export function ProductCard({ product, showCategory = true }: Props) {
           >
             {product.product_type === "affiliate_external"
               ? t("affiliate_badge")
+              : product.waitlistEligible
+              ? t("out_of_stock")
               : product.purchasable
               ? t("available")
               : t("on_request")}

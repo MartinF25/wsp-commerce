@@ -191,8 +191,82 @@ export default function DatenschutzPage() {
             </Subsection>
           </Section>
 
-          {/* ── 5. Hosting ───────────────────────────────────────────────────── */}
-          <Section title="5. Hosting">
+          {/* ── 5. Warteliste ────────────────────────────────────────────────── */}
+          <Section title="5. Warteliste / Benachrichtigung bei Verfügbarkeit">
+            <p className="text-sm text-brand-muted leading-relaxed mb-3">
+              Für Produkte, die vorübergehend nicht verfügbar sind, bieten wir
+              eine Wartelisten-Funktion an. Sie können sich mit Ihrer
+              E-Mail-Adresse eintragen, um eine Benachrichtigung zu erhalten,
+              sobald das Produkt wieder verfügbar ist.
+            </p>
+
+            <Subsection title="Verarbeitete Daten">
+              <ul className="list-disc list-inside space-y-1 text-sm text-brand-muted">
+                <li>E-Mail-Adresse</li>
+                <li>Vorname (optional)</li>
+                <li>Produktbezeichnung und Produkt-ID</li>
+                <li>Gewählte Produktvariante (optional)</li>
+                <li>Spracheinstellung (de / en / es)</li>
+                <li>Seitenherkunft (URL-Pfad)</li>
+                <li>Zeitpunkt der Eintragung</li>
+              </ul>
+            </Subsection>
+
+            <Subsection title="Zweck der Verarbeitung">
+              <p className="text-sm text-brand-muted leading-relaxed">
+                Die Daten werden ausschließlich dazu verwendet, Sie einmalig
+                per E-Mail zu benachrichtigen, sobald das gewünschte Produkt
+                wieder verfügbar ist. Eine Nutzung für Werbezwecke oder
+                eine Weitergabe an Dritte findet nicht statt.
+              </p>
+            </Subsection>
+
+            <Subsection title="Rechtsgrundlage">
+              <p className="text-sm text-brand-muted leading-relaxed">
+                Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Sie erteilen
+                Ihre Einwilligung durch aktives Setzen des Häkchens im
+                Wartelisten-Formular. Die Einwilligung ist freiwillig und
+                kann jederzeit widerrufen werden.
+              </p>
+            </Subsection>
+
+            <Subsection title="Technische Verarbeitung und Speicherung">
+              <p className="text-sm text-brand-muted leading-relaxed mb-3">
+                Ihre Daten werden in einer Datenbank bei Google Firebase
+                (Cloud Firestore) gespeichert, Region Europe-West (Belgien/
+                Frankfurt). Zur Versendung der Benachrichtigungs-E-Mail
+                wird ein automatisiertes Workflow-System (n8n) eingesetzt.
+                Weitere Einzelheiten zur Firebase-Verarbeitung finden Sie
+                in Abschnitt 4.
+              </p>
+            </Subsection>
+
+            <Subsection title="Speicherdauer und Widerruf">
+              <p className="text-sm text-brand-muted leading-relaxed mb-2">
+                Ihre Daten werden gespeichert, bis:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm text-brand-muted mb-3">
+                <li>die Benachrichtigung erfolgreich versendet wurde, oder</li>
+                <li>Sie Ihre Einwilligung widerrufen, oder</li>
+                <li>das Produkt dauerhaft eingestellt wird.</li>
+              </ul>
+              <p className="text-sm text-brand-muted leading-relaxed">
+                Den Widerruf können Sie jederzeit durch formlose E-Mail an{" "}
+                <a
+                  href="mailto:verkauf@wsp-solarenergie.de"
+                  className="text-brand-text hover:text-brand-accent transition-colors duration-150"
+                >
+                  verkauf@wsp-solarenergie.de
+                </a>{" "}
+                unter Angabe Ihrer E-Mail-Adresse und des Produkts erklären.
+                Nach dem Widerruf werden Ihre Daten umgehend gelöscht und
+                keine Benachrichtigung mehr versendet.
+              </p>
+            </Subsection>
+          </Section>
+
+          {/* ── 6. Hosting ───────────────────────────────────────────────────── */}
+          <Section title="6. Hosting">
             <p className="text-sm text-brand-muted leading-relaxed mb-3">
               Diese Website wird bei Vercel Inc. gehostet:
             </p>
@@ -217,8 +291,8 @@ export default function DatenschutzPage() {
             </p>
           </Section>
 
-          {/* ── 6. Schriftarten ──────────────────────────────────────────────── */}
-          <Section title="6. Schriftarten">
+          {/* ── 7. Schriftarten ──────────────────────────────────────────────── */}
+          <Section title="7. Schriftarten">
             <p className="text-sm text-brand-muted leading-relaxed">
               Diese Website verwendet die Schriftarten <em>Sora</em> und{" "}
               <em>Inter</em>. Die Schriftarten werden über das Next.js
@@ -231,8 +305,8 @@ export default function DatenschutzPage() {
             </p>
           </Section>
 
-          {/* ── 7. Cookies und Tracking ──────────────────────────────────────── */}
-          <Section title="7. Cookies und Tracking">
+          {/* ── 8. Cookies und Tracking ──────────────────────────────────────── */}
+          <Section title="8. Cookies und Tracking">
             <p className="text-sm text-brand-muted leading-relaxed mb-3">
               Diese Website setzt derzeit{" "}
               <strong className="text-brand-text font-medium">
@@ -245,12 +319,12 @@ export default function DatenschutzPage() {
             </p>
             <p className="text-sm text-brand-muted leading-relaxed">
               Eine cookiefreie, anonyme Klickzählung für Affiliate-Links (ohne
-              Personenbezug) ist in Abschnitt 8 beschrieben.
+              Personenbezug) ist in Abschnitt 9 beschrieben.
             </p>
           </Section>
 
-          {/* ── 8. Affiliate-Links ───────────────────────────────────────────── */}
-          <Section title="8. Affiliate-Links und anonyme Klickzählung">
+          {/* ── 9. Affiliate-Links ───────────────────────────────────────────── */}
+          <Section title="9. Affiliate-Links und anonyme Klickzählung">
             <p className="text-sm text-brand-muted leading-relaxed mb-3">
               Einige Produkte auf dieser Website werden als sogenannte
               Affiliate-Links zu Amazon.de dargestellt. Das bedeutet: Wenn Sie
@@ -323,8 +397,8 @@ export default function DatenschutzPage() {
             </Subsection>
           </Section>
 
-          {/* ── 9. Ihre Rechte ───────────────────────────────────────────────── */}
-          <Section title="9. Ihre Rechte als betroffene Person">
+          {/* ── 10. Ihre Rechte ──────────────────────────────────────────────── */}
+          <Section title="10. Ihre Rechte als betroffene Person">
             <p className="text-sm text-brand-muted leading-relaxed mb-5">
               Sie haben gegenüber uns folgende Rechte hinsichtlich der Sie
               betreffenden personenbezogenen Daten:
@@ -370,8 +444,8 @@ export default function DatenschutzPage() {
             </p>
           </Section>
 
-          {/* ── 10. Aktualität ───────────────────────────────────────────────── */}
-          <Section title="10. Aktualität und Änderung dieser Datenschutzerklärung">
+          {/* ── 11. Aktualität ───────────────────────────────────────────────── */}
+          <Section title="11. Aktualität und Änderung dieser Datenschutzerklärung">
             <p className="text-sm text-brand-muted leading-relaxed">
               Diese Datenschutzerklärung ist aktuell gültig (Stand: Mai 2026).
               Durch die Weiterentwicklung unserer Website oder aufgrund geänderter
