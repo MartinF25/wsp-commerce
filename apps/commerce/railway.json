@@ -1,7 +1,6 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "dockerfilePath": "apps/commerce/Dockerfile",
-    "dockerContext": "apps/commerce"
+    "dockerfilePath": "apps/commerce/Dockerfile"
   }
 }

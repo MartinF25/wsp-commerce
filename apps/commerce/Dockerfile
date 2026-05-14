@@ -4,12 +4,12 @@ RUN npm install -g pnpm@9.15.9
 
 WORKDIR /app
 
-COPY package.json wsp-contracts-0.0.1.tgz ./
+COPY apps/commerce/package.json apps/commerce/wsp-contracts-0.0.1.tgz ./
 RUN pnpm install --no-frozen-lockfile
 
-COPY src/ src/
-COPY tsconfig.json ./
-COPY prisma/ prisma/
+COPY apps/commerce/src/ src/
+COPY apps/commerce/tsconfig.json ./
+COPY apps/commerce/prisma/ prisma/
 
 RUN pnpm run build
 
