@@ -52,6 +52,7 @@ export default async function HomePage({
         id: slug,
         slug,
         name: matching[0]?.category?.name ?? slug,
+        description: null,
         parent_id: null,
         productCount: matching.length,
         coverImageUrl: matching[0]?.coverImageUrl ?? null,

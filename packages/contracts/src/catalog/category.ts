@@ -11,6 +11,7 @@ export const CategorySummarySchema = z.object({
   id: z.string().uuid(),
   slug: z.string(),
   name: z.string(),
+  description: z.string().nullable(),
   parent_id: z.string().uuid().nullable(),
   productCount: z.number().int().nonnegative(),
   coverImageUrl: z.string().nullable(),

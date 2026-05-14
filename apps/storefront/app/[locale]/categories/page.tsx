@@ -102,7 +102,10 @@ function CategoryCard({ category }: { category: CategorySummary }) {
         <h2 className="font-display font-semibold text-lg text-brand-text group-hover:text-brand-accent transition-colors duration-150 mb-1">
           {category.name}
         </h2>
-        <p className="text-sm text-brand-muted">{category.productCount}</p>
+        {category.description && (
+          <p className="text-sm text-brand-muted line-clamp-2 mb-2">{category.description}</p>
+        )}
+        <p className="text-xs text-brand-muted">{category.productCount}</p>
       </div>
     </Link>
   );

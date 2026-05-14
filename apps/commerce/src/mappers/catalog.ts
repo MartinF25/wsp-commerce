@@ -155,6 +155,7 @@ export function toCategorySummary(
     id: string;
     slug: string;
     name: string;
+    description?: string | null;
     parent_id: string | null;
     image_url?: string | null;
     meta_title?: string | null;
@@ -170,6 +171,7 @@ export function toCategorySummary(
     id: category.id,
     slug: category.slug,
     name: t?.name ?? category.name,
+    description: t?.description ?? category.description ?? null,
     parent_id: category.parent_id ?? null,
     productCount,
     coverImageUrl: category.image_url ?? coverImageUrl,
@@ -217,6 +219,7 @@ export function toCategoryTreeNode(
     id: category.id,
     slug: category.slug,
     name: t?.name ?? category.name,
+    description: t?.description ?? category.description ?? null,
     parent_id: category.parent_id ?? null,
     productCount: category.products?.length ?? 0,
     coverImageUrl: category.image_url ?? coverImage?.url ?? null,
