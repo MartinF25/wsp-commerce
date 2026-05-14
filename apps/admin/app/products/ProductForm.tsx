@@ -64,6 +64,9 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [productType, setProductType] = useState<ProductType>(product?.product_type ?? "inquiry_only");
   const [status, setStatus] = useState<ProductStatus>(product?.status ?? "draft");
+  const [availabilityStatus, setAvailabilityStatus] = useState<string>(
+    (product as any)?.availability_status ?? "in_stock"
+  );
   const [categoryId, setCategoryId] = useState(product?.category_id ?? "");
   const [paypalUrl, setPaypalUrl] = useState(product?.paypal_url ?? "");
   const [stripeUrl, setStripeUrl] = useState(product?.stripe_url ?? "");
@@ -174,6 +177,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
         slug: slug.trim() || undefined,
         product_type: productType,
         status,
+        availability_status: availabilityStatus,
         category_id: categoryId || null,
         paypal_url: paypalUrl.trim() || null,
         stripe_url: stripeUrl.trim() || null,
@@ -482,6 +486,16 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
               <option value="draft">Entwurf</option>
               <option value="active">Aktiv</option>
               <option value="archived">Archiviert</option>
+            </select>
+          </div>
+          <div>
+            <label>Verfügbarkeit</label>
+            <select value={availabilityStatus} onChange={(e) => setAvailabilityStatus(e.target.value)}>
+              <option value="in_stock">Auf Lager</option>
+              <option value="out_of_stock">Ausverkauft (Warteliste)</option>
+              <option value="preorder">Vorbestellung</option>
+              <option value="on_request">Auf Anfrage</option>
+              <option value="discontinued">Eingestellt</option>
             </select>
           </div>
           <div>

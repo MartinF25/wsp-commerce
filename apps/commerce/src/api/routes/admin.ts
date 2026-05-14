@@ -549,6 +549,12 @@ adminRoutes.put("/products/:id", async (c) => {
   if ("affiliate_enabled" in b) {
     productData.affiliate_enabled = typeof b.affiliate_enabled === "boolean" ? b.affiliate_enabled : false;
   }
+  if ("availability_status" in b) {
+    const validStatuses = ["in_stock", "out_of_stock", "preorder", "discontinued", "on_request"];
+    if (typeof b.availability_status === "string" && validStatuses.includes(b.availability_status)) {
+      (productData as any).availability_status = b.availability_status;
+    }
+  }
 
   // Translations upsert
   if (translations && typeof translations === "object") {
