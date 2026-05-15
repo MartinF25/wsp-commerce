@@ -72,10 +72,11 @@ model Category {
   is_active        Boolean @default(true)
   parent_id        String?
 
-  parent       Category?             @relation("CategoryHierarchy", fields: [parent_id], references: [id])
-  children     Category[]            @relation("CategoryHierarchy")
-  products     Product[]
-  translations CategoryTranslation[]
+  parent          Category?             @relation("CategoryHierarchy", fields: [parent_id], references: [id])
+  children        Category[]            @relation("CategoryHierarchy")
+  products        Product[]
+  translations    CategoryTranslation[]
+  ticker_messages LiveTickerMessage[]
 
   @@map("categories")
 }
@@ -134,6 +135,7 @@ model Product {
   images           ProductImage[]
   documents        ProductDocument[]
   affiliate_clicks AffiliateClick[]
+  ticker_messages  LiveTickerMessage[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -344,4 +346,83 @@ model BlogPostTag {
 
   @@id([post_id, tag_id])
   @@map("blog_post_tags")
+}
+
+// ─── Live-Ticker ──────────────────────────────────────────────────────────────
+
+enum LiveTickerStatus {
+  draft
+  active
+  archived
+}
+
+/// info        → allgemeiner Hinweis (neutral)
+/// offer       → echtes, datenbankgestütztes Angebot mit Zeitraum
+/// availability → Verfügbarkeitsstatus (wieder da, auf Anfrage …)
+/// blog        → Verweis auf neuen Ratgeber / Blog-Post
+/// product     → produktbezogener Hinweis
+/// warning     → wichtiger Systemhinweis
+enum LiveTickerType {
+  info
+  offer
+  availability
+  blog
+  product
+  warning
+}
+
+/// global   → alle Seiten (unter dem Header)
+/// product  → nur auf /products/[slug] (product_id muss gesetzt sein)
+/// category → nur auf /categories/[slug] (category_id muss gesetzt sein)
+/// solution → nur auf Lösungsseiten (solution_slug: "solarzaun" | "skywind" | "kombiloesungen")
+enum LiveTickerScope {
+  global
+  product
+  category
+  solution
+}
+
+/// Admin-verwaltete Ticker-Nachrichten.
+/// DE-Übersetzung ist Pflicht; EN/ES fallen auf DE zurück (Service-Layer).
+/// starts_at / ends_at steuern den Aktivierungszeitraum (null = sofort / kein Ablauf).
+model LiveTickerMessage {
+  id            String           @id @default(uuid())
+  status        LiveTickerStatus @default(draft)
+  type          LiveTickerType
+  scope         LiveTickerScope  @default(global)
+  product_id    String?
+  category_id   String?
+  solution_slug String?
+  priority      Int              @default(0)
+  starts_at     DateTime?
+  ends_at       DateTime?
+  link_href     String?
+  icon          String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  product      Product?                       @relation(fields: [product_id], references: [id], onDelete: SetNull)
+  category     Category?                      @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  translations LiveTickerMessageTranslation[]
+
+  @@index([status, scope])
+  @@index([starts_at, ends_at])
+  @@map("live_ticker_messages")
+}
+
+/// Sprachabhängiger Text einer Ticker-Nachricht. DE ist immer Pflicht.
+/// Fehlende EN/ES-Einträge → Fallback auf DE im Service-Layer.
+model LiveTickerMessageTranslation {
+  id         String @id @default(uuid())
+  message_id String
+  locale     Locale
+
+  text       String
+  link_label String?
+
+  message LiveTickerMessage @relation(fields: [message_id], references: [id], onDelete: Cascade)
+
+  @@unique([message_id, locale])
+  @@map("live_ticker_message_translations")
 }

@@ -137,6 +137,50 @@ export interface AffiliateStats {
   lastClickedAt: string | null;
 }
 
+// ─── Ticker-Typen ────────────────────────────────────────────────────────────
+
+export type LiveTickerStatus = "draft" | "active" | "archived";
+export type LiveTickerType = "info" | "offer" | "availability" | "blog" | "product" | "warning";
+export type LiveTickerScope = "global" | "product" | "category" | "solution";
+
+export interface TickerTranslation {
+  locale: Locale;
+  text: string;
+  link_label: string | null;
+}
+
+export interface TickerMessage {
+  id: string;
+  status: LiveTickerStatus;
+  type: LiveTickerType;
+  scope: LiveTickerScope;
+  product_id: string | null;
+  category_id: string | null;
+  solution_slug: string | null;
+  priority: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  link_href: string | null;
+  icon: string | null;
+  translations: TickerTranslation[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TickerInput {
+  type: LiveTickerType;
+  scope: LiveTickerScope;
+  product_id?: string | null;
+  category_id?: string | null;
+  solution_slug?: string | null;
+  priority?: number;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  link_href?: string | null;
+  icon?: string | null;
+  translations: TickerTranslation[];
+}
+
 // ─── Blog-Typen ───────────────────────────────────────────────────────────────
 
 export type BlogStatus = "draft" | "published" | "archived";
@@ -392,5 +436,20 @@ export const api = {
     update: (docId: string, data: Partial<Omit<ProductDocument, "id" | "product_id">>) =>
       request<ProductDocument>(`/documents/${docId}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (docId: string) => request<void>(`/documents/${docId}`, { method: "DELETE" }),
+  },
+
+  ticker: {
+    list: () => request<TickerMessage[]>("/ticker"),
+    get: (id: string) => request<TickerMessage>(`/ticker/${id}`),
+    create: (data: TickerInput) =>
+      request<TickerMessage>("/ticker", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: TickerInput) =>
+      request<TickerMessage>(`/ticker/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    setStatus: (id: string, status: LiveTickerStatus) =>
+      request<{ id: string; status: LiveTickerStatus }>(`/ticker/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+    delete: (id: string) => request<void>(`/ticker/${id}`, { method: "DELETE" }),
   },
 };

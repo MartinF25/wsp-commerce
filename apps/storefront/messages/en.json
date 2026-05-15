@@ -613,6 +613,28 @@
     "cta_sub": "Tell us about your project and your questions. We will get back to you within two working days – without standard responses.",
     "cta_primary": "Request Advice"
   },
+  "ticker": {
+    "more": "Learn more",
+    "viewOffer": "View offer",
+    "requestConsultation": "Request consultation",
+    "labelNew": "New",
+    "labelInfo": "Info",
+    "labelOffer": "Offer",
+    "labelAvailability": "Availability",
+    "labelWarning": "Notice",
+    "labelBlog": "Guide",
+    "labelProduct": "Product",
+    "fallback": "Free consultation for all projects · Individual planning · Request now and check funding options",
+    "productMessages": {
+      "inquiryOnly": "This product requires individual review – personal consultation recommended",
+      "configurableNote": "Individual configuration required – we're happy to advise you",
+      "outOfStock": "Currently out of stock – notification on restock available",
+      "preorder": "Pre-order available – delivery date on request",
+      "onRequest": "Available on personal request – we'll create your individual offer",
+      "affiliateExternal": "This product is available via our affiliate partner link",
+      "offerActive": "Current offer · valid until {date}"
+    }
+  },
   "categories": {
     "meta_title": "Categories – Solar Fence & SkyWind",
     "meta_desc": "Browse solar fence, SkyWind and combined energy solutions by category – find the right system for your home, commercial property or farm.",

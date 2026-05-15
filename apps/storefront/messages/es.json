@@ -613,6 +613,28 @@
     "cta_sub": "Cuéntanos sobre tu proyecto y tus preguntas. Nos pondremos en contacto en dos días hábiles – sin respuestas estándar.",
     "cta_primary": "Solicitar Asesoría"
   },
+  "ticker": {
+    "more": "Saber más",
+    "viewOffer": "Ver oferta",
+    "requestConsultation": "Solicitar asesoría",
+    "labelNew": "Nuevo",
+    "labelInfo": "Aviso",
+    "labelOffer": "Oferta",
+    "labelAvailability": "Disponibilidad",
+    "labelWarning": "Atención",
+    "labelBlog": "Guía",
+    "labelProduct": "Producto",
+    "fallback": "Asesoría gratuita para todos los proyectos · Planificación individual · Solicite ahora y compruebe las opciones de financiación",
+    "productMessages": {
+      "inquiryOnly": "Este producto requiere revisión individual – se recomienda consulta personal",
+      "configurableNote": "Se requiere configuración individual – estaremos encantados de asesorarle",
+      "outOfStock": "Actualmente sin stock – posibilidad de notificación cuando vuelva a estar disponible",
+      "preorder": "Reserva anticipada posible – fecha de entrega bajo consulta",
+      "onRequest": "Disponible bajo consulta personal – le crearemos su oferta individual",
+      "affiliateExternal": "Este producto está disponible a través de nuestro enlace de socio",
+      "offerActive": "Oferta actual · válida hasta {date}"
+    }
+  },
   "categories": {
     "meta_title": "Categorías – Valla Solar & SkyWind",
     "meta_desc": "Explora vallas solares, aerogeneradores SkyWind y soluciones combinadas por categoría – encuentra la solución energética ideal para tu hogar, negocio o granja.",

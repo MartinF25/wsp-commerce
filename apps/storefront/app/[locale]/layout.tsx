@@ -11,6 +11,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Footer } from "@/components/Footer";
 import { NewsletterPopup } from "@/components/NewsletterPopup";
 import { MobileNav } from "@/components/MobileNav";
+import { TickerBarServer } from "@/components/storefront/ticker-bar-server";
 import "../globals.css";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -97,17 +98,14 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
   const t = await getTranslations({ locale, namespace: "nav" });
-  const tRoot = await getTranslations({ locale });
 
   return (
     <html lang={locale} className={`${sora.variable} ${inter.variable}`}>
       <body className="bg-white text-brand-text font-sans antialiased min-h-screen flex flex-col">
         <NextIntlClientProvider messages={messages}>
 
-          {/* ── Ankündigungsstreifen ── */}
-          <div className="bg-brand-text text-white text-xs py-2 text-center px-4">
-            {tRoot("announcement")}
-          </div>
+          {/* ── Live-Ticker ── */}
+          <TickerBarServer locale={locale} scope="global" />
 
           {/* ── Top-Navigation ── */}
           <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">

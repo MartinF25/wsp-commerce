@@ -29,6 +29,12 @@
  *   PUT    /categories/:id              → Kategorie aktualisieren
  *   DELETE /categories/:id              → Kategorie löschen
  *   PATCH  /categories/:id/visibility   → Sichtbarkeit umschalten
+ *   GET    /ticker                      → alle Ticker-Nachrichten
+ *   POST   /ticker                      → Ticker-Nachricht anlegen
+ *   GET    /ticker/:id                  → Ticker-Nachricht Detail
+ *   PUT    /ticker/:id                  → Ticker-Nachricht aktualisieren
+ *   PATCH  /ticker/:id/status           → Status setzen
+ *   DELETE /ticker/:id                  → Ticker-Nachricht löschen
  */
 
 import { Hono } from "hono";
@@ -42,6 +48,8 @@ import {
   BlogPostStatusInputSchema,
   BlogCategoryInputSchema,
   BlogTagInputSchema,
+  TickerInputSchema,
+  TickerStatusUpdateSchema,
 } from "@wsp/contracts";
 
 // ─── Hilfsfunktionen ─────────────────────────────────────────────────────────
@@ -1590,3 +1598,159 @@ function buildTranslationCreates(translations: Record<string, unknown> | undefin
   }
   return result;
 }
+
+// ─── Admin Ticker-Routen ──────────────────────────────────────────────────────
+
+adminRoutes.get("/ticker", async (c) => {
+  const prisma = getPrismaClient();
+  const messages = await prisma.liveTickerMessage.findMany({
+    orderBy: [{ priority: "desc" }, { created_at: "desc" }],
+    include: { translations: true },
+  });
+
+  const data = messages.map((msg) => ({
+    id: msg.id,
+    status: msg.status,
+    type: msg.type,
+    scope: msg.scope,
+    product_id: msg.product_id,
+    category_id: msg.category_id,
+    solution_slug: msg.solution_slug,
+    priority: msg.priority,
+    starts_at: msg.starts_at?.toISOString() ?? null,
+    ends_at: msg.ends_at?.toISOString() ?? null,
+    link_href: msg.link_href,
+    icon: msg.icon,
+    translations: msg.translations.map((t) => ({
+      locale: t.locale,
+      text: t.text,
+      link_label: t.link_label,
+    })),
+    created_at: msg.created_at.toISOString(),
+    updated_at: msg.updated_at.toISOString(),
+  }));
+
+  return c.json({ data });
+});
+
+adminRoutes.post("/ticker", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json();
+  const parsed = TickerInputSchema.safeParse(body);
+
+  if (!parsed.success) {
+    throw new CatalogError(
+      "INVALID_INPUT",
+      422,
+      parsed.error.issues.map((i) => i.message).join(", ")
+    );
+  }
+
+  const { translations, ...fields } = parsed.data;
+
+  const message = await prisma.liveTickerMessage.create({
+    data: {
+      ...fields,
+      starts_at: fields.starts_at ? new Date(fields.starts_at) : null,
+      ends_at: fields.ends_at ? new Date(fields.ends_at) : null,
+      priority: fields.priority ?? 0,
+      translations: {
+        create: translations.map((t) => ({
+          locale: t.locale,
+          text: t.text,
+          link_label: t.link_label ?? null,
+        })),
+      },
+    },
+    include: { translations: true },
+  });
+
+  return c.json({ data: message }, 201);
+});
+
+adminRoutes.get("/ticker/:id", async (c) => {
+  const prisma = getPrismaClient();
+  const message = await prisma.liveTickerMessage.findUnique({
+    where: { id: c.req.param("id") },
+    include: { translations: true },
+  });
+
+  if (!message) throw new CatalogError("NOT_FOUND", 404, "Ticker-Nachricht nicht gefunden");
+
+  return c.json({ data: message });
+});
+
+adminRoutes.put("/ticker/:id", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json();
+  const parsed = TickerInputSchema.safeParse(body);
+
+  if (!parsed.success) {
+    throw new CatalogError(
+      "INVALID_INPUT",
+      422,
+      parsed.error.issues.map((i) => i.message).join(", ")
+    );
+  }
+
+  const { translations, ...fields } = parsed.data;
+  const id = c.req.param("id");
+
+  const existing = await prisma.liveTickerMessage.findUnique({ where: { id } });
+  if (!existing) throw new CatalogError("NOT_FOUND", 404, "Ticker-Nachricht nicht gefunden");
+
+  await prisma.liveTickerMessageTranslation.deleteMany({ where: { message_id: id } });
+
+  const message = await prisma.liveTickerMessage.update({
+    where: { id },
+    data: {
+      ...fields,
+      starts_at: fields.starts_at ? new Date(fields.starts_at) : null,
+      ends_at: fields.ends_at ? new Date(fields.ends_at) : null,
+      priority: fields.priority ?? existing.priority,
+      translations: {
+        create: translations.map((t) => ({
+          locale: t.locale,
+          text: t.text,
+          link_label: t.link_label ?? null,
+        })),
+      },
+    },
+    include: { translations: true },
+  });
+
+  return c.json({ data: message });
+});
+
+adminRoutes.patch("/ticker/:id/status", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json();
+  const parsed = TickerStatusUpdateSchema.safeParse(body);
+
+  if (!parsed.success) {
+    throw new CatalogError("INVALID_INPUT", 422, "Ungültiger Status");
+  }
+
+  const id = c.req.param("id");
+  const existing = await prisma.liveTickerMessage.findUnique({ where: { id } });
+  if (!existing) throw new CatalogError("NOT_FOUND", 404, "Ticker-Nachricht nicht gefunden");
+
+  const message = await prisma.liveTickerMessage.update({
+    where: { id },
+    data: { status: parsed.data.status },
+  });
+
+  return c.json({ data: { id: message.id, status: message.status } });
+});
+
+adminRoutes.delete("/ticker/:id", async (c) => {
+  const prisma = getPrismaClient();
+  const id = c.req.param("id");
+
+  const existing = await prisma.liveTickerMessage.findUnique({ where: { id } });
+  if (!existing) throw new CatalogError("NOT_FOUND", 404, "Ticker-Nachricht nicht gefunden");
+
+  await prisma.liveTickerMessage.delete({ where: { id } });
+
+  return c.json({ data: { deleted: true } });
+});

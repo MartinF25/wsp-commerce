@@ -21,6 +21,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/blog">Posts</Link>
               <Link href="/blog/categories">Kategorien</Link>
               <Link href="/blog/tags">Tags</Link>
+              <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Marketing</div>
+              <Link href="/ticker">Live-Ticker</Link>
             </nav>
           </aside>
           <main className="main">{children}</main>

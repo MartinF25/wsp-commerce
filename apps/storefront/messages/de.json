@@ -615,6 +615,28 @@
     "cta_sub": "Schildern Sie uns Ihr Projekt und Ihre Fragen. Wir melden uns innerhalb von zwei Werktagen – ohne Standardantworten.",
     "cta_primary": "Beratung anfragen"
   },
+  "ticker": {
+    "more": "Mehr erfahren",
+    "viewOffer": "Angebot ansehen",
+    "requestConsultation": "Beratung anfragen",
+    "labelNew": "Neu",
+    "labelInfo": "Hinweis",
+    "labelOffer": "Angebot",
+    "labelAvailability": "Verfügbarkeit",
+    "labelWarning": "Achtung",
+    "labelBlog": "Ratgeber",
+    "labelProduct": "Produkt",
+    "fallback": "Kostenlose Beratung für alle Projekte · Individuelle Planung · Jetzt anfragen und Förderoptionen prüfen",
+    "productMessages": {
+      "inquiryOnly": "Dieses Produkt wird individuell geprüft – persönliche Beratung empfohlen",
+      "configurableNote": "Individuelle Konfiguration erforderlich – wir beraten Sie gerne",
+      "outOfStock": "Aktuell nicht auf Lager – Benachrichtigung bei Wiederverfügbarkeit möglich",
+      "preorder": "Vorbestellung möglich – Liefertermin auf Anfrage",
+      "onRequest": "Auf persönliche Anfrage verfügbar – wir erstellen Ihr individuelles Angebot",
+      "affiliateExternal": "Dieses Produkt ist über unseren Partnerlink erhältlich",
+      "offerActive": "Aktuelles Angebot · gültig bis {date}"
+    }
+  },
   "categories": {
     "meta_title": "Kategorien – Solarzaun & SkyWind",
     "meta_desc": "Solarzaun, SkyWind und Kombilösungen nach Kategorie durchsuchen – finden Sie die passende Energielösung für Ihr Privatgrundstück, Gewerbeobjekt oder Ihren Hof.",

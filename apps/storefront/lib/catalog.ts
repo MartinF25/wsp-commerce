@@ -16,6 +16,7 @@ import type {
   CategorySummary,
   CategoryDetail,
 } from "@wsp/types";
+import type { TickerMessage } from "@wsp/contracts";
 import { env } from "./env";
 
 // ─── Interne API-Envelope-Typen ───────────────────────────────────────────────
@@ -145,4 +146,27 @@ export async function fetchCategory(slug: string, locale = "de"): Promise<Catego
 
   const body = (await res.json()) as ApiDetailResponse<CategoryDetail>;
   return body.data;
+}
+
+/**
+ * Aktive Ticker-Nachrichten für einen bestimmten Scope.
+ * Gecacht für 60 Sekunden (ISR) – Ticker-Inhalte ändern sich nicht sekündlich.
+ * Gibt leeres Array zurück bei Fehler (resilient – Ticker ist non-critical).
+ */
+export async function fetchTicker(
+  scope: "global" | "product" | "category" | "solution" = "global",
+  slug?: string,
+  locale = "de"
+): Promise<TickerMessage[]> {
+  try {
+    const params = new URLSearchParams({ scope, locale });
+    if (slug) params.set("slug", slug);
+    const url = `${env.COMMERCE_API_URL}/api/ticker?${params.toString()}`;
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    const body = (await res.json()) as { data: TickerMessage[] };
+    return body.data;
+  } catch {
+    return [];
+  }
 }

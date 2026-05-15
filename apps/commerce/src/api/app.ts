@@ -6,6 +6,7 @@ import { catalogRoutes } from "./routes";
 import { adminRoutes } from "./routes/admin";
 import { blogRoutes } from "./routes/blog";
 import { affiliateRoutes } from "./routes/affiliate";
+import { tickerRoutes } from "./routes/ticker";
 
 /**
  * Hono-App-Factory
@@ -47,6 +48,7 @@ export function createApp() {
   app.route("/api/blog", blogRoutes);
   app.route("/api/admin", adminRoutes);
   app.route("/api/affiliate", affiliateRoutes);
+  app.route("/api/ticker", tickerRoutes);
 
   // ─── 404-Handler ────────────────────────────────────────────────────────────
 

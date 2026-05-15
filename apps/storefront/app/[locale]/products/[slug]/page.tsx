@@ -11,6 +11,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductImageGallery } from "@/components/ProductImageGallery";
 import { ShareButtons } from "@/components/ShareButtons";
 import { OfferCountdown } from "@/components/storefront/offer-countdown";
+import { ProductTicker } from "@/components/storefront/product-ticker";
 
 const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000";
 
@@ -220,6 +221,15 @@ export default async function ProductDetailPage({ params }: Props) {
                 className="mb-5"
               />
             )}
+
+            <div className="mb-5">
+              <ProductTicker
+                productType={p.product_type}
+                availabilityStatus={p.availabilityStatus}
+                isOnSale={p.priceDisplay.isOnSale}
+                saleEndsAt={p.priceDisplay.saleEndsAt}
+              />
+            </div>
 
             {p.product_type !== "affiliate_external" && (
               <VariantSelector
