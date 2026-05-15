@@ -1,10 +1,10 @@
-import { api } from "@/lib/api";
+import { api, type Category } from "@/lib/api";
 import { StickerForm } from "@/components/StickerForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewStickerPage() {
-  let categories = [];
+  let categories: Category[] = [];
   try {
     categories = await api.categories.list();
   } catch {
