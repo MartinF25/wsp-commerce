@@ -51,12 +51,92 @@ enum BlogStatus {
   archived
 }
 
+// ─── Bundle Enums ─────────────────────────────────────────────────────────────
+
+/// active   → Bundle wird im Storefront angezeigt
+/// inactive → Bundle ist deaktiviert (kein Anzeigen)
+enum BundleStatus {
+  active
+  inactive
+}
+
+/// none        → Nur Cross-Sell-Anzeige, kein Rabatt
+/// percentage  → Prozentualer Rabatt auf den Bundle-Gesamtpreis
+/// fixed       → Fester Rabattbetrag in Cent
+/// per_item    → Individueller Rabatt pro Bundle-Produkt
+enum BundleDiscountType {
+  none
+  percentage
+  fixed
+  per_item
+}
+
+/// all_items  → Rabatt gilt nur wenn alle Pflichtprodukte im Warenkorb sind
+/// min_count  → Rabatt gilt ab min_items_for_discount ausgewählten Produkten
+/// any_item   → Rabatt gilt bei jedem Bundle-Kauf (mind. 1 Produkt)
+enum BundleDiscountMode {
+  all_items
+  min_count
+  any_item
+}
+
+/// card   → Kartenlayout (Standard)
+/// list   → Kompaktes Listenlayout
+/// slider → Slider/Karussell
+/// tabs   → Tab-Darstellung für mehrere Bundle-Gruppen
+enum BundleDisplayMode {
+  card
+  list
+  slider
+  tabs
+}
+
 /// Unterstützte Inhaltssprachen. DE ist Pflicht (Source of Truth).
 /// Fehlende Übersetzungen fallen auf DE zurück (Service-Layer).
 enum Locale {
   de
   en
   es
+}
+
+// ─── Sticker / Label Enums ────────────────────────────────────────────────────
+
+enum StickerStatus {
+  active
+  inactive
+}
+
+/// image     → Nur Bild-Overlay
+/// text      → Nur Text-Label (CSS-gestaltet)
+/// css_badge → Tailwind/CSS-Badge
+/// tooltip   → Label mit Hover/Tap-Tooltip
+/// combined  → Bild + Text kombiniert
+enum StickerType {
+  image
+  text
+  css_badge
+  tooltip
+  combined
+}
+
+/// Standardpositionen. custom erlaubt freie X/Y-Platzierung.
+enum StickerPosition {
+  top_left
+  top_right
+  bottom_left
+  bottom_right
+  center
+  custom
+}
+
+/// Regeltypen für automatische Produkt-Zuweisung.
+/// Mehrere Regeln desselben Stickers werden OR-verknüpft.
+enum StickerRuleType {
+  all_products
+  category
+  price_range
+  availability
+  new_arrival
 }
 
 // ─── Models ──────────────────────────────────────────────────────────────────
@@ -77,6 +157,7 @@ model Category {
   products        Product[]
   translations    CategoryTranslation[]
   ticker_messages LiveTickerMessage[]
+  bundle_assignments BundleCategoryAssignment[]
 
   @@map("categories")
 }
@@ -136,6 +217,9 @@ model Product {
   documents        ProductDocument[]
   affiliate_clicks AffiliateClick[]
   ticker_messages  LiveTickerMessage[]
+  bundle_items     BundleItem[]
+  bundle_assignments BundleProductAssignment[]
+  sticker_overrides  StickerProductOverride[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -425,4 +509,262 @@ model LiveTickerMessageTranslation {
 
   @@unique([message_id, locale])
   @@map("live_ticker_message_translations")
+}
+
+// ─── Cross-Sell Bundles ───────────────────────────────────────────────────────
+
+/// Admin-verwaltetes Produkt-Bundle: Gruppe von Produkten mit Cross-Sell-Anzeige
+/// und optionalem Rabatt. Bundles werden Produkten oder Kategorien zugewiesen.
+/// DE-Übersetzung ist Pflicht; EN/ES fallen auf DE zurück (Service-Layer).
+model Bundle {
+  id          String        @id @default(uuid())
+  status      BundleStatus  @default(inactive)
+  sort_order  Int           @default(0)
+  image_url   String?
+  valid_from  DateTime?
+  valid_until DateTime?
+  /// Multi-Store-Vorbereitung: null = alle Stores
+  store_id    String?
+
+  // ─── Rabattlogik ─────────────────────────────────────────────────────────
+  discount_type          BundleDiscountType @default(none)
+  /// Prozentualer Rabatt, z.B. 10.00 für 10%. Nur relevant wenn discount_type=percentage.
+  discount_percent       Decimal?           @db.Decimal(5, 2)
+  /// Fester Rabatt in Cent. Nur relevant wenn discount_type=fixed.
+  discount_cents         Int?
+  discount_mode          BundleDiscountMode @default(all_items)
+  /// Mindestanzahl ausgewählter Produkte für Rabatt (discount_mode=min_count).
+  min_items_for_discount Int                @default(1)
+  /// Zeitlich begrenzter Rabatt – unabhängig von Bundle-Gültigkeit.
+  valid_from_discount    DateTime?
+  valid_until_discount   DateTime?
+
+  // ─── Darstellung ─────────────────────────────────────────────────────────
+  display_mode BundleDisplayMode @default(card)
+  /// Optionaler Gruppenname für Tab-Darstellung, z.B. "zubehoer", "starter-set".
+  tab_group    String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  translations         BundleTranslation[]
+  items                BundleItem[]
+  product_assignments  BundleProductAssignment[]
+  category_assignments BundleCategoryAssignment[]
+
+  @@index([status, sort_order])
+  @@index([valid_from, valid_until])
+  @@map("bundles")
+}
+
+/// Sprachabhängige Texte eines Bundles. DE ist immer Pflicht.
+/// Fehlende EN/ES-Einträge → Fallback auf DE im Service-Layer.
+model BundleTranslation {
+  id          String @id @default(uuid())
+  bundle_id   String
+  locale      Locale
+
+  title       String
+  description String?
+  /// Label für Tab-Darstellung (z.B. "Zubehör", "Häufig zusammen gekauft").
+  tab_name    String?
+
+  bundle Bundle @relation(fields: [bundle_id], references: [id], onDelete: Cascade)
+
+  @@unique([bundle_id, locale])
+  @@map("bundle_translations")
+}
+
+/// Ein Produkt innerhalb eines Bundles. Jede Kombination bundle+product ist unique.
+/// discount_percent / discount_cents überschreiben den Bundle-Level-Rabatt für dieses Produkt.
+model BundleItem {
+  id               String   @id @default(uuid())
+  bundle_id        String
+  product_id       String
+  quantity         Int      @default(1)
+  /// true = Pflichtprodukt (muss ausgewählt bleiben); false = optional (Checkbox)
+  is_required      Boolean  @default(true)
+  sort_order       Int      @default(0)
+  /// Individueller Produkt-Rabatt in Prozent (überschreibt Bundle-Rabatt).
+  discount_percent Decimal? @db.Decimal(5, 2)
+  /// Individueller Produkt-Rabatt als fester Betrag in Cent.
+  discount_cents   Int?
+
+  bundle  Bundle  @relation(fields: [bundle_id], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@unique([bundle_id, product_id])
+  @@map("bundle_items")
+}
+
+/// Weist ein Bundle einem oder mehreren spezifischen Produkten zu.
+/// Das Bundle erscheint auf der Produktdetailseite dieser Produkte.
+model BundleProductAssignment {
+  bundle_id  String
+  product_id String
+
+  bundle  Bundle  @relation(fields: [bundle_id], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@id([bundle_id, product_id])
+  @@map("bundle_product_assignments")
+}
+
+/// Weist ein Bundle einer Kategorie zu.
+/// Das Bundle erscheint für alle Produkte dieser Kategorie.
+model BundleCategoryAssignment {
+  bundle_id   String
+  category_id String
+
+  bundle   Bundle   @relation(fields: [bundle_id], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@id([bundle_id, category_id])
+  @@map("bundle_category_assignments")
+}
+
+// ─── Product Stickers & Labels ────────────────────────────────────────────────
+
+/// Admin-verwaltete Produkt-Sticker / Labels.
+/// Werden automatisch via Regeln (StickerRule) oder manuell (StickerProductOverride) zugewiesen.
+/// DE-Übersetzung ist Pflicht; EN/ES fallen auf DE zurück (Service-Layer).
+model Sticker {
+  id           String          @id @default(uuid())
+  /// Interner Admin-Name (nicht im Storefront sichtbar).
+  name         String
+  status       StickerStatus   @default(inactive)
+  /// Höherer Wert = höhere Priorität bei Konflikten.
+  priority     Int             @default(0)
+  sort_order   Int             @default(0)
+  type         StickerType     @default(text)
+
+  /// URL des Bild-Stickers (nur relevant wenn type=image|combined).
+  image_url    String?
+
+  /// Text-Sticker Styling – alle Felder optional, Fallback auf Defaults im Frontend.
+  text_color   String?         // z. B. "#FFFFFF"
+  bg_color     String?         // z. B. "#22C55E"
+  border_color String?         // z. B. "#16A34A"
+  font_size    String?         // z. B. "12px"
+  font_bold    Boolean         @default(false)
+  font_italic  Boolean         @default(false)
+  border_radius String?        // z. B. "4px" oder "9999px" (Pill-Form)
+  padding      String?         // z. B. "4px 8px"
+  /// CSS opacity 0.00–1.00
+  opacity      Decimal?        @db.Decimal(3, 2)
+  /// Optionale Tailwind- oder Custom-CSS-Klasse für den Sticker.
+  css_class    String?
+  /// Optionales freies inline-CSS (überschreibt alle anderen Stilfelder).
+  custom_css   String?
+
+  /// Klickbarer Link-URL (optional). Übersetzbar in StickerTranslation.link_url.
+  link_url     String?
+
+  /// Position des Stickers auf dem Produktbild.
+  position     StickerPosition @default(top_left)
+  /// Custom X-Offset in px (nur relevant wenn position=custom).
+  position_x   Int?
+  /// Custom Y-Offset in px (nur relevant wenn position=custom).
+  position_y   Int?
+
+  /// Sticker-Größe je Seitenkontext als JSON:
+  /// { "homepage": "80px", "listing": "70px", "detail": "100px", "search": "64px" }
+  size_config  Json            @default("{}")
+
+  /// Gültigkeitszeitraum. null = sofort aktiv / kein Ablauf.
+  valid_from   DateTime?
+  valid_until  DateTime?
+
+  /// Multi-Store: null = alle Stores.
+  store_id     String?
+
+  /// Sichtbare Kundengruppen als JSON-Array: ["guest","registered","b2b","vip"].
+  /// null = alle Gruppen sehen den Sticker.
+  customer_groups Json?
+
+  /// Maximale Anzahl gleichzeitig sichtbarer Sticker pro Produkt (0 = unbegrenzt).
+  max_per_product Int           @default(3)
+  /// Darf dieser Sticker durch manuelle Produktregeln überschrieben werden?
+  allow_override  Boolean       @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  translations      StickerTranslation[]
+  rules             StickerRule[]
+  product_overrides StickerProductOverride[]
+
+  @@index([status, priority])
+  @@index([valid_from, valid_until])
+  @@map("stickers")
+}
+
+/// Sprachabhängige Texte eines Stickers. DE ist immer Pflicht.
+/// Fehlende EN/ES-Einträge → Fallback auf DE im Service-Layer.
+model StickerTranslation {
+  id         String  @id @default(uuid())
+  sticker_id String
+  locale     Locale
+
+  /// Label-Text (für type=text/combined/css_badge/tooltip).
+  text               String?
+  /// Tooltip-Inhalt (sichtbar bei Hover/Tap; für type=tooltip/combined).
+  tooltip            String?
+  /// Link-Label im Tooltip.
+  tooltip_link_label String?
+  /// Locale-spezifische Tooltip-Link-URL.
+  tooltip_link_url   String?
+  /// Locale-spezifische Sticker-Link-URL (überschreibt Sticker.link_url).
+  link_url           String?
+
+  sticker Sticker @relation(fields: [sticker_id], references: [id], onDelete: Cascade)
+
+  @@unique([sticker_id, locale])
+  @@map("sticker_translations")
+}
+
+/// Automatische Zuweisungsregel für einen Sticker.
+/// Mehrere Regeln desselben Stickers werden OR-verknüpft:
+/// Ein Produkt bekommt den Sticker, wenn mindestens eine Regel zutrifft.
+model StickerRule {
+  id         String          @id @default(uuid())
+  sticker_id String
+  rule_type  StickerRuleType
+
+  /// Kategorie-ID (nur relevant wenn rule_type=category).
+  category_id String?
+
+  /// Mindestpreis in Cent (nur relevant wenn rule_type=price_range).
+  price_min_cents Int?
+  /// Maximalpreis in Cent (nur relevant wenn rule_type=price_range).
+  price_max_cents Int?
+
+  /// Verfügbarkeitsstatus als String (nur relevant wenn rule_type=availability).
+  /// Werte: "in_stock" | "out_of_stock" | "preorder" | "discontinued" | "on_request"
+  availability_status String?
+
+  /// Produkt muss innerhalb der letzten N Tage erstellt worden sein (rule_type=new_arrival).
+  new_arrival_days Int?
+
+  sticker Sticker @relation(fields: [sticker_id], references: [id], onDelete: Cascade)
+
+  @@map("sticker_rules")
+}
+
+/// Manuelle Sticker-Zuweisung oder -Ausschluss für einzelne Produkte.
+model StickerProductOverride {
+  id         String  @id @default(uuid())
+  sticker_id String
+  product_id String
+
+  /// false → Sticker für dieses Produkt explizit deaktiviert (auch wenn Regel greift).
+  enabled  Boolean @default(true)
+  /// true → Produkt vollständig vom Sticker-System ausgeschlossen (alle Sticker).
+  excluded Boolean @default(false)
+
+  sticker Sticker @relation(fields: [sticker_id], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@unique([sticker_id, product_id])
+  @@map("sticker_product_overrides")
 }

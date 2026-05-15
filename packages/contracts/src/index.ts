@@ -16,3 +16,5 @@ export * from "./catalog";
 export * from "./blog";
 export * from "./waitlist";
 export * from "./ticker";
+export * from "./bundle";
+export * from "./sticker";

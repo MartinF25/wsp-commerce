@@ -679,15 +679,15 @@ packages:
     resolution: {integrity: sha512-mUFwbeTqrVgDQxFveS+df2yfap6iuP20NAKAsBt5jDEoOTDew+zwLAOilHCeQJOVSvmgCX4ogqIrA0mnyr08yQ==}
 
   '@wsp/contracts@file:apps/commerce/wsp-contracts-0.0.1.tgz':
-    resolution: {integrity: sha512-uZM/aVulkthcu5MBOg8RUxIX759vqVhcUzVCsQJ7HYIjmcNbAco/QxYB7TZrm4pW2muf0sXObhYr6oZRxT4vsA==, tarball: file:apps/commerce/wsp-contracts-0.0.1.tgz}
+    resolution: {integrity: sha512-2eSx1PTb3eipDyxjvITt0EOwa3vKhwLcUq5NPKVBPove0LcmxHdslXBp4cUOvqVjYg+UpmtHL38Nw3gt9V8XhA==, tarball: file:apps/commerce/wsp-contracts-0.0.1.tgz}
     version: 0.0.1
 
   '@wsp/contracts@file:packages/contracts/wsp-contracts-0.0.1.tgz':
-    resolution: {integrity: sha512-uZM/aVulkthcu5MBOg8RUxIX759vqVhcUzVCsQJ7HYIjmcNbAco/QxYB7TZrm4pW2muf0sXObhYr6oZRxT4vsA==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
+    resolution: {integrity: sha512-2eSx1PTb3eipDyxjvITt0EOwa3vKhwLcUq5NPKVBPove0LcmxHdslXBp4cUOvqVjYg+UpmtHL38Nw3gt9V8XhA==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
     version: 0.0.1
 
   '@wsp/types@file:packages/types/wsp-types-0.0.1.tgz':
-    resolution: {integrity: sha512-OMGzEFn7ZF5q5V4hI/kJdHcDIabPcJWkmbRgB8ZEmvvHX0yhdx1MAzlowUOPGzwvuaNZK6+ysmlHUG0MfYIQBQ==, tarball: file:packages/types/wsp-types-0.0.1.tgz}
+    resolution: {integrity: sha512-FRgVvkn3IuXwIgUbJ7CylrRSJvLiGkxU5hjjOFOqZOxfv2StEhCc+qfcZk73ea+qu1EDqMV3Ctt7TsLhz6MhWw==, tarball: file:packages/types/wsp-types-0.0.1.tgz}
     version: 0.0.1
 
   abort-controller@3.0.0:

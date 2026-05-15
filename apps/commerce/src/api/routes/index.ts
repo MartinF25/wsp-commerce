@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { productRoutes } from "./products";
 import { categoryRoutes } from "./categories";
+import { bundleRoutes } from "./bundles";
 
 /**
  * Katalog-Routen
@@ -13,8 +14,11 @@ import { categoryRoutes } from "./categories";
  *   GET /products/:slug    → Produktdetail
  *   GET /categories        → Kategorienliste (mit Produktzählern)
  *   GET /categories/:slug  → Kategoriedetail (mit Produkten)
+ *   GET /bundles           → Bundles für Produkt oder Kategorie
+ *   GET /bundles/:id       → Bundle-Detail
  */
 export const catalogRoutes = new Hono();
 
 catalogRoutes.route("/products", productRoutes);
 catalogRoutes.route("/categories", categoryRoutes);
+catalogRoutes.route("/bundles", bundleRoutes);

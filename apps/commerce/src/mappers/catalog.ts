@@ -6,6 +6,7 @@ import type {
   CategoryTreeNode,
   PriceDisplay,
   AvailabilityStatus,
+  StickerDisplay,
 } from "@wsp/contracts";
 import { isDirectlyPurchasable, isConfigurable, isAffiliateExternal, calculatePriceDisplay, computeSaleStatus } from "../utils/productUtils";
 import { resolveTranslation, resolveVariantTranslation, resolveCategoryTranslation } from "../utils/localeUtils";
@@ -33,7 +34,11 @@ function toStringArray(value: unknown): string[] {
  *
  * Niemals rohe Prisma-Objekte nach außen geben – immer durch diesen Mapper.
  */
-export function toProductSummary(product: ProductWithVariants, locale = "de"): ProductSummary {
+export function toProductSummary(
+  product: ProductWithVariants,
+  locale = "de",
+  stickers: StickerDisplay[] = []
+): ProductSummary {
   const activeVariants = product.variants.filter((v) => v.is_active);
   const priceDisplay: PriceDisplay = calculatePriceDisplay({ ...product, variants: activeVariants });
   const coverImage = product.images?.[0] ?? null;
@@ -65,6 +70,7 @@ export function toProductSummary(product: ProductWithVariants, locale = "de"): P
     coverImageAlt: coverImage?.alt ?? null,
     affiliateEnabled: product.affiliate_enabled,
     affiliateProvider: product.affiliate_provider ?? null,
+    stickers,
   };
 }
 
@@ -76,7 +82,11 @@ export function toProductSummary(product: ProductWithVariants, locale = "de"): P
  *   purchasable=true  → Variantenauswahl + "Jetzt kaufen"
  *   purchasable=false → "Beratung anfragen" (inquiry_only)
  */
-export function toProductDetail(product: ProductWithVariants, locale = "de"): ProductDetail {
+export function toProductDetail(
+  product: ProductWithVariants,
+  locale = "de",
+  stickers: StickerDisplay[] = []
+): ProductDetail {
   const activeVariants = product.variants.filter((v) => v.is_active);
   const priceDisplay: PriceDisplay = calculatePriceDisplay({ ...product, variants: activeVariants });
   const t = resolveTranslation(product.translations, locale);
@@ -160,6 +170,7 @@ export function toProductDetail(product: ProductWithVariants, locale = "de"): Pr
         : null,
     affiliateButtonLabel: product.affiliate_button_label ?? null,
     affiliateDisclosure: product.affiliate_disclosure ?? null,
+    stickers,
   };
 }
 

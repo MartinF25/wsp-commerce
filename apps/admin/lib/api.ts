@@ -181,6 +181,206 @@ export interface TickerInput {
   translations: TickerTranslation[];
 }
 
+// ─── Bundle-Typen ─────────────────────────────────────────────────────────────
+
+export type BundleStatus = "active" | "inactive";
+export type BundleDiscountType = "none" | "percentage" | "fixed" | "per_item";
+export type BundleDiscountMode = "all_items" | "min_count" | "any_item";
+export type BundleDisplayMode = "card" | "list" | "slider" | "tabs";
+
+export interface BundleTranslation {
+  locale: Locale;
+  title: string;
+  description: string | null;
+  tab_name: string | null;
+}
+
+export interface BundleItemSummary {
+  id: string;
+  product: {
+    id: string;
+    slug: string;
+    name: string;
+    coverImageUrl: string | null;
+  };
+  quantity: number;
+  is_required: boolean;
+  sort_order: number;
+  discount_percent: number | null;
+  discount_cents: number | null;
+}
+
+export interface BundlePriceInfo {
+  originalTotalCents: number;
+  discountedTotalCents: number;
+  savingsCents: number;
+  savingsPercent: number;
+  currencyCode: string;
+  hasDiscount: boolean;
+  isTimeLimitedDiscount: boolean;
+  discountEndsAt: string | null;
+}
+
+export interface BundleSummary {
+  id: string;
+  status: BundleStatus;
+  title: string;
+  description: string | null;
+  tab_name: string | null;
+  image_url: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  discount_type: BundleDiscountType;
+  discount_percent: number | null;
+  discount_cents: number | null;
+  discount_mode: BundleDiscountMode;
+  min_items_for_discount: number;
+  display_mode: BundleDisplayMode;
+  tab_group: string | null;
+  sort_order: number;
+  items: BundleItemSummary[];
+  priceInfo: BundlePriceInfo | null;
+  translations?: BundleTranslation[];
+}
+
+export interface BundleInput {
+  status?: BundleStatus;
+  sort_order?: number;
+  image_url?: string | null;
+  valid_from?: string | null;
+  valid_until?: string | null;
+  discount_type?: BundleDiscountType;
+  discount_percent?: number | null;
+  discount_cents?: number | null;
+  discount_mode?: BundleDiscountMode;
+  min_items_for_discount?: number;
+  valid_from_discount?: string | null;
+  valid_until_discount?: string | null;
+  display_mode?: BundleDisplayMode;
+  tab_group?: string | null;
+  translations: BundleTranslation[];
+}
+
+export interface BundleItemInput {
+  product_id: string;
+  quantity?: number;
+  is_required?: boolean;
+  sort_order?: number;
+  discount_percent?: number | null;
+  discount_cents?: number | null;
+}
+
+// ─── Sticker-Typen ────────────────────────────────────────────────────────────
+
+export type StickerStatus = "active" | "inactive";
+export type StickerType = "image" | "text" | "css_badge" | "tooltip" | "combined";
+export type StickerPosition = "top_left" | "top_right" | "bottom_left" | "bottom_right" | "center" | "custom";
+export type StickerRuleType = "all_products" | "category" | "price_range" | "availability" | "new_arrival";
+
+export interface StickerTranslation {
+  id?: string;
+  locale: Locale;
+  text: string | null;
+  tooltip: string | null;
+  tooltip_link_label: string | null;
+  tooltip_link_url: string | null;
+  link_url: string | null;
+}
+
+export interface StickerRule {
+  id: string;
+  rule_type: StickerRuleType;
+  category_id: string | null;
+  price_min_cents: number | null;
+  price_max_cents: number | null;
+  availability_status: string | null;
+  new_arrival_days: number | null;
+}
+
+export interface StickerAdmin {
+  id: string;
+  name: string;
+  status: StickerStatus;
+  priority: number;
+  sort_order: number;
+  type: StickerType;
+  image_url: string | null;
+  text_color: string | null;
+  bg_color: string | null;
+  border_color: string | null;
+  font_size: string | null;
+  font_bold: boolean;
+  font_italic: boolean;
+  border_radius: string | null;
+  padding: string | null;
+  opacity: number | null;
+  css_class: string | null;
+  custom_css: string | null;
+  link_url: string | null;
+  position: StickerPosition;
+  position_x: number | null;
+  position_y: number | null;
+  size_config: Record<string, string>;
+  valid_from: string | null;
+  valid_until: string | null;
+  store_id: string | null;
+  customer_groups: string[] | null;
+  max_per_product: number;
+  allow_override: boolean;
+  created_at: string;
+  updated_at: string;
+  translations: StickerTranslation[];
+  rules: StickerRule[];
+  override_count: number;
+}
+
+export interface StickerInput {
+  name: string;
+  status?: StickerStatus;
+  priority?: number;
+  sort_order?: number;
+  type?: StickerType;
+  image_url?: string | null;
+  text_color?: string | null;
+  bg_color?: string | null;
+  border_color?: string | null;
+  font_size?: string | null;
+  font_bold?: boolean;
+  font_italic?: boolean;
+  border_radius?: string | null;
+  padding?: string | null;
+  opacity?: number | null;
+  css_class?: string | null;
+  custom_css?: string | null;
+  link_url?: string | null;
+  position?: StickerPosition;
+  position_x?: number | null;
+  position_y?: number | null;
+  size_config?: Record<string, string>;
+  valid_from?: string | null;
+  valid_until?: string | null;
+  store_id?: string | null;
+  customer_groups?: string[] | null;
+  max_per_product?: number;
+  allow_override?: boolean;
+  translations: Array<{
+    locale: Locale;
+    text?: string | null;
+    tooltip?: string | null;
+    tooltip_link_label?: string | null;
+    tooltip_link_url?: string | null;
+    link_url?: string | null;
+  }>;
+  rules?: Array<{
+    rule_type: StickerRuleType;
+    category_id?: string | null;
+    price_min_cents?: number | null;
+    price_max_cents?: number | null;
+    availability_status?: string | null;
+    new_arrival_days?: number | null;
+  }>;
+}
+
 // ─── Blog-Typen ───────────────────────────────────────────────────────────────
 
 export type BlogStatus = "draft" | "published" | "archived";
@@ -436,6 +636,63 @@ export const api = {
     update: (docId: string, data: Partial<Omit<ProductDocument, "id" | "product_id">>) =>
       request<ProductDocument>(`/documents/${docId}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (docId: string) => request<void>(`/documents/${docId}`, { method: "DELETE" }),
+  },
+
+  bundles: {
+    list: () => request<BundleSummary[]>("/bundles"),
+    get: (id: string) => request<BundleSummary>(`/bundles/${id}`),
+    create: (data: BundleInput) =>
+      request<BundleSummary>("/bundles", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<BundleInput>) =>
+      request<BundleSummary>(`/bundles/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete: (id: string) => request<void>(`/bundles/${id}`, { method: "DELETE" }),
+    setStatus: (id: string, status: BundleStatus) =>
+      request<{ success: boolean }>(`/bundles/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+    addItem: (bundleId: string, data: BundleItemInput) =>
+      request<{ success: boolean }>(`/bundles/${bundleId}/items`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateItem: (bundleId: string, itemId: string, data: Partial<BundleItemInput>) =>
+      request<{ success: boolean }>(`/bundles/${bundleId}/items/${itemId}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    removeItem: (bundleId: string, itemId: string) =>
+      request<void>(`/bundles/${bundleId}/items/${itemId}`, { method: "DELETE" }),
+    assignToProduct: (bundleId: string, productId: string) =>
+      request<void>(`/bundles/${bundleId}/products/${productId}`, { method: "POST" }),
+    unassignFromProduct: (bundleId: string, productId: string) =>
+      request<void>(`/bundles/${bundleId}/products/${productId}`, { method: "DELETE" }),
+    assignToCategory: (bundleId: string, categoryId: string) =>
+      request<void>(`/bundles/${bundleId}/categories/${categoryId}`, { method: "POST" }),
+    unassignFromCategory: (bundleId: string, categoryId: string) =>
+      request<void>(`/bundles/${bundleId}/categories/${categoryId}`, { method: "DELETE" }),
+  },
+
+  stickers: {
+    list: () => request<StickerAdmin[]>("/stickers"),
+    get: (id: string) => request<StickerAdmin>(`/stickers/${id}`),
+    create: (data: StickerInput) =>
+      request<StickerAdmin>("/stickers", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<StickerInput>) =>
+      request<StickerAdmin>(`/stickers/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete: (id: string) => request<void>(`/stickers/${id}`, { method: "DELETE" }),
+    setStatus: (id: string, status: StickerStatus) =>
+      request<{ success: boolean }>(`/stickers/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+    upsertOverride: (stickerId: string, data: { product_id: string; enabled: boolean; excluded: boolean }) =>
+      request<{ success: boolean }>(`/stickers/${stickerId}/overrides`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    removeOverride: (stickerId: string, productId: string) =>
+      request<{ success: boolean }>(`/stickers/${stickerId}/overrides/${productId}`, { method: "DELETE" }),
   },
 
   ticker: {

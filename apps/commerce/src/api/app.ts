@@ -4,6 +4,8 @@ import { logger } from "hono/logger";
 import { CatalogError } from "../types";
 import { catalogRoutes } from "./routes";
 import { adminRoutes } from "./routes/admin";
+import { adminBundleRoutes } from "./routes/adminBundles";
+import { adminStickerRoutes } from "./routes/adminStickers";
 import { blogRoutes } from "./routes/blog";
 import { affiliateRoutes } from "./routes/affiliate";
 import { tickerRoutes } from "./routes/ticker";
@@ -47,6 +49,8 @@ export function createApp() {
   app.route("/api/catalog", catalogRoutes);
   app.route("/api/blog", blogRoutes);
   app.route("/api/admin", adminRoutes);
+  app.route("/api/admin/bundles", adminBundleRoutes);
+  app.route("/api/admin/stickers", adminStickerRoutes);
   app.route("/api/affiliate", affiliateRoutes);
   app.route("/api/ticker", tickerRoutes);
 

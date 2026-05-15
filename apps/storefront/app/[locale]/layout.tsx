@@ -12,6 +12,9 @@ import { Footer } from "@/components/Footer";
 import { NewsletterPopup } from "@/components/NewsletterPopup";
 import { MobileNav } from "@/components/MobileNav";
 import { TickerBarServer } from "@/components/storefront/ticker-bar-server";
+import { CartProvider } from "@/contexts/CartContext";
+import { CartButton } from "@/components/cart/CartButton";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import "../globals.css";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -103,6 +106,7 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${sora.variable} ${inter.variable}`}>
       <body className="bg-white text-brand-text font-sans antialiased min-h-screen flex flex-col">
         <NextIntlClientProvider messages={messages}>
+          <CartProvider>
 
           {/* ── Live-Ticker ── */}
           <TickerBarServer locale={locale} scope="global" />
@@ -139,6 +143,7 @@ export default async function LocaleLayout({
               {/* Rechte Seite: immer sichtbar */}
               <div className="flex items-center gap-3">
                 <LanguageSwitcher />
+                <CartButton />
                 <Link
                   href="/kontakt"
                   className="text-sm font-semibold text-white bg-brand-accent px-4 py-1.5 rounded-lg hover:bg-green-600 transition-colors duration-150"
@@ -163,7 +168,9 @@ export default async function LocaleLayout({
           <SalesPopup />
           <NewsletterPopup />
           <Footer />
+          <CartSidebar />
 
+          </CartProvider>
         </NextIntlClientProvider>
 
         {GA_ID && (

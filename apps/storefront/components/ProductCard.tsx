@@ -13,6 +13,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { OfferCountdown } from "@/components/storefront/offer-countdown";
+import { StickerOverlay } from "@/components/sticker/StickerOverlay";
 
 type Props = {
   product: ProductSummary;
@@ -139,28 +140,30 @@ export function ProductCard({ product, showCategory = true }: Props) {
         tabIndex={-1}
         aria-hidden="true"
       >
-        {product.coverImageUrl ? (
-          <Image
-            src={product.coverImageUrl}
-            alt={product.coverImageAlt ?? product.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
-        ) : (
-          <ProductImagePlaceholder categorySlug={product.category?.slug ?? null} />
-        )}
+        <StickerOverlay stickers={product.stickers ?? []} pageContext="listing">
+          {product.coverImageUrl ? (
+            <Image
+              src={product.coverImageUrl}
+              alt={product.coverImageAlt ?? product.name}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          ) : (
+            <ProductImagePlaceholder categorySlug={product.category?.slug ?? null} />
+          )}
 
-        {/* Affiliate-Badge — schließt sich mit Angebots-Badge aus */}
-        {product.product_type === "affiliate_external" ? (
-          <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full shadow-sm">
-            {t("affiliate_badge")}
-          </span>
-        ) : priceDisplay.isOnSale ? (
-          <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-white bg-orange-500 px-2.5 py-1 rounded-full shadow-sm">
-            {priceDisplay.saleLabel ?? "Angebot"}
-          </span>
-        ) : null}
+          {/* Affiliate-Badge — schließt sich mit Angebots-Badge aus */}
+          {product.product_type === "affiliate_external" ? (
+            <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full shadow-sm">
+              {t("affiliate_badge")}
+            </span>
+          ) : priceDisplay.isOnSale ? (
+            <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-white bg-orange-500 px-2.5 py-1 rounded-full shadow-sm">
+              {priceDisplay.saleLabel ?? "Angebot"}
+            </span>
+          ) : null}
+        </StickerOverlay>
       </Link>
 
       {/* Inhalt */}

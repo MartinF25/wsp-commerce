@@ -9,9 +9,11 @@ import { PaymentOptions } from "@/components/PaymentOptions";
 import { AffiliateButton } from "@/components/AffiliateButton";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductImageGallery } from "@/components/ProductImageGallery";
+import { StickerOverlay } from "@/components/sticker/StickerOverlay";
 import { ShareButtons } from "@/components/ShareButtons";
 import { OfferCountdown } from "@/components/storefront/offer-countdown";
 import { ProductTicker } from "@/components/storefront/product-ticker";
+import { BundleSection } from "@/components/bundle/BundleSection";
 
 const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000";
 
@@ -158,11 +160,20 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
           <div className="lg:sticky lg:top-24">
-            <ProductImageGallery
-              images={p.images}
-              fallback={mainImage}
-              categoryName={p.category?.name}
-            />
+            <div className="relative">
+              <ProductImageGallery
+                images={p.images}
+                fallback={mainImage}
+                categoryName={p.category?.name}
+              />
+              {p.stickers && p.stickers.length > 0 && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <StickerOverlay stickers={p.stickers} pageContext="detail">
+                    <div className="w-full h-full" />
+                  </StickerOverlay>
+                </div>
+              )}
+            </div>
 
             {specs.length > 0 && (
               <div className="mt-4 bg-gray-50 rounded-2xl p-4">
@@ -345,6 +356,13 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </div>
       )}
+
+      {/* ─── Bundle Cross-Sell ──────────────────────────────────────────── */}
+      <div className="py-12 bg-gray-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <BundleSection productId={p.id} locale={params.locale} />
+        </div>
+      </div>
 
       {related.length > 0 && (
         <div className="py-16">

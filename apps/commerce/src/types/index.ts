@@ -16,11 +16,28 @@ import type {
   BlogCategoryTranslation,
   BlogTag,
   BlogStatus,
+  Bundle,
+  BundleTranslation,
+  BundleItem,
+  BundleStatus,
+  BundleDiscountType,
+  BundleDiscountMode,
+  BundleDisplayMode,
+  Sticker,
+  StickerTranslation,
+  StickerRule,
+  StickerProductOverride,
+  StickerStatus,
+  StickerType,
+  StickerPosition,
+  StickerRuleType,
 } from "@prisma/client";
 import type { SortBy } from "@wsp/contracts";
 
 // Re-export Prisma enums as domain types so consumers don't import @prisma/client directly.
 export type { ProductType, ProductStatus, AvailabilityStatus, BlogStatus };
+export type { BundleStatus, BundleDiscountType, BundleDiscountMode, BundleDisplayMode };
+export type { StickerStatus, StickerType, StickerPosition, StickerRuleType };
 
 /** ProductVariant with its locale-specific translations loaded. */
 export type VariantWithTranslations = ProductVariant & {
@@ -104,6 +121,38 @@ export type BlogPostWithRelations = BlogPost & {
   category: BlogCategoryWithTranslations | null;
   tags: { tag: BlogTag }[];
 };
+
+// ─── Bundle-Domain-Typen ──────────────────────────────────────────────────────
+
+/** BundleItem vollständig geladen – inkl. Produkt mit Varianten und Bildern. */
+export type BundleItemWithProduct = BundleItem & {
+  product: ProductWithVariants;
+};
+
+/** Bundle vollständig geladen – Translations, Items mit Produkten, Assignments. */
+export type BundleWithItems = Bundle & {
+  translations: BundleTranslation[];
+  items: BundleItemWithProduct[];
+};
+
+// ─── Sticker-Domain-Typen ─────────────────────────────────────────────────────
+
+/** Sticker vollständig geladen – Translations + Rules + Overrides. */
+export type StickerWithRelations = Sticker & {
+  translations: StickerTranslation[];
+  rules: StickerRule[];
+  product_overrides: StickerProductOverride[];
+};
+
+/** Produktinfo, die der Rule Engine zur Regelauswertung übergeben wird. */
+export interface ProductRuleContext {
+  id: string;
+  category_id: string | null;
+  availability_status: AvailabilityStatus;
+  created_at: Date;
+  /** Minimaler Variantenpreis in Cent (null wenn kein Preis gepflegt). */
+  min_price_cents: number | null;
+}
 
 // ─── CatalogError ─────────────────────────────────────────────────────────────
 

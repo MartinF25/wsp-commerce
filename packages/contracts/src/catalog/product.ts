@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ProductTypeSchema } from "./query";
+import { StickerDisplaySchema } from "../sticker/sticker";
 
 // ─── AvailabilityStatus ───────────────────────────────────────────────────────
 
@@ -129,6 +130,8 @@ export const ProductSummarySchema = z.object({
   coverImageAlt: z.string().nullable(),
   affiliateEnabled: z.boolean(),
   affiliateProvider: z.string().nullable(),
+  /** Aufgelöste Sticker für dieses Produkt (nach Regelauswertung, sortiert nach Priorität). */
+  stickers: z.array(StickerDisplaySchema),
 });
 export type ProductSummary = z.infer<typeof ProductSummarySchema>;
 
@@ -180,6 +183,8 @@ export const ProductDetailSchema = z.object({
   affiliateUrl: z.string().nullable(),
   affiliateButtonLabel: z.string().nullable(),
   affiliateDisclosure: z.string().nullable(),
+  /** Aufgelöste Sticker für dieses Produkt (nach Regelauswertung, sortiert nach Priorität). */
+  stickers: z.array(StickerDisplaySchema),
 });
 export type ProductDetail = z.infer<typeof ProductDetailSchema>;
 

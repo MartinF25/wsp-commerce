@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { ProductQuerySchema, LocaleSchema } from "@wsp/contracts";
 import { ProductService } from "../../services/productService";
+import { StickerService } from "../../services/stickerService";
+import { StickerRuleEngine, toProductRuleContext } from "../../services/stickerRuleEngine";
 import { toProductSummary, toProductDetail } from "../../mappers/catalog";
 import { CatalogError } from "../../types";
 
@@ -59,13 +61,19 @@ productRoutes.get("/", async (c) => {
     status: "active" as const,
   };
 
-  const [products, total] = await Promise.all([
+  const [products, total, activeStickers] = await Promise.all([
     ProductService.listProducts(filter),
     ProductService.countProducts(filter),
+    StickerService.getActiveStickersForRuleEngine(),
   ]);
 
+  const engine = new StickerRuleEngine(activeStickers);
+
   return c.json({
-    data: products.map((p) => toProductSummary(p, locale)),
+    data: products.map((p) => {
+      const stickers = engine.resolve(toProductRuleContext(p), locale);
+      return toProductSummary(p, locale, stickers);
+    }),
     meta: {
       total,
       limit: filter.limit,
@@ -105,7 +113,11 @@ productRoutes.get("/:slug", async (c) => {
     );
   }
 
+  const activeStickers = await StickerService.getActiveStickersForRuleEngine();
+  const engine = new StickerRuleEngine(activeStickers);
+  const stickers = engine.resolve(toProductRuleContext(product), locale);
+
   return c.json({
-    data: toProductDetail(product, locale),
+    data: toProductDetail(product, locale, stickers),
   });
 });

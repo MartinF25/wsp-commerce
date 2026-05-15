@@ -38,3 +38,26 @@ export type {
   CategoryDetail,
   CategoryTreeNode,
 } from "@wsp/contracts";
+
+// ─── Bundle ───────────────────────────────────────────────────────────────────
+
+export type {
+  BundleStatus,
+  BundleDiscountType,
+  BundleDiscountMode,
+  BundleDisplayMode,
+  BundleItem,
+  BundlePriceInfo,
+  Bundle,
+} from "@wsp/contracts";
+
+// ─── Sticker ──────────────────────────────────────────────────────────────────
+
+export type {
+  StickerStatus,
+  StickerType,
+  StickerPosition,
+  StickerRuleType,
+  StickerDisplay,
+  StickerAdmin,
+} from "@wsp/contracts";
