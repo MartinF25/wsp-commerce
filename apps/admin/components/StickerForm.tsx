@@ -197,13 +197,20 @@ function buildPayload(form: FormState): StickerInput {
     allow_override: form.allow_override,
     translations: form.translations.map((t) => ({
       locale: t.locale,
-      text: t.text || null,
-      tooltip: t.tooltip || null,
-      tooltip_link_label: t.tooltip_link_label || null,
-      tooltip_link_url: t.tooltip_link_url || null,
-      link_url: t.link_url || null,
+      ...(t.text ? { text: t.text } : {}),
+      ...(t.tooltip ? { tooltip: t.tooltip } : {}),
+      ...(t.tooltip_link_label ? { tooltip_link_label: t.tooltip_link_label } : {}),
+      ...(t.tooltip_link_url ? { tooltip_link_url: t.tooltip_link_url } : {}),
+      ...(t.link_url ? { link_url: t.link_url } : {}),
     })),
-    rules: form.rules,
+    rules: form.rules.map((r) => ({
+      rule_type: r.rule_type,
+      ...(r.category_id ? { category_id: r.category_id } : {}),
+      ...(r.price_min_cents != null ? { price_min_cents: r.price_min_cents } : {}),
+      ...(r.price_max_cents != null ? { price_max_cents: r.price_max_cents } : {}),
+      ...(r.availability_status ? { availability_status: r.availability_status } : {}),
+      ...(r.new_arrival_days != null ? { new_arrival_days: r.new_arrival_days } : {}),
+    })),
   };
 }
 
