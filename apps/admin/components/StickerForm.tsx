@@ -174,25 +174,25 @@ function buildPayload(form: FormState): StickerInput {
     priority: form.priority,
     sort_order: form.sort_order,
     type: form.type,
-    image_url: form.image_url || null,
-    text_color: form.text_color || null,
-    bg_color: form.bg_color || null,
-    border_color: form.border_color || null,
-    font_size: form.font_size || null,
+    ...(form.image_url ? { image_url: form.image_url } : {}),
+    ...(form.text_color ? { text_color: form.text_color } : {}),
+    ...(form.bg_color ? { bg_color: form.bg_color } : {}),
+    ...(form.border_color ? { border_color: form.border_color } : {}),
+    ...(form.font_size ? { font_size: form.font_size } : {}),
     font_bold: form.font_bold,
     font_italic: form.font_italic,
-    border_radius: form.border_radius || null,
-    padding: form.padding || null,
-    opacity: form.opacity ? parseFloat(form.opacity) : null,
-    css_class: form.css_class || null,
-    custom_css: form.custom_css || null,
-    link_url: form.link_url || null,
+    ...(form.border_radius ? { border_radius: form.border_radius } : {}),
+    ...(form.padding ? { padding: form.padding } : {}),
+    ...(form.opacity ? { opacity: parseFloat(form.opacity) } : {}),
+    ...(form.css_class ? { css_class: form.css_class } : {}),
+    ...(form.custom_css ? { custom_css: form.custom_css } : {}),
+    ...(form.link_url ? { link_url: form.link_url } : {}),
     position: form.position,
-    position_x: form.position_x ? parseInt(form.position_x) : null,
-    position_y: form.position_y ? parseInt(form.position_y) : null,
+    ...(form.position_x ? { position_x: parseInt(form.position_x) } : {}),
+    ...(form.position_y ? { position_y: parseInt(form.position_y) } : {}),
     size_config,
-    valid_from: form.valid_from ? new Date(form.valid_from).toISOString() : null,
-    valid_until: form.valid_until ? new Date(form.valid_until).toISOString() : null,
+    ...(form.valid_from ? { valid_from: new Date(form.valid_from).toISOString() } : {}),
+    ...(form.valid_until ? { valid_until: new Date(form.valid_until).toISOString() } : {}),
     max_per_product: form.max_per_product,
     allow_override: form.allow_override,
     translations: form.translations.map((t) => ({
@@ -323,18 +323,16 @@ export function StickerForm({ sticker, categories }: Props) {
     setError(null);
 
     startTransition(async () => {
-      try {
-        const payload = buildPayload(form);
-        if (sticker) {
-          await updateStickerAction(sticker.id, payload);
-        } else {
-          await createStickerAction(payload);
-        }
-        router.push("/stickers");
-        router.refresh();
-      } catch (err) {
-        setError((err as Error).message);
+      const payload = buildPayload(form);
+      const result = sticker
+        ? await updateStickerAction(sticker.id, payload)
+        : await createStickerAction(payload);
+      if (result.error) {
+        setError(result.error);
+        return;
       }
+      router.push("/stickers");
+      router.refresh();
     });
   }
 
