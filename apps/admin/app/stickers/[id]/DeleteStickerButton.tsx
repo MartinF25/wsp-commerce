@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { deleteStickerAction } from "@/app/stickers/actions";
 
 export function DeleteStickerButton({ id, name }: { id: string; name: string }) {
   const router = useRouter();
@@ -11,7 +11,7 @@ export function DeleteStickerButton({ id, name }: { id: string; name: string }) 
   function handleDelete() {
     if (!confirm(`Sticker „${name}" wirklich löschen? Alle Regeln und Overrides werden entfernt.`)) return;
     startTransition(async () => {
-      await api.stickers.delete(id);
+      await deleteStickerAction(id);
       router.push("/stickers");
       router.refresh();
     });

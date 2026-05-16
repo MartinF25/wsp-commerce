@@ -11,7 +11,7 @@ import type {
   Locale,
   Category,
 } from "@/lib/api";
-import { api } from "@/lib/api";
+import { createStickerAction, updateStickerAction } from "@/app/stickers/actions";
 
 // ─── Konstanten ───────────────────────────────────────────────────────────────
 
@@ -319,9 +319,9 @@ export function StickerForm({ sticker, categories }: Props) {
       try {
         const payload = buildPayload(form);
         if (sticker) {
-          await api.stickers.update(sticker.id, payload);
+          await updateStickerAction(sticker.id, payload);
         } else {
-          await api.stickers.create(payload);
+          await createStickerAction(payload);
         }
         router.push("/stickers");
         router.refresh();
