@@ -15,14 +15,15 @@
     "@hono/node-server": "1.19.14",
     "@prisma/client": "5.22.0",
     "@wsp/contracts": "file:./wsp-contracts-0.0.1.tgz",
-    "zod": "^3.22.4",
-    "hono": "4.12.14"
+    "hono": "4.12.14",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "prisma": "^5.22.0",
     "ts-node": "^10.9.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.6"
   },
   "prisma": {
     "schema": "prisma/schema.prisma",

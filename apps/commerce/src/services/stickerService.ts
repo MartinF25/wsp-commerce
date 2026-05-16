@@ -205,33 +205,22 @@ export class StickerService {
   ): Promise<StickerWithRelations> {
     invalidateCache();
     const prisma = getPrismaClient();
-    const { translations, rules, ...rest } = input;
+    const { translations, rules, size_config, customer_groups, ...rest } = input;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await prisma.sticker.update({
       where: { id },
       data: {
         ...rest,
-        ...(rest.size_config !== undefined ? { size_config: rest.size_config } : {}),
-        ...(rest.customer_groups !== undefined
-          ? { customer_groups: rest.customer_groups ?? undefined }
-          : {}),
+        ...(size_config !== undefined ? { size_config: size_config as any } : {}),
+        ...(customer_groups !== undefined ? { customer_groups: (customer_groups ?? undefined) as any } : {}),
         ...(translations !== undefined
-          ? {
-              translations: {
-                deleteMany: {},
-                create: translations,
-              },
-            }
+          ? { translations: { deleteMany: {}, create: translations } }
           : {}),
         ...(rules !== undefined
-          ? {
-              rules: {
-                deleteMany: {},
-                create: rules,
-              },
-            }
+          ? { rules: { deleteMany: {}, create: rules } }
           : {}),
-      },
+      } as any,
     });
 
     return StickerService.requireStickerById(id);
