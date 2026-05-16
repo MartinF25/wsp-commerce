@@ -104,6 +104,27 @@ adminStickerRoutes.get("/:id", async (c) => {
   return c.json({ data: toStickerAdmin(sticker) });
 });
 
+// ─── GET /:id/overrides ───────────────────────────────────────────────────────
+
+adminStickerRoutes.get("/:id/overrides", async (c) => {
+  const id = c.req.param("id");
+  const overrides = await StickerService.getProductOverrides(id);
+  return c.json({
+    data: overrides.map((o) => ({
+      id: o.id,
+      sticker_id: o.sticker_id,
+      product_id: o.product_id,
+      enabled: o.enabled,
+      excluded: o.excluded,
+      product: {
+        id: o.product.id,
+        slug: o.product.slug,
+        name: o.product.translations[0]?.name ?? o.product.slug,
+      },
+    })),
+  });
+});
+
 // ─── PUT /:id ─────────────────────────────────────────────────────────────────
 
 adminStickerRoutes.put("/:id", async (c) => {

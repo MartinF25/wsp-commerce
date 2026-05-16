@@ -3,6 +3,7 @@ import { StickerForm } from "@/components/StickerForm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DeleteStickerButton } from "./DeleteStickerButton";
+import { ProductOverridesSection } from "./ProductOverridesSection";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,14 @@ export default async function EditStickerPage({ params }: { params: { id: string
   }
 
   if (!sticker) notFound();
+
+  const [overrides, products] = await Promise.allSettled([
+    api.stickers.getOverrides(params.id),
+    api.products.list(),
+  ]);
+
+  const resolvedOverrides = overrides.status === "fulfilled" ? overrides.value : [];
+  const resolvedProducts = products.status === "fulfilled" ? products.value : [];
 
   return (
     <div className="p-8 max-w-4xl">
@@ -39,7 +48,15 @@ export default async function EditStickerPage({ params }: { params: { id: string
         </div>
       </div>
 
-      <StickerForm sticker={sticker} categories={categories} />
+      <div className="space-y-6">
+        <StickerForm sticker={sticker} categories={categories} />
+
+        <ProductOverridesSection
+          stickerId={sticker.id}
+          overrides={resolvedOverrides}
+          products={resolvedProducts}
+        />
+      </div>
     </div>
   );
 }

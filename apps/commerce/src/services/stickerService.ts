@@ -242,6 +242,24 @@ export class StickerService {
 
   // ─── Produkt-Overrides ────────────────────────────────────────────────────
 
+  /** Alle Produkt-Overrides eines Stickers inkl. Produktname (DE). */
+  static async getProductOverrides(stickerId: string) {
+    const prisma = getPrismaClient();
+    return prisma.stickerProductOverride.findMany({
+      where: { sticker_id: stickerId },
+      include: {
+        product: {
+          select: {
+            id: true,
+            slug: true,
+            translations: { where: { locale: "de" }, select: { name: true } },
+          },
+        },
+      },
+      orderBy: { product: { slug: "asc" } },
+    });
+  }
+
   /** Produkt-Override anlegen oder aktualisieren (upsert). */
   static async upsertProductOverride(
     stickerId: string,

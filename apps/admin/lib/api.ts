@@ -287,6 +287,15 @@ export interface StickerTranslation {
   link_url: string | null;
 }
 
+export interface StickerProductOverride {
+  id: string;
+  sticker_id: string;
+  product_id: string;
+  enabled: boolean;
+  excluded: boolean;
+  product: { id: string; slug: string; name: string };
+}
+
 export interface StickerRule {
   id: string;
   rule_type: StickerRuleType;
@@ -676,6 +685,7 @@ export const api = {
   stickers: {
     list: () => request<StickerAdmin[]>("/stickers"),
     get: (id: string) => request<StickerAdmin>(`/stickers/${id}`),
+    getOverrides: (id: string) => request<StickerProductOverride[]>(`/stickers/${id}/overrides`),
     create: (data: StickerInput) =>
       request<StickerAdmin>("/stickers", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: Partial<StickerInput>) =>

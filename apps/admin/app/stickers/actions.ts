@@ -23,3 +23,27 @@ export async function updateStickerAction(id: string, input: StickerInput): Prom
 export async function deleteStickerAction(id: string) {
   return api.stickers.delete(id);
 }
+
+export async function upsertOverrideAction(
+  stickerId: string,
+  data: { product_id: string; enabled: boolean; excluded: boolean }
+): Promise<{ error?: string }> {
+  try {
+    await api.stickers.upsertOverride(stickerId, data);
+    return {};
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+}
+
+export async function removeOverrideAction(
+  stickerId: string,
+  productId: string
+): Promise<{ error?: string }> {
+  try {
+    await api.stickers.removeOverride(stickerId, productId);
+    return {};
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+}
