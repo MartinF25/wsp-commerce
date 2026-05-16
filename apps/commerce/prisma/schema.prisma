@@ -751,6 +751,46 @@ model StickerRule {
   @@map("sticker_rules")
 }
 
+// ─── Market Listings (Kleinanzeigen Marktbeobachtung) ─────────────────────────
+
+/// Täglich via n8n von Kleinanzeigen importierte Marktangebote.
+/// Dient der Preisanalyse und Marktbeobachtung im Admin-Bereich.
+/// ad_id ist eindeutig → verhindert Duplikate bei täglichem Re-Import.
+model MarketListing {
+  id               String    @id @default(uuid())
+  /// Kleinanzeigen-Anzeigen-ID (z.B. "3409646684"). Unique-Constraint verhindert Duplikate.
+  ad_id            String    @unique
+  source           String    @default("kleinanzeigen")
+  keyword          String    @default("skywind")
+
+  title            String
+  /// Originalpreisstring, z.B. "1.500 € VB"
+  price_raw        String?
+  /// Preis in Cent (geparst). Null wenn nur "VB" ohne Betrag.
+  price_cents      Int?
+  /// true wenn Preis verhandelbar ("VB" im Preisstring enthalten)
+  price_negotiable Boolean   @default(false)
+
+  description      String?   @db.Text
+  location         String?
+  plz              String?
+
+  listing_url      String?
+  image_url        String?
+  shipping         String?
+
+  /// Inserate-Datum (geparst aus "Heute, 07:17" / "Gestern, HH:MM" / "DD.MM.YYYY")
+  listed_at        DateTime?
+  /// Zeitstempel wann n8n die Daten gesammelt hat (scraped_at = jetzt beim Import)
+  scraped_at       DateTime  @default(now())
+  created_at       DateTime  @default(now())
+
+  @@index([scraped_at])
+  @@index([source, keyword])
+  @@index([price_cents])
+  @@map("market_listings")
+}
+
 /// Manuelle Sticker-Zuweisung oder -Ausschluss für einzelne Produkte.
 model StickerProductOverride {
   id         String  @id @default(uuid())

@@ -490,6 +490,37 @@ export interface BlogCategoryDetail {
   translations: BlogCategoryTranslation[];
 }
 
+// ─── Market Listings ─────────────────────────────────────────────────────────
+
+export interface MarketListing {
+  id: string;
+  ad_id: string;
+  source: string;
+  keyword: string;
+  title: string;
+  price_raw: string | null;
+  price_cents: number | null;
+  price_negotiable: boolean;
+  description: string | null;
+  location: string | null;
+  plz: string | null;
+  listing_url: string | null;
+  image_url: string | null;
+  shipping: string | null;
+  listed_at: string | null;
+  scraped_at: string;
+  created_at: string;
+}
+
+export interface MarketListingStats {
+  total: number;
+  avg_price_cents: number | null;
+  min_price_cents: number | null;
+  max_price_cents: number | null;
+  new_today: number;
+  with_price: number;
+}
+
 // ─── HTTP-Helfer ──────────────────────────────────────────────────────────────
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -735,5 +766,18 @@ export const api = {
         body: JSON.stringify({ status }),
       }),
     delete: (id: string) => request<void>(`/ticker/${id}`, { method: "DELETE" }),
+  },
+
+  marketListings: {
+    list: (params?: { source?: string; keyword?: string; limit?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.source) qs.set("source", params.source);
+      if (params?.keyword) qs.set("keyword", params.keyword);
+      if (params?.limit != null) qs.set("limit", String(params.limit));
+      const q = qs.toString();
+      return request<{ data: MarketListing[]; stats: MarketListingStats }>(
+        `/market-listings${q ? `?${q}` : ""}`
+      );
+    },
   },
 };
