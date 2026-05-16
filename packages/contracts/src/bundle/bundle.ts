@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProductSummarySchema } from "../catalog/product";
+import { ProductSummarySchema, VariantSchema } from "../catalog/product";
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
@@ -23,7 +23,9 @@ export type BundleDisplayMode = z.infer<typeof BundleDisplayModeSchema>;
  */
 export const BundleItemSchema = z.object({
   id: z.string().uuid(),
-  product: ProductSummarySchema,
+  product: ProductSummarySchema.extend({
+    variants: z.array(VariantSchema).optional(),
+  }),
   quantity: z.number().int().positive(),
   is_required: z.boolean(),
   sort_order: z.number().int(),

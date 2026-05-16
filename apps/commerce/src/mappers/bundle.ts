@@ -2,6 +2,8 @@ import type { Bundle as BundleContract, BundleItem as BundleItemContract } from 
 import type { BundleWithItems, BundleItemWithProduct } from "../types";
 import { toProductSummary } from "./catalog";
 import { calculateBundlePriceInfo, isBundleValid } from "../utils/bundleDiscount";
+import { resolveVariantTranslation } from "../utils/localeUtils";
+import { computeSaleStatus } from "../utils/productUtils";
 
 /**
  * Löst die Bundle-Übersetzung auf. Fallback-Kette: gewünschte Locale → DE → erste verfügbare.
@@ -28,9 +30,33 @@ export function toBundleItem(
 ): BundleItemContract | null {
   if (!item.product || item.product.status !== "active") return null;
 
+  const productSummary = toProductSummary(item.product, locale);
+  const variants = item.product.variants
+    .filter((v) => v.is_active)
+    .map((v) => {
+      const vt = resolveVariantTranslation(v.translations, locale);
+      return {
+        id: v.id,
+        sku: v.sku,
+        name: vt?.name ?? "",
+        price_cents: v.price_cents ?? null,
+        currency: v.currency,
+        stock_quantity: v.stock_quantity,
+        attributes: v.attributes as Record<string, unknown>,
+        weight_kg: v.weight_kg ?? null,
+        dimensions: (v.dimensions ?? null) as Record<string, unknown> | null,
+        sale_price_cents: v.sale_price_cents ?? null,
+        sale_status: computeSaleStatus(
+          v.sale_price_cents,
+          item.product.sale_starts_at,
+          item.product.sale_ends_at
+        ),
+      };
+    });
+
   return {
     id: item.id,
-    product: toProductSummary(item.product, locale),
+    product: { ...productSummary, variants },
     quantity: item.quantity,
     is_required: item.is_required,
     sort_order: item.sort_order,
