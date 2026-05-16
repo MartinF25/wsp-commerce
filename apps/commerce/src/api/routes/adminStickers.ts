@@ -40,6 +40,13 @@ adminStickerRoutes.get("/", async (c) => {
   return c.json({ data: stickers.map(toStickerAdmin) });
 });
 
+// ─── GET /product-matrix ──────────────────────────────────────────────────────
+
+adminStickerRoutes.get("/product-matrix", async (c) => {
+  const matrix = await StickerService.getProductStickerMatrix();
+  return c.json({ data: matrix });
+});
+
 // ─── POST / ───────────────────────────────────────────────────────────────────
 
 adminStickerRoutes.post("/", async (c) => {

@@ -240,6 +240,110 @@ export class StickerService {
     await prisma.sticker.delete({ where: { id } });
   }
 
+  // ─── Produkt-Sticker-Matrix ───────────────────────────────────────────────
+
+  /**
+   * Gibt für jedes Produkt aus, welche Sticker es hat (Regeln + manuelle Overrides).
+   * Nur Sticker mit status=active werden berücksichtigt.
+   * Ausgeschlossene Produkte (excluded=true Override) werden herausgefiltert.
+   */
+  static async getProductStickerMatrix() {
+    const prisma = getPrismaClient();
+    const now = new Date();
+
+    const [stickers, products] = await Promise.all([
+      prisma.sticker.findMany({
+        where: { status: "active" },
+        include: { rules: true, product_overrides: true, translations: { where: { locale: "de" } } },
+        orderBy: [{ priority: "desc" }],
+      }),
+      prisma.product.findMany({
+        where: { status: "active" },
+        select: {
+          id: true,
+          slug: true,
+          category_id: true,
+          created_at: true,
+          translations: { where: { locale: "de" }, select: { name: true } },
+        },
+        orderBy: { created_at: "desc" },
+      }),
+    ]);
+
+    return products.map((product) => {
+      const matchedStickers: {
+        id: string;
+        name: string;
+        type: string;
+        source: string;
+        text_color: string | null;
+        bg_color: string | null;
+        border_radius: string | null;
+        text: string | null;
+      }[] = [];
+
+      for (const sticker of stickers) {
+        const override = sticker.product_overrides.find(
+          (o) => o.product_id === product.id
+        );
+
+        // Produkt explizit ausgeschlossen → überspringen
+        if (override?.excluded) continue;
+
+        let matched = false;
+        let source = "";
+
+        // Manueller Override (enabled=true) hat Vorrang vor Regeln
+        if (override?.enabled) {
+          matched = true;
+          source = "Manuell zugeordnet";
+        } else {
+          // Automatische Regeln prüfen
+          for (const rule of sticker.rules) {
+            if (rule.rule_type === "all_products") {
+              matched = true;
+              source = "Alle Produkte";
+              break;
+            }
+            if (rule.rule_type === "category" && rule.category_id === product.category_id) {
+              matched = true;
+              source = "Kategorie";
+              break;
+            }
+            if (rule.rule_type === "new_arrival" && rule.new_arrival_days) {
+              const cutoff = new Date(now.getTime() - rule.new_arrival_days * 24 * 60 * 60 * 1000);
+              if (product.created_at >= cutoff) {
+                matched = true;
+                source = `Neues Produkt (≤${rule.new_arrival_days}d)`;
+                break;
+              }
+            }
+          }
+        }
+
+        if (matched) {
+          matchedStickers.push({
+            id: sticker.id,
+            name: sticker.name,
+            type: sticker.type,
+            source,
+            text_color: sticker.text_color,
+            bg_color: sticker.bg_color,
+            border_radius: sticker.border_radius,
+            text: sticker.translations[0]?.text ?? null,
+          });
+        }
+      }
+
+      return {
+        product_id: product.id,
+        product_name: product.translations[0]?.name ?? product.slug,
+        product_slug: product.slug,
+        stickers: matchedStickers,
+      };
+    });
+  }
+
   // ─── Produkt-Overrides ────────────────────────────────────────────────────
 
   /** Alle Produkt-Overrides eines Stickers inkl. Produktname (DE). */

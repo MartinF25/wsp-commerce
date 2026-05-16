@@ -287,6 +287,22 @@ export interface StickerTranslation {
   link_url: string | null;
 }
 
+export interface StickerMatrixEntry {
+  product_id: string;
+  product_name: string;
+  product_slug: string;
+  stickers: {
+    id: string;
+    name: string;
+    type: string;
+    source: string;
+    text_color: string | null;
+    bg_color: string | null;
+    border_radius: string | null;
+    text: string | null;
+  }[];
+}
+
 export interface StickerProductOverride {
   id: string;
   sticker_id: string;
@@ -686,6 +702,7 @@ export const api = {
     list: () => request<StickerAdmin[]>("/stickers"),
     get: (id: string) => request<StickerAdmin>(`/stickers/${id}`),
     getOverrides: (id: string) => request<StickerProductOverride[]>(`/stickers/${id}/overrides`),
+    getProductMatrix: () => request<StickerMatrixEntry[]>("/stickers/product-matrix"),
     create: (data: StickerInput) =>
       request<StickerAdmin>("/stickers", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: Partial<StickerInput>) =>

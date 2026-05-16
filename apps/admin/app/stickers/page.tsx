@@ -80,12 +80,20 @@ export default async function StickersPage() {
             {stickers.length} Sticker gesamt · {activeCount} aktiv
           </p>
         </div>
-        <Link
-          href="/stickers/new"
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
-        >
-          + Neuer Sticker
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/stickers/products"
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Produkt-Übersicht
+          </Link>
+          <Link
+            href="/stickers/new"
+            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
+          >
+            + Neuer Sticker
+          </Link>
+        </div>
       </div>
 
       {error && (
