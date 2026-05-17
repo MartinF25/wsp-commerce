@@ -1,5 +1,5 @@
 {
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "next build",
+  "buildCommand": "cd ../.. && pnpm --filter admin run build",
   "framework": "nextjs"
 }
