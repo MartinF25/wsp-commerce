@@ -117,12 +117,15 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
   const prisma = getPrismaClient();
 
   const body = await c.req.json().catch(() => null);
-  if (!body || !Array.isArray(body.listings)) {
+  const listings = Array.isArray(body) ? body : body?.listings;
+  if (!Array.isArray(listings)) {
     return c.json({ error: { code: "INVALID_BODY", message: 'Body muss { listings: [...] } enthalten.' } }, 422);
   }
 
-  const { listings, source = "kleinanzeigen", keyword = "skywind" } = body as {
-    listings: Array<{
+  const source: string = Array.isArray(body) ? "kleinanzeigen" : (body?.source ?? "kleinanzeigen");
+  const keyword: string = Array.isArray(body) ? "skywind" : (body?.keyword ?? "skywind");
+
+  const _listings = listings as Array<{
       adId?: string;
       id?: string;
       title?: string;
@@ -135,15 +138,12 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
       image?: string;
       shipping?: string;
     }>;
-    source?: string;
-    keyword?: string;
-  };
 
   const now = new Date();
   let upserted = 0;
   let skipped = 0;
 
-  for (const item of listings) {
+  for (const item of _listings) {
     const adId = String(item.adId ?? item.id ?? "").trim();
     if (!adId || !item.title) { skipped++; continue; }
 
