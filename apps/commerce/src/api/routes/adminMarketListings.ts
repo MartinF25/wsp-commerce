@@ -140,7 +140,7 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listings = Array.isArray(body) ? body : (body as any)?.listings;
   if (!Array.isArray(listings)) {
-    return c.json({ error: { code: "INVALID_BODY", message: 'Body muss { listings: [...] } enthalten.', received: rawText.substring(0, 200) } }, 422);
+    return c.json({ error: { code: "INVALID_BODY", message: 'Body muss { listings: [...] } enthalten.', received: raw.substring(0, 200) } }, 422);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
