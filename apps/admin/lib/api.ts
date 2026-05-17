@@ -769,15 +769,19 @@ export const api = {
   },
 
   marketListings: {
-    list: (params?: { source?: string; keyword?: string; limit?: number }) => {
+    list: async (params?: { source?: string; keyword?: string; limit?: number }) => {
       const qs = new URLSearchParams();
       if (params?.source) qs.set("source", params.source);
       if (params?.keyword) qs.set("keyword", params.keyword);
       if (params?.limit != null) qs.set("limit", String(params.limit));
       const q = qs.toString();
-      return request<{ data: MarketListing[]; stats: MarketListingStats }>(
-        `/market-listings${q ? `?${q}` : ""}`
-      );
+      const res = await fetch(`${BASE_URL}/api/admin/market-listings${q ? `?${q}` : ""}`, {
+        cache: "no-store",
+        headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_KEY },
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
+      return json as { data: MarketListing[]; stats: MarketListingStats };
     },
   },
 };
