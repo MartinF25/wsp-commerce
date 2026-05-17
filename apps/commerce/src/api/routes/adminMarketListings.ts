@@ -117,9 +117,6 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
   const prisma = getPrismaClient();
 
   const raw = await c.req.text().catch(() => "");
-  console.log("[bulk] content-type:", c.req.header("content-type"));
-  console.log("[bulk] body-length:", raw.length);
-  console.log("[bulk] body-preview:", raw.substring(0, 300));
 
   let body: unknown = null;
 
