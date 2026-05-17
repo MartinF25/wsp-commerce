@@ -116,14 +116,24 @@ adminMarketListingRoutes.get("/", async (c) => {
 adminMarketListingRoutes.post("/bulk", async (c) => {
   const prisma = getPrismaClient();
 
-  const body = await c.req.json().catch(() => null);
-  const listings = Array.isArray(body) ? body : body?.listings;
+  const rawText = await c.req.text().catch(() => "");
+  console.log("[bulk] content-type:", c.req.header("content-type"));
+  console.log("[bulk] body-length:", rawText.length);
+  console.log("[bulk] body-preview:", rawText.substring(0, 300));
+
+  let body: unknown = null;
+  try { body = JSON.parse(rawText); } catch { /* not valid JSON */ }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const listings = Array.isArray(body) ? body : (body as any)?.listings;
   if (!Array.isArray(listings)) {
-    return c.json({ error: { code: "INVALID_BODY", message: 'Body muss { listings: [...] } enthalten.' } }, 422);
+    return c.json({ error: { code: "INVALID_BODY", message: 'Body muss { listings: [...] } enthalten.', received: rawText.substring(0, 200) } }, 422);
   }
 
-  const source: string = Array.isArray(body) ? "kleinanzeigen" : (body?.source ?? "kleinanzeigen");
-  const keyword: string = Array.isArray(body) ? "skywind" : (body?.keyword ?? "skywind");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const source: string = Array.isArray(body) ? "kleinanzeigen" : ((body as any)?.source ?? "kleinanzeigen");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const keyword: string = Array.isArray(body) ? "skywind" : ((body as any)?.keyword ?? "skywind");
 
   const _listings = listings as Array<{
       adId?: string;
