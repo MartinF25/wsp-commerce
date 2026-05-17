@@ -117,14 +117,25 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
   const prisma = getPrismaClient();
 
   const raw = await c.req.text().catch(() => "");
-  // n8n Raw-Body expression mode prefixes the result with "=" — strip it
-  const rawText = raw.startsWith("=") ? raw.slice(1) : raw;
   console.log("[bulk] content-type:", c.req.header("content-type"));
-  console.log("[bulk] body-length:", rawText.length);
-  console.log("[bulk] body-preview:", rawText.substring(0, 300));
+  console.log("[bulk] body-length:", raw.length);
+  console.log("[bulk] body-preview:", raw.substring(0, 300));
 
   let body: unknown = null;
-  try { body = JSON.parse(rawText); } catch { /* not valid JSON */ }
+
+  // First parse: handles normal JSON or double-encoded JSON string
+  try { body = JSON.parse(raw); } catch { /* not valid JSON */ }
+
+  // n8n double-encodes: JSON.parse gives a string like '={"listings":[...]}'
+  if (typeof body === "string") {
+    const inner = body.startsWith("=") ? body.slice(1) : body;
+    try { body = JSON.parse(inner); } catch { body = null; }
+  }
+
+  // n8n raw mode may also send plain '={"listings":[...]}' without outer quotes
+  if (body === null && raw.startsWith("=")) {
+    try { body = JSON.parse(raw.slice(1)); } catch { /* not valid JSON */ }
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listings = Array.isArray(body) ? body : (body as any)?.listings;
