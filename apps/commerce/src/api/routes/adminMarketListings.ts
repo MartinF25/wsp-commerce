@@ -173,6 +173,8 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
     await prisma.marketListing.upsert({
       where: { ad_id: adId },
       update: {
+        source,
+        keyword,
         title: item.title,
         price_raw: item.price ?? null,
         price_cents,
