@@ -116,7 +116,9 @@ adminMarketListingRoutes.get("/", async (c) => {
 adminMarketListingRoutes.post("/bulk", async (c) => {
   const prisma = getPrismaClient();
 
-  const rawText = await c.req.text().catch(() => "");
+  const raw = await c.req.text().catch(() => "");
+  // n8n Raw-Body expression mode prefixes the result with "=" — strip it
+  const rawText = raw.startsWith("=") ? raw.slice(1) : raw;
   console.log("[bulk] content-type:", c.req.header("content-type"));
   console.log("[bulk] body-length:", rawText.length);
   console.log("[bulk] body-preview:", rawText.substring(0, 300));
