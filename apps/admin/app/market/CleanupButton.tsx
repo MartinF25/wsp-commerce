@@ -1,25 +1,26 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { cleanupListings } from "./actions";
 
 export function CleanupButton() {
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [result, setResult] = useState<{ deleted: number; reclassified: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  function handleCleanup() {
+  async function handleCleanup() {
     if (!confirm("Listings mit ungültigem Keyword löschen und restliche Listings neu klassifizieren?")) return;
     setResult(null);
     setError(null);
-    startTransition(async () => {
-      try {
-        const r = await cleanupListings();
-        setResult(r);
-      } catch (e) {
-        setError((e as Error).message);
-      }
-    });
+    setIsPending(true);
+    try {
+      const r = await cleanupListings();
+      setResult(r);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
