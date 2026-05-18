@@ -1,8 +1,16 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import type { MarketListing, MarketListingStats } from "@/lib/api";
 import { ListingCard } from "./ListingCard";
 
 export const dynamic = "force-dynamic";
+
+const KEYWORDS: { key: string; label: string }[] = [
+  { key: "skywind",     label: "SkyWind" },
+  { key: "solarzaun",   label: "Solarzaun" },
+  { key: "solaranlage", label: "Solaranlage" },
+  { key: "solarspeicher", label: "Solarspeicher" },
+];
 
 function fmt(cents: number | null) {
   if (cents === null) return "–";
@@ -11,21 +19,28 @@ function fmt(cents: number | null) {
 
 function KpiCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5">
-      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-2">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 leading-none">{value}</p>
-      {sub && <p className="text-[11px] text-gray-400 mt-1.5">{sub}</p>}
+    <div className="kpi-card">
+      <div className="kpi-label">{label}</div>
+      <div className="kpi-value">{value}</div>
+      {sub && <div className="kpi-sub">{sub}</div>}
     </div>
   );
 }
 
-export default async function MarketPage() {
+export default async function MarketPage({
+  searchParams,
+}: {
+  searchParams: { keyword?: string };
+}) {
+  const activeKeyword = KEYWORDS.find((k) => k.key === searchParams.keyword)?.key ?? KEYWORDS[0].key;
+  const activeLabel = KEYWORDS.find((k) => k.key === activeKeyword)!.label;
+
   let listings: MarketListing[] = [];
   let stats: MarketListingStats | null = null;
   let error: string | null = null;
 
   try {
-    const result = await api.marketListings.list({ keyword: "skywind", limit: 200 });
+    const result = await api.marketListings.list({ keyword: activeKeyword, limit: 200 });
     listings = result.data;
     stats = result.stats;
   } catch (e) {
@@ -33,22 +48,37 @@ export default async function MarketPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Marktbeobachtung</h1>
-        <p className="text-sm text-gray-400 mt-1">SkyWind · Kleinanzeigen · täglich via n8n</p>
+    <div>
+      <div className="page-header">
+        <div>
+          <h1>Marktbeobachtung</h1>
+          <div className="page-subtitle">Kleinanzeigen · täglich via n8n</div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        {KEYWORDS.map(({ key, label }) => (
+          <Link
+            key={key}
+            href={`/market?keyword=${key}`}
+            className={`tab-btn${activeKeyword === key ? " active" : ""}`}
+          >
+            {label}
+            {activeKeyword === key && stats && (
+              <span className="tab-badge">{stats.total}</span>
+            )}
+          </Link>
+        ))}
       </div>
 
       {error && (
-        <div className="mb-6 rounded-2xl bg-red-50 border border-red-100 p-4 text-sm text-red-600">
-          {error}
-        </div>
+        <div className="alert alert-error">{error}</div>
       )}
 
       {/* KPIs */}
       {stats && (
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        <div className="kpi-grid">
           <KpiCard label="Gesamt" value={String(stats.total)} />
           <KpiCard label="Ø Preis" value={fmt(stats.avg_price_cents)} sub="Mittelwert" />
           <KpiCard label="Minimum" value={fmt(stats.min_price_cents)} />
@@ -60,43 +90,50 @@ export default async function MarketPage() {
 
       {/* Listings */}
       {listings.length === 0 && !error ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 p-12 text-center">
-          <p className="text-sm text-gray-400">Noch keine Listings importiert.</p>
-          <p className="text-xs text-gray-300 mt-1">
-            n8n Workflow ausführen → <code className="bg-gray-100 px-1 rounded">POST /api/admin/market-listings/bulk</code>
-          </p>
+        <div className="empty empty-dashed">
+          <div>Noch keine Listings für „{activeLabel}" importiert.</div>
+          <div className="empty-sub">
+            n8n Workflow ausführen →{" "}
+            <code className="code-inline">POST /api/admin/market-listings/bulk</code>{" "}
+            mit <code className="code-inline">{`{ "keyword": "${activeKeyword}", "listings": [...] }`}</code>
+          </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
-          {/* Legende + Anzahl */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-            <p className="text-xs text-gray-400">
-              {listings.length} Angebote · Quelle: Kleinanzeigen
-            </p>
+        <div className="table-wrapper">
+          <div className="table-toolbar">
+            <span className="table-toolbar-meta">{listings.length} Angebote · Quelle: Kleinanzeigen</span>
             {stats?.avg_price_cents && (
-              <div className="flex items-center gap-4 text-[11px] text-gray-400">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+              <span className="table-toolbar-legend">
+                <span className="legend-item">
+                  <span className="legend-dot" style={{ background: "#4ade80" }} />
                   Günstig (&lt;80% Ø)
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />
+                <span className="legend-item">
+                  <span className="legend-dot" style={{ background: "#fb923c" }} />
                   Teuer (&gt;120% Ø)
                 </span>
-              </div>
+              </span>
             )}
           </div>
-
-          {/* Rows */}
-          <div className="divide-y divide-gray-50">
-            {listings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                avgPriceCents={stats?.avg_price_cents ?? null}
-              />
-            ))}
-          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: 56 }}></th>
+                <th>Titel</th>
+                <th style={{ textAlign: "right" }}>Preis</th>
+                <th style={{ textAlign: "right" }}>Aktion</th>
+              </tr>
+            </thead>
+            <tbody>
+              {listings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  avgPriceCents={stats?.avg_price_cents ?? null}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

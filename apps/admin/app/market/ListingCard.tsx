@@ -20,14 +20,12 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-function priceBadge(cents: number | null, avg: number | null) {
-  if (!cents) return { cls: "text-gray-400", label: "–" };
-  const label = formatPrice(cents, false);
-  if (!avg) return { cls: "text-gray-700 font-semibold", label };
+function priceColor(cents: number | null, avg: number | null): string {
+  if (!cents || !avg) return "#374151";
   const ratio = cents / avg;
-  if (ratio < 0.8) return { cls: "text-green-700 font-semibold", label };
-  if (ratio > 1.2) return { cls: "text-orange-600 font-semibold", label };
-  return { cls: "text-gray-700 font-semibold", label };
+  if (ratio < 0.8) return "#166534";
+  if (ratio > 1.2) return "#9a3412";
+  return "#374151";
 }
 
 export function ListingCard({ listing, avgPriceCents }: Props) {
@@ -36,9 +34,8 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const badge = priceBadge(listing.price_cents, avgPriceCents);
-  const negotiableLabel = listing.price_negotiable && listing.price_cents
-    ? " VB" : listing.price_negotiable ? "VB" : "";
+  const priceDisplay = formatPrice(listing.price_cents, listing.price_negotiable);
+  const color = priceColor(listing.price_cents, avgPriceCents);
 
   function handleCreate() {
     setError(null);
@@ -53,94 +50,85 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
 
   return (
     <>
-      <div className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50/80 transition-colors group">
-        {/* Thumbnail */}
-        <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
+      <tr>
+        <td style={{ width: 56 }}>
           {listing.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={listing.image_url}
               alt=""
-              className="w-full h-full object-cover"
+              className="listing-img"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <div className="listing-img-placeholder">
+              <svg width="18" height="18" fill="none" stroke="#94a3b8" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
           )}
-        </div>
-
-        {/* Title + Meta */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate leading-snug">
-            {listing.title}
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
-            {listing.location && (
-              <span className="truncate max-w-[180px]">
-                {listing.location}{listing.plz ? ` · ${listing.plz}` : ""}
-              </span>
+        </td>
+        <td>
+          <div className="listing-title">{listing.title}</div>
+          <div className="listing-meta">
+            {listing.location && <span>{listing.location}{listing.plz ? ` · ${listing.plz}` : ""} · </span>}
+            <span>{formatDate(listing.listed_at)}</span>
+          </div>
+        </td>
+        <td style={{ textAlign: "right", width: 120, fontWeight: 600, color }}>
+          {priceDisplay}
+        </td>
+        <td style={{ width: 160, textAlign: "right" }}>
+          <div className="actions-row" style={{ justifyContent: "flex-end" }}>
+            {listing.listing_url && (
+              <a
+                href={listing.listing_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary btn-sm"
+              >
+                Anzeige →
+              </a>
             )}
-            <span className="shrink-0">{formatDate(listing.listed_at)}</span>
-          </p>
-        </div>
-
-        {/* Price */}
-        <div className="shrink-0 text-right min-w-[80px]">
-          <span className={`text-sm ${badge.cls}`}>
-            {badge.label}{negotiableLabel}
-          </span>
-        </div>
-
-        {/* Actions */}
-        <div className="shrink-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {listing.listing_url && (
-            <a
-              href={listing.listing_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:border-gray-300 hover:bg-white transition-colors whitespace-nowrap"
+            <button
+              onClick={() => setModalOpen(true)}
+              className="btn btn-primary btn-sm"
             >
-              Anzeige →
-            </a>
-          )}
-          <button
-            onClick={() => setModalOpen(true)}
-            className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700 transition-colors whitespace-nowrap"
-          >
-            + Produkt
-          </button>
-        </div>
-      </div>
+              + Produkt
+            </button>
+          </div>
+        </td>
+      </tr>
 
-      {/* Modal */}
+      {modalOpen && (
+        <tr>
+          <td colSpan={4} style={{ padding: 0, border: "none" }}>
+            {/* Modal overlay rendered via portal-like approach using position:fixed */}
+          </td>
+        </tr>
+      )}
+
       {modalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+          className="modal-overlay"
           onClick={(e) => { if (e.target === e.currentTarget) { setModalOpen(false); setError(null); } }}
         >
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl p-6">
-            <div className="flex items-start gap-3 mb-5">
+          <div className="modal-content">
+            <div className="modal-img-row">
               {listing.image_url && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={listing.image_url} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-gray-100" />
+                <img src={listing.image_url} alt="" className="modal-img" />
               )}
-              <div className="min-w-0">
-                <h2 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2">{listing.title}</h2>
-                <p className="text-xs text-gray-400 mt-0.5">{badge.label}{negotiableLabel} · DE/EN/ES vorausgefüllt</p>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2, lineHeight: 1.4 }}>{listing.title}</div>
+                <div className="listing-meta">{priceDisplay} · DE/EN/ES vorausgefüllt</div>
               </div>
             </div>
 
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Produkttyp
-            </label>
+            <label className="modal-label">Produkttyp</label>
             <select
               value={productType}
               onChange={(e) => setProductType(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 mb-5"
+              className="modal-select"
             >
               <option value="inquiry_only">Nur Anfrage</option>
               <option value="direct_purchase">Direktkauf</option>
@@ -148,21 +136,21 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
             </select>
 
             {error && (
-              <p className="text-xs text-red-600 mb-4 rounded-xl bg-red-50 p-3 border border-red-100">{error}</p>
+              <div className="alert alert-error" style={{ marginBottom: 12 }}>{error}</div>
             )}
 
-            <div className="flex gap-2">
+            <div className="modal-actions">
               <button
                 onClick={() => { setModalOpen(false); setError(null); }}
                 disabled={isPending}
-                className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
+                className="btn btn-secondary modal-btn-flex"
               >
                 Abbrechen
               </button>
               <button
                 onClick={handleCreate}
                 disabled={isPending}
-                className="flex-1 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-40"
+                className="btn btn-primary modal-btn-flex"
               >
                 {isPending ? "Wird angelegt…" : "Anlegen & Bearbeiten"}
               </button>
