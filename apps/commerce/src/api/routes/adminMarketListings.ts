@@ -212,6 +212,38 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
   return c.json({ ok: true, upserted, skipped });
 });
 
+// ─── POST /cleanup ───────────────────────────────────────────────────────────
+
+const VALID_KEYWORDS = ["skywind", "solarzaun", "solaranlage", "solarspeicher"];
+
+adminMarketListingRoutes.post("/cleanup", async (c) => {
+  const prisma = getPrismaClient();
+
+  // 1. Delete listings whose keyword is not in the valid set
+  const { count: deleted } = await prisma.marketListing.deleteMany({
+    where: { keyword: { notIn: VALID_KEYWORDS } },
+  });
+
+  // 2. Re-classify listings where the stored keyword does not appear in the title
+  const all = await prisma.marketListing.findMany({
+    select: { id: true, keyword: true, title: true },
+  });
+
+  let reclassified = 0;
+  for (const listing of all) {
+    const lower = listing.title.toLowerCase();
+    if (!lower.includes(listing.keyword.toLowerCase())) {
+      const match = VALID_KEYWORDS.find((k) => lower.includes(k));
+      if (match) {
+        await prisma.marketListing.update({ where: { id: listing.id }, data: { keyword: match } });
+        reclassified++;
+      }
+    }
+  }
+
+  return c.json({ ok: true, deleted, reclassified });
+});
+
 // ─── DELETE / ────────────────────────────────────────────────────────────────
 
 adminMarketListingRoutes.delete("/", async (c) => {

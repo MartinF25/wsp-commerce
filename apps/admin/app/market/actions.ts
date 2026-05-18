@@ -15,6 +15,16 @@ function slugify(text: string): string {
     .substring(0, 80);
 }
 
+export async function cleanupListings(): Promise<{ deleted: number; reclassified: number }> {
+  const res = await fetch(`${BASE_URL}/api/admin/market-listings/cleanup`, {
+    method: "POST",
+    headers: { "X-Admin-Key": ADMIN_KEY },
+  });
+  if (!res.ok) throw new Error(`Cleanup fehlgeschlagen (HTTP ${res.status})`);
+  const body = await res.json();
+  return { deleted: body.deleted ?? 0, reclassified: body.reclassified ?? 0 };
+}
+
 export async function createProductFromListing(listing: MarketListing, productType: string) {
   const translation = {
     name: listing.title,
