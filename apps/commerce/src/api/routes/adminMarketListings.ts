@@ -220,28 +220,46 @@ adminMarketListingRoutes.post("/cleanup", async (c) => {
   const prisma = getPrismaClient();
 
   // 1. Delete listings whose keyword is not in the valid set
-  const { count: deleted } = await prisma.marketListing.deleteMany({
+  const { count: invalidDeleted } = await prisma.marketListing.deleteMany({
     where: { keyword: { notIn: VALID_KEYWORDS } },
   });
 
-  // 2. Re-classify listings where the stored keyword does not appear in the title
+  // 2. For remaining listings: check if the keyword appears in the title
+  //    - keyword found in title → keep (correctly classified)
+  //    - different valid keyword found in title → re-classify
+  //    - no valid keyword found in title → delete (false positive from search)
   const all = await prisma.marketListing.findMany({
     select: { id: true, keyword: true, title: true },
   });
 
-  let reclassified = 0;
+  const toDelete: string[] = [];
+  const toReclassify: Array<{ id: string; keyword: string }> = [];
+
   for (const listing of all) {
     const lower = listing.title.toLowerCase();
-    if (!lower.includes(listing.keyword.toLowerCase())) {
-      const match = VALID_KEYWORDS.find((k) => lower.includes(k));
-      if (match) {
-        await prisma.marketListing.update({ where: { id: listing.id }, data: { keyword: match } });
-        reclassified++;
-      }
+    if (lower.includes(listing.keyword.toLowerCase())) continue; // correctly classified
+
+    const match = VALID_KEYWORDS.find((k) => lower.includes(k));
+    if (match) {
+      toReclassify.push({ id: listing.id, keyword: match });
+    } else {
+      toDelete.push(listing.id); // no valid keyword in title → false positive
     }
   }
 
-  return c.json({ ok: true, deleted, reclassified });
+  const { count: falsePositivesDeleted } = await prisma.marketListing.deleteMany({
+    where: { id: { in: toDelete } },
+  });
+
+  for (const { id, keyword } of toReclassify) {
+    await prisma.marketListing.update({ where: { id }, data: { keyword } });
+  }
+
+  return c.json({
+    ok: true,
+    deleted: invalidDeleted + falsePositivesDeleted,
+    reclassified: toReclassify.length,
+  });
 });
 
 // ─── DELETE / ────────────────────────────────────────────────────────────────
