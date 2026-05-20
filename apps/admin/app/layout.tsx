@@ -118,6 +118,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/ticker">Live-Ticker</Link>
               <Link href="/bundles">Bundles</Link>
               <Link href="/stickers">Sticker &amp; Labels</Link>
+              <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Affiliate</div>
+              <Link href="/affiliate">Klick-Statistiken</Link>
               <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Markt</div>
               <Link href="/market">SkyWind Markt</Link>
             </nav>

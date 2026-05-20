@@ -137,6 +137,30 @@ export interface AffiliateStats {
   lastClickedAt: string | null;
 }
 
+export interface AffiliateProductStats {
+  productId: string;
+  slug: string;
+  title: string;
+  status: ProductStatus;
+  affiliateProvider: string | null;
+  totalClicks: number;
+  clicksLast7Days: number;
+  clicksLast30Days: number;
+  lastClickedAt: string | null;
+}
+
+export interface AffiliateStatsOverview {
+  summary: {
+    totalClicks: number;
+    totalLast7Days: number;
+    totalLast30Days: number;
+  };
+  bySource: Record<string, number>;
+  byLocale: Record<string, number>;
+  byDevice: Record<string, number>;
+  products: AffiliateProductStats[];
+}
+
 // ─── Ticker-Typen ────────────────────────────────────────────────────────────
 
 export type LiveTickerStatus = "draft" | "active" | "archived";
@@ -766,6 +790,10 @@ export const api = {
         body: JSON.stringify({ status }),
       }),
     delete: (id: string) => request<void>(`/ticker/${id}`, { method: "DELETE" }),
+  },
+
+  affiliate: {
+    getStats: () => request<{ data: AffiliateStatsOverview }>("/affiliate/stats"),
   },
 
   marketListings: {
