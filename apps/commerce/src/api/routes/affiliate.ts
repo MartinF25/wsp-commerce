@@ -7,8 +7,9 @@ import { getPrismaClient } from "../../lib/prisma";
  *
  * POST /track
  *   Erfasst einen Klick auf einen Affiliate-Button (datensparsam).
- *   Gespeichert wird: productId, Zeitstempel, Referrer-Pfad, Locale.
- *   Nicht gespeichert: IP-Adresse, User-Agent, personenbezogene Daten.
+ *   Gespeichert wird: productId, Zeitstempel, Referrer-Pfad, Locale,
+ *   Klickquelle (source), Affiliate-Anbieter, Gerätekategorie.
+ *   Nicht gespeichert: IP-Adresse, User-Agent-String, personenbezogene Daten.
  *
  *   Antwortet immer 200 OK – auch bei ungültiger productId (kein Info-Leak,
  *   da navigator.sendBeacon() die Response ignoriert).
@@ -23,6 +24,11 @@ const TrackBodySchema = z.object({
   productId: z.string().uuid(),
   referrerPath: z.string().max(500).optional(),
   locale: z.enum(["de", "en", "es"]).optional(),
+  source: z
+    .enum(["product_detail", "product_card", "solution_page", "blog", "unknown"])
+    .optional(),
+  affiliateProvider: z.string().max(50).optional(),
+  deviceCategory: z.enum(["mobile", "desktop", "tablet"]).optional(),
 });
 
 // ─── POST /track ──────────────────────────────────────────────────────────────
@@ -45,7 +51,7 @@ affiliateRoutes.post("/track", async (c) => {
     );
   }
 
-  const { productId, referrerPath, locale } = parsed.data;
+  const { productId, referrerPath, locale, source, affiliateProvider, deviceCategory } = parsed.data;
   const prisma = getPrismaClient();
 
   // Produkt muss aktiv, vom Typ affiliate_external und affiliate_enabled=true sein.
@@ -58,7 +64,7 @@ affiliateRoutes.post("/track", async (c) => {
       affiliate_enabled: true,
       affiliate_url: { not: null },
     },
-    select: { id: true },
+    select: { id: true, affiliate_provider: true },
   });
 
   if (!product) {
@@ -71,8 +77,12 @@ affiliateRoutes.post("/track", async (c) => {
       product_id: product.id,
       referrer_path: referrerPath ?? null,
       locale: locale ?? null,
+      source: source ?? "unknown",
+      // Anbieter aus DB bevorzugen; Client-Wert als Fallback
+      affiliate_provider: product.affiliate_provider ?? affiliateProvider ?? null,
+      device_category: deviceCategory ?? null,
       // clicked_at: DB-Default (now())
-      // Kein IP, kein User-Agent, keine personenbezogenen Daten
+      // Kein IP, kein User-Agent-String, keine personenbezogenen Daten
     },
   });
 

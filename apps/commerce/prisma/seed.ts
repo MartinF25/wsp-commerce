@@ -58,6 +58,23 @@ async function upsertCategoryTranslation(
   });
 }
 
+async function seedAffiliateProduct(
+  categoryId: string,
+  slug: string,
+  status: ProductStatus,
+  affiliateUrl: string,
+  affiliateEnabled: boolean,
+  translation: { name: string; short_description: string; description: string; features: string[]; meta_title?: string; meta_description?: string }
+) {
+  const product = await prisma.product.upsert({
+    where: { slug },
+    update: { product_type: ProductType.affiliate_external, status, category_id: categoryId, affiliate_provider: "amazon", affiliate_url: affiliateUrl, affiliate_enabled: affiliateEnabled },
+    create: { slug, product_type: ProductType.affiliate_external, status, category_id: categoryId, affiliate_provider: "amazon", affiliate_url: affiliateUrl, affiliate_enabled: affiliateEnabled },
+  });
+  await upsertTranslation(product.id, translation);
+  return product;
+}
+
 async function main() {
   console.log("🌱 Seed startet …");
 
@@ -470,6 +487,51 @@ async function main() {
   });
 
   console.log("📝 Demo-Blogbeiträge angelegt.");
+
+  // ─── AFFILIATE-BEISPIELPRODUKTE ──────────────────────────────────────────────
+
+  const catZubehoer = await prisma.category.upsert({
+    where: { slug: "solar-zubehoer" },
+    update: { name: "Solar-Zubehör" },
+    create: { slug: "solar-zubehoer", name: "Solar-Zubehör", is_active: true },
+  });
+  await prisma.categoryTranslation.upsert({
+    where: { category_id_locale: { category_id: catZubehoer.id, locale: Locale.de } },
+    update: { name: "Solar-Zubehör", description: "Ergänzende Produkte für Solaranlagen" },
+    create: { category_id: catZubehoer.id, locale: Locale.de, name: "Solar-Zubehör", description: "Ergänzende Produkte für Solaranlagen" },
+  });
+
+  await seedAffiliateProduct(
+    catZubehoer.id,
+    "balkonkraftwerk-600w-beispiel",
+    ProductStatus.active,
+    "https://www.amazon.de/dp/BPLATZHALTER?tag=PARTNER-TAG-21",
+    true,
+    {
+      name: "Balkonkraftwerk 600W – Beispiel (Platzhalter)",
+      short_description: "Demo-Affiliate-Produkt – ASIN und Partner-Tag vor Aktivierung ersetzen.",
+      description: "Dies ist ein Beispiel-Seed-Eintrag. Der Affiliate-Link enthält Platzhalter-Werte. Bitte ASIN und Partner-Tag durch echte Werte ersetzen, bevor das Produkt produktiv geht.",
+      features: ["Beispiel-Feature 1", "Beispiel-Feature 2"],
+      meta_title: "Balkonkraftwerk 600W | Solarwind",
+      meta_description: "Balkonkraftwerk 600W Beispiel-Eintrag.",
+    }
+  );
+
+  await seedAffiliateProduct(
+    catZubehoer.id,
+    "solarladeregler-30a-beispiel",
+    ProductStatus.draft,
+    "https://www.amazon.de/dp/BPLATZHALTER2?tag=PARTNER-TAG-21",
+    false,
+    {
+      name: "Solar-Laderegler 30A MPPT – Beispiel (Entwurf)",
+      short_description: "Demo-Entwurf – Platzhalter, noch nicht aktiv.",
+      description: "Entwurf-Eintrag. affiliate_enabled=false, Status draft – wird im Storefront nicht angezeigt.",
+      features: ["MPPT-Technologie", "30A Ladestrom"],
+    }
+  );
+
+  console.log("🔗 Affiliate-Beispielprodukte angelegt.");
   console.log("🌱 Seed abgeschlossen.");
 }
 

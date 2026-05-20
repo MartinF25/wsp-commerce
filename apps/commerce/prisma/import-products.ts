@@ -8,6 +8,7 @@ const VALID_PRODUCT_TYPES = new Set<string>([
   ProductType.direct_purchase,
   ProductType.configurable,
   ProductType.inquiry_only,
+  ProductType.affiliate_external,
 ]);
 
 const VALID_STATUSES = new Set<string>([
@@ -17,6 +18,7 @@ const VALID_STATUSES = new Set<string>([
 ]);
 
 const OPTIONAL_LOCALES = [Locale.en, Locale.es] as const;
+const AFFILIATE_ASIN_REGEX = /^B[A-Z0-9]{9}$/;
 
 // ─── Import Types ─────────────────────────────────────────────────────────────
 
@@ -69,12 +71,19 @@ type ImportProduct = {
   sale_ends_at?: string | null;
   sale_label?: string | null;
   show_countdown?: boolean;
+  // Affiliate-Felder (nur relevant wenn product_type = affiliate_external)
+  affiliate_provider?: string | null;
+  affiliate_url?: string | null;
+  affiliate_asin?: string | null;
+  affiliate_button_label?: string | null;
+  affiliate_disclosure?: string | null;
+  affiliate_enabled?: boolean;
   translations: {
     de: ImportProductTranslation;
     en?: ImportProductTranslation;
     es?: ImportProductTranslation;
   };
-  variants: ImportVariant[];
+  variants?: ImportVariant[];
   images?: ImportImage[];
 };
 
@@ -133,6 +142,12 @@ type ValidatedProduct = {
   sale_ends_at: Date | null;
   sale_label: string | null;
   show_countdown: boolean;
+  affiliate_provider: string | null;
+  affiliate_url: string | null;
+  affiliate_asin: string | null;
+  affiliate_button_label: string | null;
+  affiliate_disclosure: string | null;
+  affiliate_enabled: boolean;
   translations: ValidatedProductTranslation[];
   variants: ValidatedVariant[];
   images: Array<{ url: string; alt: string | null; sort_order: number }>;
@@ -294,7 +309,7 @@ function validateProduct(
   requireNonEmptyString(p.slug, `${path}.slug`, errors);
 
   if (!VALID_PRODUCT_TYPES.has(p.product_type)) {
-    errors.push(`${path}.product_type: erlaubt sind direct_purchase, configurable, inquiry_only.`);
+    errors.push(`${path}.product_type: erlaubt sind direct_purchase, configurable, inquiry_only, affiliate_external.`);
   }
 
   const status = p.status ?? ProductStatus.draft;
@@ -304,6 +319,28 @@ function validateProduct(
 
   if (p.category_slug !== undefined && p.category_slug !== null) {
     requireNonEmptyString(p.category_slug, `${path}.category_slug`, errors);
+  }
+
+  // Affiliate-Felder validieren wenn product_type = affiliate_external
+  if (p.product_type === ProductType.affiliate_external) {
+    if (!p.affiliate_url) {
+      errors.push(`${path}.affiliate_url: Pflichtfeld bei product_type affiliate_external.`);
+    } else if (!/^https:\/\//i.test(p.affiliate_url)) {
+      errors.push(`${path}.affiliate_url: muss eine HTTPS-URL sein.`);
+    }
+    if (!p.affiliate_provider) {
+      errors.push(`${path}.affiliate_provider: Pflichtfeld bei product_type affiliate_external.`);
+    } else if (p.affiliate_provider !== "amazon") {
+      errors.push(`${path}.affiliate_provider: im MVP nur "amazon" erlaubt.`);
+    }
+  }
+  if (p.affiliate_url && p.product_type !== ProductType.affiliate_external) {
+    errors.push(`${path}.affiliate_url: darf nur bei product_type affiliate_external gesetzt werden.`);
+  }
+  if (p.affiliate_asin !== undefined && p.affiliate_asin !== null) {
+    if (typeof p.affiliate_asin !== "string" || !AFFILIATE_ASIN_REGEX.test(p.affiliate_asin.trim())) {
+      errors.push(`${path}.affiliate_asin: muss das Format B + 9 alphanumerische Zeichen haben, z. B. B0EXAMPLE1.`);
+    }
   }
 
   if (!isPlainObject(p.translations)) {
@@ -335,14 +372,18 @@ function validateProduct(
     }
   }
 
-  if (!Array.isArray(p.variants) || p.variants.length === 0) {
-    errors.push(`${path}.variants: mindestens eine Variante ist erforderlich.`);
+  // Affiliate-Produkte brauchen keine Varianten (kein eigener Checkout)
+  const requiresVariants = p.product_type !== ProductType.affiliate_external;
+  if (requiresVariants && (!Array.isArray(p.variants) || p.variants.length === 0)) {
+    errors.push(`${path}.variants: mindestens eine Variante ist erforderlich (außer bei affiliate_external).`);
     return null;
   }
 
-  const variants = p.variants
-    .map((variant, i) => validateVariant(variant, `${path}.variants[${i}]`, errors))
-    .filter((v): v is ValidatedVariant => v !== null);
+  const variants = Array.isArray(p.variants)
+    ? p.variants
+        .map((variant, i) => validateVariant(variant, `${path}.variants[${i}]`, errors))
+        .filter((v): v is ValidatedVariant => v !== null)
+    : [];
 
   const imagesRaw = p.images ?? [];
   if (!Array.isArray(imagesRaw)) {
@@ -363,6 +404,12 @@ function validateProduct(
     sale_ends_at: p.sale_ends_at ? new Date(p.sale_ends_at as string) : null,
     sale_label: normalizeNullableString(p.sale_label),
     show_countdown: typeof p.show_countdown === "boolean" ? p.show_countdown && !!p.sale_ends_at : false,
+    affiliate_provider: normalizeNullableString(p.affiliate_provider),
+    affiliate_url: normalizeNullableString(p.affiliate_url),
+    affiliate_asin: normalizeNullableString(p.affiliate_asin),
+    affiliate_button_label: normalizeNullableString(p.affiliate_button_label),
+    affiliate_disclosure: normalizeNullableString(p.affiliate_disclosure),
+    affiliate_enabled: typeof p.affiliate_enabled === "boolean" ? p.affiliate_enabled : p.product_type === ProductType.affiliate_external && !!p.affiliate_url,
     translations,
     variants,
     images,
@@ -624,6 +671,15 @@ async function importCatalog(data: ValidatedImport): Promise<ImportStats> {
     for (const product of data.products) {
       const categoryId = product.category_slug ? (categoryIds.get(product.category_slug) ?? null) : null;
 
+      const affiliateData = {
+        affiliate_provider: product.affiliate_provider,
+        affiliate_url: product.affiliate_url,
+        affiliate_asin: product.affiliate_asin,
+        affiliate_button_label: product.affiliate_button_label,
+        affiliate_disclosure: product.affiliate_disclosure,
+        affiliate_enabled: product.affiliate_enabled,
+      };
+
       const upserted = await tx.product.upsert({
         where: { slug: product.slug },
         update: {
@@ -634,6 +690,7 @@ async function importCatalog(data: ValidatedImport): Promise<ImportStats> {
           sale_ends_at: product.sale_ends_at,
           sale_label: product.sale_label,
           show_countdown: product.show_countdown,
+          ...affiliateData,
         },
         create: {
           slug: product.slug,
@@ -644,6 +701,7 @@ async function importCatalog(data: ValidatedImport): Promise<ImportStats> {
           sale_ends_at: product.sale_ends_at,
           sale_label: product.sale_label,
           show_countdown: product.show_countdown,
+          ...affiliateData,
         },
       });
       stats.productsUpserted += 1;
@@ -765,15 +823,17 @@ function printValidationOk(data: ValidatedImport, filePath: string) {
     0
   );
   const imageCount = data.products.reduce((n, p) => n + p.images.length, 0);
+  const affiliateCount = data.products.filter((p) => p.product_type === ProductType.affiliate_external).length;
 
   console.log("Importdatei ist valide (--dry-run, keine DB-Schreibvorgänge).");
-  console.log(`Datei:                  ${filePath}`);
-  console.log(`Kategorien:             ${data.categories.length}`);
-  console.log(`Produkte:               ${data.products.length}`);
-  console.log(`Produkt-Übersetzungen:  ${translationCount}`);
-  console.log(`Varianten:              ${variantCount}`);
-  console.log(`Varianten-Übersetzungen:${variantTranslationCount}`);
-  console.log(`Bilder:                 ${imageCount}`);
+  console.log(`Datei:                    ${filePath}`);
+  console.log(`Kategorien:               ${data.categories.length}`);
+  console.log(`Produkte gesamt:          ${data.products.length}`);
+  console.log(`  davon Affiliate:        ${affiliateCount}`);
+  console.log(`Produkt-Übersetzungen:    ${translationCount}`);
+  console.log(`Varianten:                ${variantCount}`);
+  console.log(`Varianten-Übersetzungen:  ${variantTranslationCount}`);
+  console.log(`Bilder:                   ${imageCount}`);
 
   const localeBreakdown = new Map<Locale, number>();
   for (const product of data.products) {
@@ -784,6 +844,14 @@ function printValidationOk(data: ValidatedImport, filePath: string) {
   console.log("Sprachen-Verteilung (Produkte):");
   for (const [locale, count] of localeBreakdown) {
     console.log(`  ${locale.toUpperCase()}: ${count} Produkt(e)`);
+  }
+
+  if (affiliateCount > 0) {
+    console.log("\nAffiliate-Produkte:");
+    for (const p of data.products.filter((p) => p.product_type === ProductType.affiliate_external)) {
+      const enabledLabel = p.affiliate_enabled ? "aktiviert" : "deaktiviert";
+      console.log(`  ${p.slug}  [${p.status}]  ${p.affiliate_provider ?? "?"}  ${enabledLabel}`);
+    }
   }
 }
 

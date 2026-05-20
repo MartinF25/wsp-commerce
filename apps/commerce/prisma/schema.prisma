@@ -237,11 +237,18 @@ model AffiliateClick {
   referrer_path String?
   /// Sprachversion der Seite zum Zeitpunkt des Klicks
   locale        String?
+  /// Klickquelle: product_card | product_detail | solution_page | blog | unknown
+  source        String?
+  /// Affiliate-Anbieter, z. B. "amazon" – für spätere Multi-Provider-Auswertung
+  affiliate_provider String?
+  /// Gerätekategorie (aggregiert, kein Raw-User-Agent): mobile | desktop | tablet
+  device_category String?
 
   product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
 
   @@index([product_id])
   @@index([clicked_at])
+  @@index([source])
   @@map("affiliate_clicks")
 }
 

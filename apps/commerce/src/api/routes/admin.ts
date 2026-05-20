@@ -35,6 +35,8 @@
  *   PUT    /ticker/:id                  → Ticker-Nachricht aktualisieren
  *   PATCH  /ticker/:id/status           → Status setzen
  *   DELETE /ticker/:id                  → Ticker-Nachricht löschen
+ *   GET    /products/:id/affiliate-stats → Klickstatistik eines Produkts
+ *   GET    /affiliate/stats              → Aggregierte Klickstatistik aller Affiliate-Produkte
  */
 
 import { Hono } from "hono";
@@ -667,6 +669,100 @@ adminRoutes.get("/products/:id/affiliate-stats", async (c) => {
       clicksLast7Days,
       clicksLast30Days,
       lastClickedAt: lastClick?.clicked_at ?? null,
+    },
+  });
+});
+
+// ─── GET /affiliate/stats ─────────────────────────────────────────────────────
+
+adminRoutes.get("/affiliate/stats", async (c) => {
+  const prisma = getPrismaClient();
+  const now = new Date();
+  const minus7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const minus30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const products = await prisma.product.findMany({
+    where: { product_type: "affiliate_external" },
+    select: {
+      id: true,
+      slug: true,
+      status: true,
+      affiliate_provider: true,
+      translations: { where: { locale: "de" }, select: { name: true } },
+    },
+  });
+
+  const productIds = products.map((p) => p.id);
+
+  // Alle Klick-Aggregate in 7 parallelen Queries statt 4N
+  const [allCounts, last7Counts, last30Counts, lastClicks, sourceRows, localeRows, deviceRows] =
+    await Promise.all([
+      prisma.affiliateClick.groupBy({
+        by: ["product_id"],
+        where: { product_id: { in: productIds } },
+        _count: { id: true },
+      }),
+      prisma.affiliateClick.groupBy({
+        by: ["product_id"],
+        where: { product_id: { in: productIds }, clicked_at: { gte: minus7 } },
+        _count: { id: true },
+      }),
+      prisma.affiliateClick.groupBy({
+        by: ["product_id"],
+        where: { product_id: { in: productIds }, clicked_at: { gte: minus30 } },
+        _count: { id: true },
+      }),
+      prisma.affiliateClick.findMany({
+        where: { product_id: { in: productIds } },
+        orderBy: { clicked_at: "desc" },
+        select: { product_id: true, clicked_at: true },
+        distinct: ["product_id"],
+      }),
+      prisma.affiliateClick.groupBy({ by: ["source"], _count: { id: true } }),
+      prisma.affiliateClick.groupBy({ by: ["locale"], _count: { id: true } }),
+      prisma.affiliateClick.groupBy({ by: ["device_category"], _count: { id: true } }),
+    ]);
+
+  const toProductCountMap = (rows: { product_id: string; _count: { id: number } }[]) =>
+    new Map(rows.map((r) => [r.product_id, r._count.id]));
+
+  const totalMap = toProductCountMap(allCounts);
+  const last7Map = toProductCountMap(last7Counts);
+  const last30Map = toProductCountMap(last30Counts);
+  const lastClickMap = new Map(lastClicks.map((r) => [r.product_id, r.clicked_at]));
+
+  function toBreakdown<K extends string>(
+    rows: { _count: { id: number } }[],
+    getKey: (row: (typeof rows)[number]) => K | null | undefined
+  ): Record<string, number> {
+    const result: Record<string, number> = {};
+    for (const row of rows) result[getKey(row) ?? "unknown"] = row._count.id;
+    return result;
+  }
+
+  const perProduct = products.map((p) => ({
+    productId: p.id,
+    slug: p.slug,
+    title: p.translations[0]?.name ?? p.slug,
+    status: p.status,
+    affiliateProvider: p.affiliate_provider,
+    totalClicks: totalMap.get(p.id) ?? 0,
+    clicksLast7Days: last7Map.get(p.id) ?? 0,
+    clicksLast30Days: last30Map.get(p.id) ?? 0,
+    lastClickedAt: lastClickMap.get(p.id) ?? null,
+  }));
+
+  const totalClicks = perProduct.reduce((n, p) => n + p.totalClicks, 0);
+  const totalLast7 = perProduct.reduce((n, p) => n + p.clicksLast7Days, 0);
+  const totalLast30 = perProduct.reduce((n, p) => n + p.clicksLast30Days, 0);
+
+  return c.json({
+    data: {
+      summary: { totalClicks, totalLast7Days: totalLast7, totalLast30Days: totalLast30 },
+      bySource: toBreakdown(sourceRows, (r) => (r as typeof sourceRows[number]).source),
+      byLocale: toBreakdown(localeRows, (r) => (r as typeof localeRows[number]).locale),
+      byDevice: toBreakdown(deviceRows, (r) => (r as typeof deviceRows[number]).device_category),
+      products: perProduct,
     },
   });
 });

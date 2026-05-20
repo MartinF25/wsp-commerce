@@ -348,6 +348,8 @@ export default function DatenschutzPage() {
                 <li>Zeitstempel des Klicks</li>
                 <li>URL-Pfad der Seite, von der der Klick kam (z. B. <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">/products/solarzaun-pro</code>)</li>
                 <li>Spracheinstellung der Sitzung (de / en / es)</li>
+                <li>Klickquelle (z. B. Produktdetailseite oder Produktkarte) – kein Personenbezug</li>
+                <li>Gerätekategorie (mobil / Desktop / Tablet) – aggregiert, kein Fingerprint</li>
               </ul>
               <p className="text-sm text-brand-muted leading-relaxed mb-2">
                 <strong className="text-brand-text font-medium">Ausdrücklich nicht gespeichert:</strong>

@@ -2,13 +2,30 @@
 
 import { usePathname } from "next/navigation";
 
+export type AffiliateSource =
+  | "product_detail"
+  | "product_card"
+  | "solution_page"
+  | "blog"
+  | "unknown";
+
 type Props = {
   productId: string;
   affiliateUrl: string;
   buttonLabel: string;
   disclosureText: string;
   locale: string;
+  affiliateProvider?: string;
+  source?: AffiliateSource;
 };
+
+function getDeviceCategory(): "mobile" | "desktop" | "tablet" {
+  if (typeof window === "undefined") return "desktop";
+  const ua = navigator.userAgent;
+  if (/tablet|ipad|playbook|silk/i.test(ua)) return "tablet";
+  if (/mobile|android|iphone|ipod|blackberry|windows phone/i.test(ua)) return "mobile";
+  return "desktop";
+}
 
 /**
  * CTA-Button für Affiliate-Produkte.
@@ -24,6 +41,8 @@ export function AffiliateButton({
   buttonLabel,
   disclosureText,
   locale,
+  affiliateProvider,
+  source = "unknown",
 }: Props) {
   const pathname = usePathname();
 
@@ -33,6 +52,9 @@ export function AffiliateButton({
         productId,
         referrerPath: pathname,
         locale,
+        source,
+        affiliateProvider,
+        deviceCategory: getDeviceCategory(),
       });
       const blob = new Blob([payload], { type: "application/json" });
       navigator.sendBeacon("/api/affiliate/track", blob);

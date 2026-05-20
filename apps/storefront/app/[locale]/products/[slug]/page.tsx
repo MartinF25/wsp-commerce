@@ -72,7 +72,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const t = await getTranslations({ locale: params.locale, namespace: "product" });
 
   const [product, relatedResult] = await Promise.allSettled([
-    fetchProduct(params.slug),
+    fetchProduct(params.slug, params.locale),
     fetchProducts({ locale: params.locale as "de" | "en" | "es", limit: 4 }),
   ]);
 
@@ -262,6 +262,8 @@ export default async function ProductDetailPage({ params }: Props) {
                 buttonLabel={p.affiliateButtonLabel ?? t("affiliate_cta")}
                 disclosureText={p.affiliateDisclosure ?? t("affiliate_disclosure")}
                 locale={params.locale}
+                affiliateProvider={p.affiliateProvider ?? undefined}
+                source="product_detail"
               />
             ) : p.product_type !== "affiliate_external" && p.purchasable ? (
               <div className="mb-6">

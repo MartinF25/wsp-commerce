@@ -1,0 +1,90 @@
+{
+  "_comment": "PLATZHALTER-DATEI – Keine echten ASINs, keine echten Partner-Tags, keine echten Preise.",
+  "_comment2": "affiliate_url und affiliate_asin müssen vor Verwendung durch echte Werte ersetzt werden.",
+  "categories": [
+    {
+      "slug": "solar-zubehoer",
+      "name": "Solar-Zubehör",
+      "description": "Ergänzende Produkte für Solaranlagen",
+      "is_active": true
+    }
+  ],
+  "products": [
+    {
+      "slug": "balkonkraftwerk-600w-beispiel",
+      "status": "active",
+      "category_slug": "solar-zubehoer",
+      "product_type": "affiliate_external",
+      "affiliate_provider": "amazon",
+      "affiliate_url": "https://www.amazon.de/dp/BPLATZHALTER?tag=PARTNER-TAG-21",
+      "affiliate_enabled": true,
+      "affiliate_asin": "BPLATZHALTER",
+      "affiliate_button_label": null,
+      "affiliate_disclosure": null,
+      "images": [
+        {
+          "url": "https://example.com/bilder/balkonkraftwerk-600w.jpg",
+          "alt": "Balkonkraftwerk 600W mit Halterung",
+          "sort_order": 0
+        }
+      ],
+      "translations": {
+        "de": {
+          "title": "Balkonkraftwerk 600W – Plug & Play Solaranlage",
+          "short_description": "Kompakte 600-Watt-Solaranlage für den Balkon. Einfache Montage, kein Elektriker nötig.",
+          "description": "Das Balkonkraftwerk 600W ist ideal für Mieter und Eigenheimbesitzer, die sofort mit der eigenen Stromerzeugung beginnen möchten. Die Plug-&-Play-Installation dauert unter einer Stunde. Der mitgelieferte Wechselrichter ist VDE-konform und für den deutschen Markt zugelassen.",
+          "features": [
+            "600 W Nennleistung",
+            "Plug & Play – kein Elektriker nötig",
+            "Geeignet für Balkon, Terrasse und Flachdach",
+            "VDE-konformer Wechselrichter inklusive",
+            "Einspeisemanagement nach DIN VDE 0100-551-1"
+          ],
+          "meta_title": "Balkonkraftwerk 600W – Plug & Play | Solarwind",
+          "meta_description": "Balkonkraftwerk 600W bei Amazon entdecken – Plug & Play, sofort einsatzbereit, kein Elektriker nötig."
+        },
+        "en": {
+          "title": "600W Balcony Power Plant – Plug & Play Solar",
+          "short_description": "Compact 600W solar system for balconies. Easy installation, no electrician needed.",
+          "description": "The 600W balcony power plant is ideal for renters and homeowners who want to start generating their own electricity immediately. Plug-and-play installation takes less than an hour.",
+          "features": [
+            "600W rated power",
+            "Plug & Play – no electrician required",
+            "Suitable for balconies, terraces and flat roofs",
+            "VDE-compliant inverter included"
+          ],
+          "meta_title": "600W Balcony Power Plant – Plug & Play | Solarwind",
+          "meta_description": "Discover the 600W balcony power plant on Amazon – plug & play, ready to use immediately."
+        }
+      }
+    },
+    {
+      "slug": "solarladeregler-30a-beispiel",
+      "status": "draft",
+      "category_slug": "solar-zubehoer",
+      "product_type": "affiliate_external",
+      "affiliate_provider": "amazon",
+      "affiliate_url": "https://www.amazon.de/dp/BPLATZHALTER2?tag=PARTNER-TAG-21",
+      "affiliate_enabled": false,
+      "affiliate_asin": "BPLATZHALTER2",
+      "affiliate_button_label": null,
+      "affiliate_disclosure": null,
+      "images": [],
+      "translations": {
+        "de": {
+          "title": "Solar-Laderegler 30A MPPT (Beispiel-Entwurf)",
+          "short_description": "MPPT Solar-Laderegler 30A für 12V/24V-Systeme – Entwurf, noch nicht veröffentlicht.",
+          "description": "Dieser Eintrag ist ein Entwurf. Der Solar-Laderegler 30A MPPT eignet sich für Inselanalagen, Wohnmobile und Solarzaun-Speichersysteme mit 12V oder 24V Batteriespannung.",
+          "features": [
+            "30A Ladestrom",
+            "MPPT-Technologie für maximale Effizienz",
+            "Kompatibel mit 12V und 24V Systemen",
+            "LCD-Display mit Echtzeitanzeige"
+          ],
+          "meta_title": "Solar-Laderegler 30A MPPT | Solarwind",
+          "meta_description": "Solar-Laderegler 30A MPPT für 12V/24V-Anlagen – bei Amazon verfügbar."
+        }
+      }
+    }
+  ]
+}
