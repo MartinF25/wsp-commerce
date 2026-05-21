@@ -216,7 +216,11 @@ export function toCategorySummary(
  * products müssen als ProductWithVariants[] geladen sein (Varianten + Bilder + Translations).
  * children werden als CategorySummary ohne Tiefe abgebildet (nicht rekursiv).
  */
-export function toCategoryDetail(category: CategoryWithProducts, locale = "de"): CategoryDetail {
+export function toCategoryDetail(
+  category: CategoryWithProducts,
+  locale = "de",
+  resolveStickers?: (product: CategoryWithProducts["products"][number]) => StickerDisplay[]
+): CategoryDetail {
   const t = resolveCategoryTranslation(category.translations ?? [], locale);
   return {
     id: category.id,
@@ -227,7 +231,9 @@ export function toCategoryDetail(category: CategoryWithProducts, locale = "de"):
     imageUrl: category.image_url ?? null,
     metaTitle: t?.meta_title ?? category.meta_title ?? null,
     metaDescription: t?.meta_description ?? category.meta_description ?? null,
-    products: category.products.map((p) => toProductSummary(p, locale)),
+    products: category.products.map((p) =>
+      toProductSummary(p, locale, resolveStickers ? resolveStickers(p) : [])
+    ),
     children: category.children.map((child) =>
       toCategorySummary(child, child.products?.length ?? 0, null, locale)
     ),

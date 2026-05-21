@@ -12,7 +12,7 @@ function localeUrl(locale: string, path: string): string {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [productsResult, categoriesResult, blogResult] = await Promise.allSettled([
     fetchProducts({ locale: "de", limit: 100 }),
-    fetchCategories(),
+    fetchCategories("de"),
     fetchBlogPosts({ locale: "de", limit: 500 }),
   ]);
 
@@ -138,9 +138,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
       alternates: { languages: { de: `${BASE}/faq`, en: `${BASE}/en/faq`, es: `${BASE}/es/faq` } },
     },
-    { url: `${BASE}/kontakt`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE}/impressum`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.2 },
-    { url: `${BASE}/datenschutz`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.2 },
+    {
+      url: `${BASE}/kontakt`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+      alternates: { languages: { de: `${BASE}/kontakt`, en: `${BASE}/en/kontakt`, es: `${BASE}/es/kontakt` } },
+    },
   ];
 
   return [

@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { LocaleSchema } from "@wsp/contracts";
 import { CategoryService } from "../../services/categoryService";
+import { StickerService } from "../../services/stickerService";
+import { StickerRuleEngine, toProductRuleContext } from "../../services/stickerRuleEngine";
 import { toCategorySummary, toCategoryDetail } from "../../mappers/catalog";
 import { CatalogError } from "../../types";
 
@@ -63,5 +65,11 @@ categoryRoutes.get("/:slug", async (c) => {
   }
 
   const { data: locale = "de" } = LocaleSchema.safeParse(c.req.query("locale"));
-  return c.json({ data: toCategoryDetail(category, locale) });
+  const activeStickers = await StickerService.getActiveStickersForRuleEngine();
+  const engine = new StickerRuleEngine(activeStickers);
+  return c.json({
+    data: toCategoryDetail(category, locale, (p) =>
+      engine.resolve(toProductRuleContext(p), locale)
+    ),
+  });
 });

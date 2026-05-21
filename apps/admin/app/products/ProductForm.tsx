@@ -369,7 +369,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
         body: JSON.stringify({
           url: urlToUse.trim(),
           alt: newImage.alt.trim() || "Produktbild",
-          sort_order: parseInt(newImage.sort_order, 10) || 0,
+          sort_order: images.length,
         }),
       });
 
@@ -392,6 +392,36 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
         throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       }
       setImages((prev) => prev.filter((i) => i.id !== imgId));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleMoveImage(imgId: string, direction: "up" | "down") {
+    const sorted = [...images].sort((a, b) => a.sort_order - b.sort_order);
+    const idx = sorted.findIndex((i) => i.id === imgId);
+    if (direction === "up" && idx === 0) return;
+    if (direction === "down" && idx === sorted.length - 1) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    const normalized = sorted.map((img, i) => ({ ...img, sort_order: i }));
+    const tmpOrder = normalized[idx].sort_order;
+    normalized[idx] = { ...normalized[idx], sort_order: normalized[swapIdx].sort_order };
+    normalized[swapIdx] = { ...normalized[swapIdx], sort_order: tmpOrder };
+    setImages(normalized);
+    setError(null);
+    try {
+      await Promise.all([
+        fetch(`/api/admin-proxy/images/${normalized[idx].id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sort_order: normalized[idx].sort_order }),
+        }),
+        fetch(`/api/admin-proxy/images/${normalized[swapIdx].id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sort_order: normalized[swapIdx].sort_order }),
+        }),
+      ]);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -915,7 +945,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                     </tr>
                   </thead>
                   <tbody>
-                    {images.map((img) => (
+                    {[...images].sort((a, b) => a.sort_order - b.sort_order).map((img, idx, sorted) => (
                       <tr key={img.id}>
                         <td>
                           <img
@@ -961,14 +991,40 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                             </div>
                           )}
                         </td>
-                        <td>{img.sort_order}</td>
                         <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <span style={{ minWidth: 18, textAlign: "center", fontSize: 12, color: "#6b7280" }}>
+                              {idx + 1}
+                            </span>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => handleMoveImage(img.id, "up")}
+                              disabled={idx === 0}
+                              title="Nach oben"
+                              style={{ padding: "2px 6px" }}
+                            >↑</button>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => handleMoveImage(img.id, "down")}
+                              disabled={idx === sorted.length - 1}
+                              title="Nach unten"
+                              style={{ padding: "2px 6px" }}
+                            >↓</button>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
                           <button
                             type="button"
                             className="btn btn-danger btn-sm"
                             onClick={() => handleDeleteImage(img.id)}
+                            title="Bild entfernen"
+                            style={{ padding: "4px 8px", lineHeight: 1 }}
                           >
-                            Entfernen
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M2 4h12M6 4V2h4v2M5 4v8a1 1 0 001 1h4a1 1 0 001-1V4H5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
                           </button>
                         </td>
                       </tr>
@@ -995,7 +1051,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
               )}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 80px auto", gap: 8, alignItems: "end" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 160px auto", gap: 8, alignItems: "end" }}>
               <div>
                 <label>Bild-URL <span className="req">*</span></label>
                 <input
@@ -1012,14 +1068,6 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                   value={newImage.alt}
                   onChange={(e) => setNewImage({ ...newImage, alt: e.target.value })}
                   placeholder="Bildbeschreibung"
-                />
-              </div>
-              <div>
-                <label>Reihenfolge</label>
-                <input
-                  type="number"
-                  value={newImage.sort_order}
-                  onChange={(e) => setNewImage({ ...newImage, sort_order: e.target.value })}
                 />
               </div>
               <div>

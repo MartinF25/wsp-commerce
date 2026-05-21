@@ -7,11 +7,12 @@ import { upsertOverrideAction, removeOverrideAction } from "@/app/stickers/actio
 
 interface Props {
   stickerId: string;
+  stickerStatus: "active" | "inactive";
   overrides: StickerProductOverride[];
   products: ProductSummary[];
 }
 
-export function ProductOverridesSection({ stickerId, overrides, products }: Props) {
+export function ProductOverridesSection({ stickerId, stickerStatus, overrides, products }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedProductId, setSelectedProductId] = useState("");
@@ -63,6 +64,13 @@ export function ProductOverridesSection({ stickerId, overrides, products }: Prop
         Ergänzt die automatischen Regeln oben. Aktiviert einen Sticker gezielt für einzelne Produkte,
         oder schließt Produkte explizit aus.
       </p>
+
+      {stickerStatus === "inactive" && (
+        <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+          <strong>Sticker ist inaktiv.</strong> Manuelle Zuordnungen haben keine Wirkung solange der Sticker auf
+          &quot;Inaktiv&quot; steht – er wird im Storefront nicht angezeigt. Sticker oben auf &quot;Aktiv&quot; setzen.
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 border border-red-100 p-3 text-sm text-red-700">{error}</div>

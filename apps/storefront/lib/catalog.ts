@@ -42,6 +42,7 @@ type ApiDetailResponse<T> = {
 function buildQuery(filter: CatalogFilter & { limit?: number; offset?: number; sortBy?: string }): string {
   const params = new URLSearchParams();
 
+  if (filter.locale !== undefined) params.set("locale", filter.locale);
   if (filter.type !== undefined) params.set("type", filter.type);
   if (filter.category !== undefined) params.set("category", filter.category);
   if (filter.purchasable !== undefined) params.set("purchasable", String(filter.purchasable));

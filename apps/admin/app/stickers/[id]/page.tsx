@@ -53,6 +53,7 @@ export default async function EditStickerPage({ params }: { params: { id: string
 
         <ProductOverridesSection
           stickerId={sticker.id}
+          stickerStatus={sticker.status}
           overrides={resolvedOverrides}
           products={resolvedProducts}
         />

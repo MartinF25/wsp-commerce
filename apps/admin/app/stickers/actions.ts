@@ -20,8 +20,13 @@ export async function updateStickerAction(id: string, input: StickerInput): Prom
   }
 }
 
-export async function deleteStickerAction(id: string) {
-  return api.stickers.delete(id);
+export async function deleteStickerAction(id: string): Promise<{ error?: string }> {
+  try {
+    await api.stickers.delete(id);
+    return {};
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
 }
 
 export async function upsertOverrideAction(

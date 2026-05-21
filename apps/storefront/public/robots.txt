@@ -13,4 +13,4 @@ Allow: /sitemap.xml
 Crawl-delay: 1
 
 # Sitemap
-Sitemap: https://wsp-solar.de/sitemap.xml
+Sitemap: https://webshop.wsp-solarenergie.de/sitemap.xml
