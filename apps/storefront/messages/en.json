@@ -255,7 +255,10 @@
     "affiliate_cta": "View on Amazon",
     "affiliate_disclosure": "Affiliate link: We may earn a commission if you make a purchase through this link. As an Amazon Associate we earn from qualifying purchases.",
     "trust_affiliate_external": ["Partner link to Amazon", "Clearly disclosed as affiliate", "No own checkout"],
-    "delivery_affiliate_external": ""
+    "delivery_affiliate_external": "",
+    "stock_label": "Stock",
+    "stock_in_stock": "{count} units",
+    "stock_out_of_stock": "Out of stock"
   },
   "blog": {
     "meta_title": "Blog – Renewable Energy | Solar Fence & SkyWind",

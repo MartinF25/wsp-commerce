@@ -257,7 +257,10 @@
     "affiliate_cta": "Bei Amazon ansehen",
     "affiliate_disclosure": "Partnerlink: Beim Kauf über diesen Link erhalten wir ggf. eine Provision. Als Amazon-Partner verdienen wir an qualifizierten Verkäufen.",
     "trust_affiliate_external": ["Partnerlink zu Amazon", "Klar als Affiliate gekennzeichnet", "Kein eigener Checkout"],
-    "delivery_affiliate_external": ""
+    "delivery_affiliate_external": "",
+    "stock_label": "Lagerbestand",
+    "stock_in_stock": "{count} Stück",
+    "stock_out_of_stock": "Kein Lagerbestand"
   },
   "blog": {
     "meta_title": "Blog – Erneuerbare Energie | Solarzaun & SkyWind",

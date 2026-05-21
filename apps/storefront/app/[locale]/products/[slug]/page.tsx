@@ -90,6 +90,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const specs = deriveSpecs(p, t);
   const trustBadges = getTrustBadges(p.product_type, t);
   const deliveryHint = getDeliveryHint(p.product_type, t);
+  const totalStock = p.variants.reduce((sum, v) => sum + v.stock_quantity, 0);
 
   return (
     <div className="bg-white">
@@ -306,13 +307,33 @@ export default async function ProductDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {p.description && (
+      {(p.description || p.product_type !== "affiliate_external") && (
         <div className="bg-gray-50 py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="font-display text-2xl font-bold text-brand-text mb-6">{t("description")}</h2>
-            <p className="text-brand-muted leading-relaxed text-base whitespace-pre-line max-w-3xl">
-              {p.description}
-            </p>
+            {p.description && (
+              <>
+                <h2 className="font-display text-2xl font-bold text-brand-text mb-6">{t("description")}</h2>
+                <p className="text-brand-muted leading-relaxed text-base whitespace-pre-line max-w-3xl mb-8">
+                  {p.description}
+                </p>
+              </>
+            )}
+            {p.product_type !== "affiliate_external" && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-brand-text">{t("stock_label")}:</span>
+                {totalStock > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                    {t("stock_in_stock", { count: totalStock })}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-full px-3 py-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                    {t("stock_out_of_stock")}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

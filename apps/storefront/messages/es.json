@@ -255,7 +255,10 @@
     "affiliate_cta": "Ver en Amazon",
     "affiliate_disclosure": "Enlace de afiliado: podemos ganar una comisión si realizas una compra a través de este enlace. Como asociado de Amazon, ganamos con las compras que cumplan los requisitos.",
     "trust_affiliate_external": ["Enlace de afiliado a Amazon", "Claramente indicado como afiliado", "Sin pago propio"],
-    "delivery_affiliate_external": ""
+    "delivery_affiliate_external": "",
+    "stock_label": "Inventario",
+    "stock_in_stock": "{count} unidades",
+    "stock_out_of_stock": "Sin existencias"
   },
   "blog": {
     "meta_title": "Blog – Energía Renovable | Valla Solar & SkyWind",
