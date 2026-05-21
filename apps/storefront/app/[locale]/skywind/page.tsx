@@ -32,7 +32,19 @@ export default async function SkyWindPage({ params }: { params: { locale: string
   let products: ProductSummary[] = [];
 
   try {
-    products = (await fetchProducts({ locale: params.locale as "de" | "en" | "es", category: "skywind", limit: 6 })).items;
+    const locale = params.locale as "de" | "en" | "es";
+    const [main, accessories] = await Promise.allSettled([
+      fetchProducts({ locale, category: "skywind-ng-kleinwindanlage", limit: 50 }),
+      fetchProducts({ locale, category: "zubehoer-skywind-ng", limit: 50 }),
+    ]);
+    const mainItems = main.status === "fulfilled" ? main.value.items : [];
+    const accessoryItems = accessories.status === "fulfilled" ? accessories.value.items : [];
+    const seen = new Set<string>();
+    products = [...mainItems, ...accessoryItems].filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
   } catch {
     products = [];
   }
@@ -74,8 +86,8 @@ export default async function SkyWindPage({ params }: { params: { locale: string
 
       <SolutionProductsSection
         eyebrow="Produkte"
-        title="Passende SkyWind-Produkte"
-        description="Aktive Produkte aus der Kategorie SkyWind, passend zu dieser Lösung."
+        title="SkyWind-Produkte im Überblick"
+        description="Alle verfügbaren SkyWind-Anlagen und passendes Zubehör – direkt bestellbar oder auf Anfrage."
         products={products}
       />
 
