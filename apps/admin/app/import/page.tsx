@@ -167,7 +167,7 @@ export default async function ImportPage() {
 
   try {
     const overview = await api.affiliate.getStats();
-    products = overview?.data?.products ?? [];
+    products = overview?.products ?? [];
   } catch (e) {
     error = (e as Error).message;
   }
