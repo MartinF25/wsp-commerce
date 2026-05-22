@@ -21,7 +21,7 @@ export async function GET() {
 
   try {
     const result = await api.affiliate.getStats();
-    products = result.data.products;
+    products = result.products;
   } catch {
     return new Response("Fehler beim Laden der Statistiken.", { status: 500 });
   }
