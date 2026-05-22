@@ -9,7 +9,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "ts-node prisma/seed.ts",
-    "type-check": "prisma generate && tsc --noEmit"
+    "type-check": "prisma generate && tsc --noEmit",
+    "import:affiliate": "ts-node prisma/import-affiliate.ts"
   },
   "dependencies": {
     "@hono/node-server": "1.19.14",

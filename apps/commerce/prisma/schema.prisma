@@ -210,6 +210,13 @@ model Product {
   affiliate_disclosure   String?
   affiliate_enabled      Boolean @default(false)
 
+  /// Letzter automatischer Health-Check via n8n.
+  affiliate_last_checked_at DateTime?
+  /// Ergebnis: ok | invalid_url | missing | timeout | blocked | error
+  affiliate_health_status   String?
+  /// Optionale Fehlermeldung oder Hinweis vom letzten Check.
+  affiliate_health_message  String?
+
   category         Category?            @relation(fields: [category_id], references: [id])
   translations     ProductTranslation[]
   variants         ProductVariant[]

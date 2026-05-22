@@ -37,6 +37,8 @@
  *   DELETE /ticker/:id                  → Ticker-Nachricht löschen
  *   GET    /products/:id/affiliate-stats → Klickstatistik eines Produkts
  *   GET    /affiliate/stats              → Aggregierte Klickstatistik aller Affiliate-Produkte
+ *   POST   /import/affiliate-products   → Affiliate-Produkte importieren (dry_run | commit)
+ *   PATCH  /products/:id/affiliate-health → Health-Status nach n8n-Prüfung setzen
  */
 
 import { Hono } from "hono";
@@ -688,6 +690,10 @@ adminRoutes.get("/affiliate/stats", async (c) => {
       slug: true,
       status: true,
       affiliate_provider: true,
+      affiliate_url: true,
+      affiliate_health_status: true,
+      affiliate_health_message: true,
+      affiliate_last_checked_at: true,
       translations: { where: { locale: "de" }, select: { name: true } },
     },
   });
@@ -746,6 +752,10 @@ adminRoutes.get("/affiliate/stats", async (c) => {
     title: p.translations[0]?.name ?? p.slug,
     status: p.status,
     affiliateProvider: p.affiliate_provider,
+    affiliateUrl: p.affiliate_url,
+    affiliateHealthStatus: p.affiliate_health_status ?? null,
+    affiliateHealthMessage: p.affiliate_health_message ?? null,
+    affiliateLastCheckedAt: p.affiliate_last_checked_at?.toISOString() ?? null,
     totalClicks: totalMap.get(p.id) ?? 0,
     clicksLast7Days: last7Map.get(p.id) ?? 0,
     clicksLast30Days: last30Map.get(p.id) ?? 0,
@@ -1852,4 +1862,337 @@ adminRoutes.delete("/ticker/:id", async (c) => {
   await prisma.liveTickerMessage.delete({ where: { id } });
 
   return c.json({ data: { deleted: true } });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AFFILIATE IMPORT  –  POST /import/affiliate-products
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Importiert Affiliate-Produkte aus einem JSON-Array (Dry-Run oder Commit).
+ * Wird von n8n nach Normalisierung der Google-Sheet-Daten aufgerufen.
+ *
+ * Body: { mode: "dry_run" | "commit", products: AffiliateImportRow[] }
+ * Response: ImportReport
+ */
+adminRoutes.post("/import/affiliate-products", async (c) => {
+  const prisma = getPrismaClient();
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
+  }
+
+  // Doppelt-enkodiertes JSON (n8n-Quirk) entpacken
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      throw new CatalogError("INVALID_BODY", 422, "Body konnte nicht als JSON geparst werden.");
+    }
+  }
+
+  const raw = body as Record<string, unknown>;
+  const mode = raw?.mode;
+  if (mode !== "dry_run" && mode !== "commit") {
+    throw new CatalogError("INVALID_MODE", 422, 'mode muss "dry_run" oder "commit" sein.');
+  }
+
+  const productsRaw = raw?.products;
+  if (!Array.isArray(productsRaw) || productsRaw.length === 0) {
+    throw new CatalogError("INVALID_PRODUCTS", 422, "products muss ein nicht-leeres Array sein.");
+  }
+
+  const VALID_STATUSES = new Set(["draft", "active", "archived"]);
+  const HTTPS_REGEX = /^https:\/\/.+/i;
+  const SLUG_REGEX = /^[a-z0-9-]+$/;
+  const ASIN_REGEX = /^B[A-Z0-9]{9}$/;
+
+  type ImportIssue = { row: number; slug: string; field: string; message: string; level: "error" | "warning" };
+  const issues: ImportIssue[] = [];
+  const validRows: Record<string, unknown>[] = [];
+  const seenSlugs = new Set<string>();
+
+  for (let i = 0; i < productsRaw.length; i++) {
+    const row = productsRaw[i] as Record<string, unknown>;
+    const rowNum = i + 1;
+    const slug = typeof row.slug === "string" ? row.slug.trim() : "";
+
+    const addIssue = (field: string, message: string, level: "error" | "warning" = "error") => {
+      issues.push({ row: rowNum, slug: slug || "(leer)", field, message, level });
+    };
+
+    if (!slug || !SLUG_REGEX.test(slug)) {
+      addIssue("slug", `Ungültiger slug: "${row.slug}"`);
+      continue;
+    }
+    if (seenSlugs.has(slug)) {
+      addIssue("slug", `Doppelter slug: "${slug}"`);
+      continue;
+    }
+    seenSlugs.add(slug);
+
+    const status = typeof row.status === "string" ? row.status.trim() : "";
+    if (!VALID_STATUSES.has(status)) addIssue("status", `Ungültiger Status: "${row.status}"`);
+
+    const categorySlug = typeof row.category_slug === "string" ? row.category_slug.trim() : "";
+    if (!categorySlug) addIssue("category_slug", "category_slug fehlt");
+
+    const provider = typeof row.affiliate_provider === "string" ? row.affiliate_provider.trim() : "";
+    if (!provider) addIssue("affiliate_provider", "affiliate_provider fehlt");
+    else if (provider !== "amazon") addIssue("affiliate_provider", `Nur "amazon" erlaubt (MVP), nicht "${provider}"`);
+
+    const url = typeof row.affiliate_url === "string" ? row.affiliate_url.trim() : "";
+    if (!url) addIssue("affiliate_url", "affiliate_url fehlt");
+    else if (!HTTPS_REGEX.test(url)) addIssue("affiliate_url", "affiliate_url muss HTTPS sein");
+
+    const titleDe = typeof row.title_de === "string" ? row.title_de.trim() : "";
+    if (!titleDe) { addIssue("title_de", "DE-Titel (title_de) fehlt"); continue; }
+
+    const asin = typeof row.affiliate_asin === "string" ? row.affiliate_asin.trim() : "";
+    if (asin && !ASIN_REGEX.test(asin)) addIssue("affiliate_asin", `Ungültige ASIN: "${asin}"`, "warning");
+
+    const imageUrl = typeof row.image_url === "string" ? row.image_url.trim() : "";
+    if (imageUrl && !HTTPS_REGEX.test(imageUrl)) addIssue("image_url", "image_url muss HTTPS sein");
+    if (!imageUrl) addIssue("image_url", "Kein Bild gesetzt", "warning");
+
+    if (!row.title_en) addIssue("title_en", "Kein EN-Titel gesetzt", "warning");
+    if (!row.title_es) addIssue("title_es", "Kein ES-Titel gesetzt", "warning");
+
+    validRows.push(row);
+  }
+
+  const errorCount = issues.filter((i) => i.level === "error").length;
+  const warningCount = issues.filter((i) => i.level === "warning").length;
+
+  if (mode === "dry_run" || errorCount > 0) {
+    // Vorschau: wie viele wären neu/aktualisiert?
+    const allSlugs = validRows.map((r) => r.slug as string);
+    let wouldCreate = allSlugs.length;
+    let wouldUpdate = 0;
+    if (allSlugs.length > 0) {
+      const existing = await prisma.product.findMany({
+        where: { slug: { in: allSlugs } },
+        select: { slug: true },
+      });
+      const existingSlugs = new Set(existing.map((p) => p.slug));
+      wouldUpdate = allSlugs.filter((s) => existingSlugs.has(s)).length;
+      wouldCreate = allSlugs.length - wouldUpdate;
+    }
+
+    return c.json({
+      mode: "dry_run",
+      success: errorCount === 0,
+      summary: {
+        total: productsRaw.length,
+        valid: validRows.length,
+        errors: errorCount,
+        warnings: warningCount,
+        would_create: wouldCreate,
+        would_update: wouldUpdate,
+      },
+      issues,
+    }, errorCount > 0 ? 422 : 200);
+  }
+
+  // ── Commit ──────────────────────────────────────────────────────────────────
+  const categorySlugs = [...new Set(validRows.map((r) => r.category_slug as string).filter(Boolean))];
+  const categories = await prisma.category.findMany({
+    where: { slug: { in: categorySlugs } },
+    select: { id: true, slug: true },
+  });
+  const categoryMap = new Map(categories.map((c) => [c.slug, c.id]));
+  const missingCats = categorySlugs.filter((s) => !categoryMap.has(s));
+  if (missingCats.length > 0) {
+    throw new CatalogError("UNKNOWN_CATEGORY", 422, `Unbekannte Kategorien: ${missingCats.join(", ")}`);
+  }
+
+  const allSlugs = validRows.map((r) => r.slug as string);
+  const existingProducts = await prisma.product.findMany({
+    where: { slug: { in: allSlugs } },
+    select: { slug: true },
+  });
+  const existingSlugs = new Set(existingProducts.map((p) => p.slug));
+
+  const results: Array<{ slug: string; action: "created" | "updated"; id: string }> = [];
+
+  await prisma.$transaction(async (tx) => {
+    for (const row of validRows) {
+      const slug = row.slug as string;
+      const categoryId = categoryMap.get(row.category_slug as string) ?? null;
+
+      const normStr = (v: unknown): string | null => {
+        if (typeof v !== "string") return null;
+        const t = v.trim();
+        return t.length > 0 ? t : null;
+      };
+      const normBool = (v: unknown, def = false): boolean => {
+        if (typeof v === "boolean") return v;
+        if (typeof v === "string") return ["true", "1", "ja", "yes"].includes(v.toLowerCase());
+        return def;
+      };
+
+      const product = await tx.product.upsert({
+        where: { slug },
+        update: {
+          product_type: "affiliate_external",
+          status: row.status as "draft" | "active" | "archived",
+          category_id: categoryId,
+          affiliate_provider: normStr(row.affiliate_provider),
+          affiliate_url: normStr(row.affiliate_url),
+          affiliate_asin: normStr(row.affiliate_asin),
+          affiliate_button_label: normStr(row.affiliate_button_label),
+          affiliate_disclosure: normStr(row.affiliate_disclosure),
+          affiliate_enabled: normBool(row.affiliate_enabled, false),
+        },
+        create: {
+          slug,
+          product_type: "affiliate_external",
+          status: row.status as "draft" | "active" | "archived",
+          category_id: categoryId,
+          affiliate_provider: normStr(row.affiliate_provider),
+          affiliate_url: normStr(row.affiliate_url),
+          affiliate_asin: normStr(row.affiliate_asin),
+          affiliate_button_label: normStr(row.affiliate_button_label),
+          affiliate_disclosure: normStr(row.affiliate_disclosure),
+          affiliate_enabled: normBool(row.affiliate_enabled, false),
+        },
+      });
+
+      const locales: Array<"de" | "en" | "es"> = ["de", "en", "es"];
+      for (const locale of locales) {
+        const title = normStr(row[`title_${locale}`]);
+        if (!title) continue;
+        await tx.productTranslation.upsert({
+          where: { product_id_locale: { product_id: product.id, locale } },
+          update: {
+            name: title,
+            short_description: normStr(row[`short_description_${locale}`]),
+            description: normStr(row[`description_${locale}`]),
+            meta_title: normStr(row[`meta_title_${locale}`]),
+            meta_description: normStr(row[`meta_description_${locale}`]),
+          },
+          create: {
+            product_id: product.id,
+            locale,
+            name: title,
+            short_description: normStr(row[`short_description_${locale}`]),
+            description: normStr(row[`description_${locale}`]),
+            meta_title: normStr(row[`meta_title_${locale}`]),
+            meta_description: normStr(row[`meta_description_${locale}`]),
+          },
+        });
+      }
+
+      const imageUrl = normStr(row.image_url);
+      if (imageUrl) {
+        const existingImage = await tx.productImage.findFirst({
+          where: { product_id: product.id, sort_order: 0 },
+        });
+        if (existingImage) {
+          await tx.productImage.update({
+            where: { id: existingImage.id },
+            data: { url: imageUrl, alt: normStr(row.image_alt) },
+          });
+        } else {
+          await tx.productImage.create({
+            data: { product_id: product.id, url: imageUrl, alt: normStr(row.image_alt), sort_order: 0 },
+          });
+        }
+      }
+
+      results.push({ slug, action: existingSlugs.has(slug) ? "updated" : "created", id: product.id });
+    }
+  });
+
+  const created = results.filter((r) => r.action === "created").length;
+  const updated = results.filter((r) => r.action === "updated").length;
+
+  console.info(`[admin] affiliate-import commit: ${created} erstellt, ${updated} aktualisiert`);
+
+  return c.json({
+    mode: "commit",
+    success: true,
+    summary: {
+      total: productsRaw.length,
+      created,
+      updated,
+      skipped: productsRaw.length - validRows.length,
+      errors: 0,
+    },
+    products: results,
+    issues: issues.filter((i) => i.level === "warning"),
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AFFILIATE HEALTH  –  PATCH /products/:id/affiliate-health
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Setzt den Health-Status eines Affiliate-Produkts nach n8n-Prüfung.
+ * Body: { status: "ok"|"invalid_url"|"missing"|"timeout"|"blocked"|"error", message?: string }
+ */
+adminRoutes.patch("/products/:id/affiliate-health", async (c) => {
+  const id = c.req.param("id");
+  const prisma = getPrismaClient();
+
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: { id: true, product_type: true, slug: true },
+  });
+  if (!product) throw new CatalogError("PRODUCT_NOT_FOUND", 404, `Produkt nicht gefunden: ${id}`);
+  if (product.product_type !== "affiliate_external") {
+    throw new CatalogError("NOT_AFFILIATE", 422, "Nur Affiliate-Produkte haben einen Health-Status.");
+  }
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
+  }
+
+  const raw = body as Record<string, unknown>;
+  const VALID_HEALTH = new Set(["ok", "invalid_url", "missing", "timeout", "blocked", "error"]);
+  const status = typeof raw?.status === "string" ? raw.status.trim() : "";
+  if (!VALID_HEALTH.has(status)) {
+    throw new CatalogError(
+      "INVALID_HEALTH_STATUS",
+      422,
+      `Ungültiger status: "${status}". Erlaubt: ok | invalid_url | missing | timeout | blocked | error`
+    );
+  }
+
+  const message = typeof raw?.message === "string" && raw.message.trim().length > 0
+    ? raw.message.trim()
+    : null;
+
+  const updated = await prisma.product.update({
+    where: { id },
+    data: {
+      affiliate_health_status: status,
+      affiliate_health_message: message,
+      affiliate_last_checked_at: new Date(),
+    },
+    select: {
+      id: true,
+      slug: true,
+      affiliate_health_status: true,
+      affiliate_health_message: true,
+      affiliate_last_checked_at: true,
+    },
+  });
+
+  return c.json({
+    data: {
+      id: updated.id,
+      slug: updated.slug,
+      affiliateHealthStatus: updated.affiliate_health_status,
+      affiliateHealthMessage: updated.affiliate_health_message,
+      affiliateLastCheckedAt: updated.affiliate_last_checked_at?.toISOString() ?? null,
+    },
+  });
 });

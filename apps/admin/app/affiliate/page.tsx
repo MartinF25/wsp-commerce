@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import type { AffiliateProductStats } from "@/lib/api";
+import type { AffiliateHealthStatus, AffiliateProductStats } from "@/lib/api";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -73,6 +73,38 @@ function DeviceBreakdown({ data }: { data: Record<string, number> }) {
   );
 }
 
+const HEALTH_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  ok:          { label: "ok",          color: "#166534", bg: "#dcfce7" },
+  blocked:     { label: "blocked",     color: "#92400e", bg: "#fef3c7" },
+  timeout:     { label: "timeout",     color: "#9a3412", bg: "#ffedd5" },
+  error:       { label: "error",       color: "#991b1b", bg: "#fee2e2" },
+  missing:     { label: "fehlt",       color: "#991b1b", bg: "#fee2e2" },
+  invalid_url: { label: "ungültige URL", color: "#991b1b", bg: "#fee2e2" },
+};
+
+function HealthBadge({ status, checkedAt }: { status: AffiliateHealthStatus | null; checkedAt: string | null }) {
+  if (!status) {
+    return <span style={{ fontSize: 11, color: "#94a3b8" }}>–</span>;
+  }
+  const cfg = HEALTH_CONFIG[status] ?? { label: status, color: "#374151", bg: "#f3f4f6" };
+  return (
+    <span
+      title={checkedAt ? `Zuletzt geprüft: ${fmtDate(checkedAt)}` : "Noch nicht geprüft"}
+      style={{
+        display: "inline-block",
+        fontSize: 11,
+        fontWeight: 600,
+        padding: "2px 8px",
+        borderRadius: 9999,
+        color: cfg.color,
+        background: cfg.bg,
+      }}
+    >
+      {cfg.label}
+    </span>
+  );
+}
+
 function ProductTable({ products }: { products: AffiliateProductStats[] }) {
   if (products.length === 0) {
     return <div className="empty">Keine Affiliate-Produkte gefunden.</div>;
@@ -85,6 +117,7 @@ function ProductTable({ products }: { products: AffiliateProductStats[] }) {
             <th>Produkt</th>
             <th>Anbieter</th>
             <th>Status</th>
+            <th>Health</th>
             <th style={{ textAlign: "right" }}>7 Tage</th>
             <th style={{ textAlign: "right" }}>30 Tage</th>
             <th style={{ textAlign: "right" }}>Gesamt</th>
@@ -105,12 +138,18 @@ function ProductTable({ products }: { products: AffiliateProductStats[] }) {
               <td>
                 <span className={`badge badge-${p.status}`}>{p.status}</span>
               </td>
+              <td>
+                <HealthBadge status={p.affiliateHealthStatus} checkedAt={p.affiliateLastCheckedAt} />
+              </td>
               <td style={{ textAlign: "right", fontWeight: 600 }}>{fmt(p.clicksLast7Days)}</td>
               <td style={{ textAlign: "right", fontWeight: 600 }}>{fmt(p.clicksLast30Days)}</td>
               <td style={{ textAlign: "right", fontWeight: 600 }}>{fmt(p.totalClicks)}</td>
               <td style={{ fontSize: 12, color: "#94a3b8" }}>{fmtDate(p.lastClickedAt)}</td>
               <td>
                 <div className="actions-row">
+                  {p.affiliateUrl && (
+                    <a href={p.affiliateUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">Link ↗</a>
+                  )}
                   <Link href={`/products/${p.productId}`} className="btn btn-secondary btn-sm">Bearbeiten</Link>
                 </div>
               </td>
@@ -123,16 +162,14 @@ function ProductTable({ products }: { products: AffiliateProductStats[] }) {
 }
 
 export default async function AffiliateStatsPage() {
-  let overview: Awaited<ReturnType<typeof api.affiliate.getStats>> | null = null;
+  let data: Awaited<ReturnType<typeof api.affiliate.getStats>> | null = null;
   let error: string | null = null;
 
   try {
-    overview = await api.affiliate.getStats();
+    data = await api.affiliate.getStats();
   } catch (e) {
     error = (e as Error).message;
   }
-
-  const data = overview?.data;
 
   return (
     <>

@@ -137,12 +137,18 @@ export interface AffiliateStats {
   lastClickedAt: string | null;
 }
 
+export type AffiliateHealthStatus = "ok" | "invalid_url" | "missing" | "timeout" | "blocked" | "error";
+
 export interface AffiliateProductStats {
   productId: string;
   slug: string;
   title: string;
   status: ProductStatus;
   affiliateProvider: string | null;
+  affiliateUrl: string | null;
+  affiliateHealthStatus: AffiliateHealthStatus | null;
+  affiliateHealthMessage: string | null;
+  affiliateLastCheckedAt: string | null;
   totalClicks: number;
   clicksLast7Days: number;
   clicksLast30Days: number;
@@ -793,7 +799,7 @@ export const api = {
   },
 
   affiliate: {
-    getStats: () => request<{ data: AffiliateStatsOverview }>("/affiliate/stats"),
+    getStats: () => request<AffiliateStatsOverview>("/affiliate/stats"),
   },
 
   marketListings: {
