@@ -9,15 +9,19 @@
  */
 
 import type { ProductSummary } from "@wsp/types";
+import type { ResolvedFeatureVisual } from "@wsp/contracts";
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { OfferCountdown } from "@/components/storefront/offer-countdown";
 import { StickerOverlay } from "@/components/sticker/StickerOverlay";
+import { FeatureMiniatureIcons } from "@/components/features";
 
 type Props = {
   product: ProductSummary;
   showCategory?: boolean;
+  /** Pre-resolved feature visuals (optional – fetched server-side by parent) */
+  featureVisuals?: ResolvedFeatureVisual[];
 };
 
 // Gradient + Icon je nach Kategorie-Slug
@@ -127,7 +131,7 @@ function formatCents(cents: number, currency: string): string {
   }).format(cents / 100);
 }
 
-export function ProductCard({ product, showCategory = true }: Props) {
+export function ProductCard({ product, showCategory = true, featureVisuals }: Props) {
   const t = useTranslations("products");
   const { priceDisplay } = product;
   return (
@@ -214,6 +218,18 @@ export function ProductCard({ product, showCategory = true }: Props) {
             compact
             className="mb-4"
           />
+        )}
+
+        {/* Feature Visuals – kompakter Icon-Strip */}
+        {featureVisuals && featureVisuals.length > 0 && (
+          <div className="mb-3">
+            <FeatureMiniatureIcons
+              visuals={featureVisuals}
+              maxDisplay={5}
+              iconSize="xs"
+              showTooltips
+            />
+          </div>
         )}
 
         {/* Footer: Badge links + CTA rechts */}

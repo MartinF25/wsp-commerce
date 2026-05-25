@@ -158,6 +158,8 @@ model Category {
   translations    CategoryTranslation[]
   ticker_messages LiveTickerMessage[]
   bundle_assignments BundleCategoryAssignment[]
+  feature_definitions FeatureDefinition[]
+  feature_visuals     FeatureVisual[]
 
   @@map("categories")
 }
@@ -227,6 +229,7 @@ model Product {
   bundle_items     BundleItem[]
   bundle_assignments BundleProductAssignment[]
   sticker_overrides  StickerProductOverride[]
+  feature_visuals    FeatureVisual[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -821,4 +824,197 @@ model StickerProductOverride {
 
   @@unique([sticker_id, product_id])
   @@map("sticker_product_overrides")
+}
+
+// ─── Feature Visual Engine ────────────────────────────────────────────────────
+
+/// Wie ein Feature-String erkannt wird.
+/// exact    → Exaktes String-Match (case-insensitive)
+/// contains → Substring-Match (Standard)
+/// starts   → String beginnt mit Pattern
+/// ends     → String endet mit Pattern
+/// regex    → Regulärer Ausdruck
+enum FeatureMatchType {
+  exact
+  contains
+  starts
+  ends
+  regex
+}
+
+/// Geltungsbereich eines FeatureVisual-Eintrags.
+/// global   → gilt für alle Produkte und Kategorien
+/// category → nur für Produkte dieser Kategorie
+/// product  → nur für dieses spezifische Produkt (höchste Priorität)
+enum FeatureVisualScope {
+  global
+  category
+  product
+}
+
+/// Darstellungsmodus der Feature-Visuals im Storefront.
+/// icon_value        → Icon + Wert (kompakt)
+/// icon_name_value   → Icon + Name + Wert (vollständig)
+/// grouped           → gruppiert nach Feature-Name mit Abschnitt-Header
+/// compact           → nur Icons, kein Text (Tooltip on Hover)
+/// tooltip_only      → unsichtbar, nur Tooltip bei Hover
+/// grid              → Kacheln-Layout (Icon + Label)
+/// horizontal        → horizontale Scroll-Zeile
+/// vertical          → vertikaler Stack (Standard)
+enum FeatureDisplayMode {
+  icon_value
+  icon_name_value
+  grouped
+  compact
+  tooltip_only
+  grid
+  horizontal
+  vertical
+}
+
+/// Definiert einen Feature-Typ, z.B. "Leistung", "Schutzklasse", "Gewicht".
+/// Das match_pattern bestimmt, welche Feature-Strings diesem Typ zugeordnet werden.
+/// Mehrere Definitionen können auf denselben String passen – der höchste sort_order gewinnt.
+model FeatureDefinition {
+  id            String           @id @default(uuid())
+  /// Maschinenlesbarer Bezeichner, z.B. "leistung", "schutzklasse". URL-safe.
+  slug          String           @unique
+  /// Mehrsprachige Anzeigenamen als JSONB, z.B. {"de":"Leistung","en":"Power"}.
+  names         Json             @default("{}")
+  /// Optionale Beschreibungen für Admin-UI.
+  descriptions  Json?
+  /// String-Pattern für automatisches Matching gegen Product.features-Strings.
+  match_pattern String?
+  match_type    FeatureMatchType @default(contains)
+  /// Optionaler Kategorie-Scope. Null = global.
+  category_id   String?
+  sort_order    Int              @default(0)
+  is_active     Boolean         @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  category Category?       @relation(fields: [category_id], references: [id])
+  visuals  FeatureVisual[]
+
+  @@index([slug])
+  @@index([category_id])
+  @@map("feature_definitions")
+}
+
+/// Visuelle Ressource für eine Feature-Definition oder einen spezifischen Feature-Wert.
+/// Prioritätsregel (höchste gewinnt):
+///   1. scope=product  (produktspezifische Überschreibung)
+///   2. scope=category (kategorieweit)
+///   3. scope=global   (überall gültig)
+/// Innerhalb desselben Scope entscheidet die priority-Spalte.
+model FeatureVisual {
+  id                    String            @id @default(uuid())
+  /// Verknüpfung zur Feature-Definition (Null = freistehende Ressource).
+  feature_definition_id String?
+  /// Spezifischer Featurewert, z.B. "IP65", "400 W". Null = gilt für alle Werte.
+  feature_value         String?
+  scope                 FeatureVisualScope @default(global)
+  category_id           String?
+  product_id            String?
+
+  // ─── Assets ─────────────────────────────────────────────────────────────────
+  /// CDN-URL zum Bild (PNG/JPG/GIF/WebP). Null wenn nur SVG.
+  image_url    String?
+  /// Inline-SVG-Inhalt (vollständiges <svg>…</svg>). Null wenn URL-Bild.
+  svg_content  String?   @db.Text
+  /// Bildbreite in px – für CLS-Prävention reserviert (width/height Attribute).
+  image_width  Int?
+  /// Bildhöhe in px – für CLS-Prävention.
+  image_height Int?
+
+  // ─── Mehrsprachige Metadaten ─────────────────────────────────────────────────
+  /// Mehrsprachige Alt-Texte für Barrierefreiheit. {"de":"…","en":"…","es":"…"}
+  alt_texts Json?
+  /// Mehrsprachige Anzeigelabels (überschreibt Feature-Definition-Name).
+  labels    Json?
+  /// Mehrsprachige Tooltip-Texte.
+  tooltips  Json?
+
+  // ─── Link-Konfiguration ──────────────────────────────────────────────────────
+  link_url    String?
+  link_target String?  @default("_self")
+  link_rel    String?
+
+  // ─── Styling ────────────────────────────────────────────────────────────────
+  color_primary   String?
+  color_secondary String?
+  css_class       String?
+
+  // ─── Verwaltung ──────────────────────────────────────────────────────────────
+  /// Priorität innerhalb desselben Scope (höherer Wert = bevorzugt).
+  priority   Int     @default(0)
+  is_active  Boolean @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  definition FeatureDefinition? @relation(fields: [feature_definition_id], references: [id], onDelete: SetNull)
+  category   Category?           @relation(fields: [category_id], references: [id])
+  product    Product?            @relation(fields: [product_id], references: [id])
+
+  @@index([feature_definition_id])
+  @@index([feature_value])
+  @@index([scope, priority])
+  @@index([category_id])
+  @@index([product_id])
+  @@map("feature_visuals")
+}
+
+/// Singleton-Datensatz für globale Display-Konfiguration des Feature Visual Engine.
+/// ID ist immer "singleton" – nur ein Datensatz erlaubt.
+model FeatureVisualSettings {
+  id String @id @default("singleton")
+
+  // ─── Anzeige-Standorte ───────────────────────────────────────────────────────
+  enable_product_page   Boolean @default(true)
+  enable_quick_view     Boolean @default(true)
+  enable_miniature      Boolean @default(false)
+  enable_faceted_search Boolean @default(true)
+  enable_collection     Boolean @default(true)
+  enable_search_results Boolean @default(true)
+
+  // ─── Globale Standardwerte ───────────────────────────────────────────────────
+  default_display_mode FeatureDisplayMode @default(vertical)
+  default_icon_size    String             @default("md")
+  show_labels          Boolean            @default(true)
+  show_tooltips        Boolean            @default(true)
+  enable_animations    Boolean            @default(true)
+
+  // ─── Responsive-Konfiguration (JSONB) ────────────────────────────────────────
+  /// {"desktop":{"columns":3,"gap":"md","iconSize":"md"},"tablet":{...},"mobile":{...}}
+  responsive_config Json?
+
+  // ─── Produktdetailseite ──────────────────────────────────────────────────────
+  product_page_mode     FeatureDisplayMode @default(grid)
+  product_page_position String             @default("below_description")
+  product_page_columns  Int                @default(3)
+
+  // ─── Produktkarte / Miniatur ─────────────────────────────────────────────────
+  miniature_mode      FeatureDisplayMode @default(compact)
+  miniature_max_icons Int                @default(4)
+  miniature_position  String             @default("bottom")
+
+  // ─── Faceted Search ──────────────────────────────────────────────────────────
+  facet_show_icons      Boolean @default(true)
+  facet_show_labels     Boolean @default(false)
+  facet_collapsible     Boolean @default(true)
+  facet_lazy_render     Boolean @default(true)
+
+  // ─── Typografie ──────────────────────────────────────────────────────────────
+  font_size   String @default("sm")
+  font_weight String @default("medium")
+
+  // ─── Analytics ───────────────────────────────────────────────────────────────
+  track_interactions Boolean @default(false)
+  enable_ab_testing  Boolean @default(false)
+
+  updated_at DateTime @updatedAt
+
+  @@map("feature_visual_settings")
 }

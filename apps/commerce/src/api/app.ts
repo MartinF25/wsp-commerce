@@ -10,6 +10,12 @@ import { adminMarketListingRoutes } from "./routes/adminMarketListings";
 import { blogRoutes } from "./routes/blog";
 import { affiliateRoutes } from "./routes/affiliate";
 import { tickerRoutes } from "./routes/ticker";
+import {
+  adminFeatureDefinitionRoutes,
+  adminFeatureVisualRoutes,
+  adminFeatureVisualSettingsRoutes,
+  publicFeatureVisualRoutes,
+} from "./routes/featureVisuals";
 
 /**
  * Hono-App-Factory
@@ -48,11 +54,15 @@ export function createApp() {
   // ─── Routen ─────────────────────────────────────────────────────────────────
 
   app.route("/api/catalog", catalogRoutes);
+  app.route("/api/catalog/feature-visuals", publicFeatureVisualRoutes);
   app.route("/api/blog", blogRoutes);
   app.route("/api/admin", adminRoutes);
   app.route("/api/admin/bundles", adminBundleRoutes);
   app.route("/api/admin/stickers", adminStickerRoutes);
   app.route("/api/admin/market-listings", adminMarketListingRoutes);
+  app.route("/api/admin/feature-definitions", adminFeatureDefinitionRoutes);
+  app.route("/api/admin/feature-visuals", adminFeatureVisualRoutes);
+  app.route("/api/admin/feature-visual-settings", adminFeatureVisualSettingsRoutes);
   app.route("/api/affiliate", affiliateRoutes);
   app.route("/api/ticker", tickerRoutes);
 

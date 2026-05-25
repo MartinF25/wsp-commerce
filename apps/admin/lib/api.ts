@@ -551,9 +551,95 @@ export interface MarketListingStats {
   with_price: number;
 }
 
+// ─── Feature Visual Engine Types ─────────────────────────────────────────────
+
+export type FeatureMatchType = "exact" | "contains" | "starts" | "ends" | "regex";
+export type FeatureVisualScope = "global" | "category" | "product";
+export type FeatureDisplayMode =
+  | "icon_value" | "icon_name_value" | "grouped" | "compact"
+  | "tooltip_only" | "grid" | "horizontal" | "vertical";
+
+export interface LocalizedText {
+  de?: string;
+  en?: string;
+  es?: string;
+}
+
+export interface FeatureDefinition {
+  id: string;
+  slug: string;
+  names: LocalizedText;
+  descriptions: LocalizedText | null;
+  match_pattern: string | null;
+  match_type: FeatureMatchType;
+  category_id: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeatureVisual {
+  id: string;
+  feature_definition_id: string | null;
+  feature_value: string | null;
+  scope: FeatureVisualScope;
+  category_id: string | null;
+  product_id: string | null;
+  image_url: string | null;
+  svg_content: string | null;
+  image_width: number | null;
+  image_height: number | null;
+  alt_texts: LocalizedText | null;
+  labels: LocalizedText | null;
+  tooltips: LocalizedText | null;
+  link_url: string | null;
+  link_target: string | null;
+  link_rel: string | null;
+  color_primary: string | null;
+  color_secondary: string | null;
+  css_class: string | null;
+  priority: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeatureVisualSettings {
+  id: "singleton";
+  enable_product_page: boolean;
+  enable_quick_view: boolean;
+  enable_miniature: boolean;
+  enable_faceted_search: boolean;
+  enable_collection: boolean;
+  enable_search_results: boolean;
+  default_display_mode: FeatureDisplayMode;
+  default_icon_size: string;
+  show_labels: boolean;
+  show_tooltips: boolean;
+  enable_animations: boolean;
+  responsive_config: Record<string, unknown> | null;
+  product_page_mode: FeatureDisplayMode;
+  product_page_position: string;
+  product_page_columns: number;
+  miniature_mode: FeatureDisplayMode;
+  miniature_max_icons: number;
+  miniature_position: string;
+  facet_show_icons: boolean;
+  facet_show_labels: boolean;
+  facet_collapsible: boolean;
+  facet_lazy_render: boolean;
+  font_size: string;
+  font_weight: string;
+  track_interactions: boolean;
+  enable_ab_testing: boolean;
+  updated_at: string;
+}
+
 // ─── HTTP-Helfer ──────────────────────────────────────────────────────────────
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function request<T>(path: string, init: RequestInit = {}, raw?: boolean): Promise<T> {
   const res = await fetch(`${BASE_URL}/api/admin${path}`, {
     ...init,
     cache: "no-store",
@@ -573,7 +659,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     throw new Error(msg);
   }
 
-  return json.data as T;
+  return (raw ? json : json.data) as T;
 }
 
 // ─── Kategorien ───────────────────────────────────────────────────────────────
@@ -817,5 +903,75 @@ export const api = {
       if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
       return json as { data: MarketListing[]; stats: MarketListingStats };
     },
+  },
+
+  featureDefinitions: {
+    list: (params?: { categoryId?: string; activeOnly?: boolean }) => {
+      const qs = new URLSearchParams();
+      if (params?.categoryId) qs.set("categoryId", params.categoryId);
+      if (params?.activeOnly !== undefined) qs.set("activeOnly", String(params.activeOnly));
+      return request<FeatureDefinition[]>(
+        `/feature-definitions${qs.toString() ? `?${qs}` : ""}`,
+      );
+    },
+    get: (id: string) => request<FeatureDefinition>(`/feature-definitions/${id}`),
+    create: (data: Omit<FeatureDefinition, "id" | "created_at" | "updated_at">) =>
+      request<FeatureDefinition>("/feature-definitions", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<Omit<FeatureDefinition, "id" | "created_at" | "updated_at">>) =>
+      request<FeatureDefinition>(`/feature-definitions/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) => request<{ success: boolean }>(`/feature-definitions/${id}`, { method: "DELETE" }),
+  },
+
+  featureVisuals: {
+    list: (params?: {
+      definitionId?: string;
+      categoryId?: string;
+      productId?: string;
+      scope?: string;
+      activeOnly?: boolean;
+      limit?: number;
+      offset?: number;
+    }) => {
+      const qs = new URLSearchParams();
+      if (params?.definitionId) qs.set("definitionId", params.definitionId);
+      if (params?.categoryId) qs.set("categoryId", params.categoryId);
+      if (params?.productId) qs.set("productId", params.productId);
+      if (params?.scope) qs.set("scope", params.scope);
+      if (params?.activeOnly !== undefined) qs.set("activeOnly", String(params.activeOnly));
+      if (params?.limit) qs.set("limit", String(params.limit));
+      if (params?.offset) qs.set("offset", String(params.offset));
+      return request<{ data: FeatureVisual[]; total: number }>(
+        `/feature-visuals${qs.toString() ? `?${qs}` : ""}`,
+        undefined,
+        true,
+      );
+    },
+    get: (id: string) => request<FeatureVisual>(`/feature-visuals/${id}`),
+    create: (data: Omit<FeatureVisual, "id" | "created_at" | "updated_at">) =>
+      request<FeatureVisual>("/feature-visuals", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<Omit<FeatureVisual, "id" | "created_at" | "updated_at">>) =>
+      request<FeatureVisual>(`/feature-visuals/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) => request<{ success: boolean }>(`/feature-visuals/${id}`, { method: "DELETE" }),
+  },
+
+  featureVisualSettings: {
+    get: () => request<FeatureVisualSettings>("/feature-visual-settings"),
+    update: (data: Partial<FeatureVisualSettings>) =>
+      request<FeatureVisualSettings>("/feature-visual-settings", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
   },
 };

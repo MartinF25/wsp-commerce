@@ -18,3 +18,4 @@ export * from "./waitlist";
 export * from "./ticker";
 export * from "./bundle";
 export * from "./sticker";
+export * from "./feature-visuals";

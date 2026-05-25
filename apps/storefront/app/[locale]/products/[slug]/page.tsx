@@ -4,6 +4,11 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { fetchProduct, fetchProducts } from "@/lib/catalog";
+import {
+  resolveProductFeatures,
+  fetchFeatureVisualSettings,
+  isFeatureVisualsEnabled,
+} from "@/lib/feature-visuals";
 import { VariantSelector } from "@/components/VariantSelector";
 import { PaymentOptions } from "@/components/PaymentOptions";
 import { AffiliateButton } from "@/components/AffiliateButton";
@@ -14,6 +19,7 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { OfferCountdown } from "@/components/storefront/offer-countdown";
 import { ProductTicker } from "@/components/storefront/product-ticker";
 import { BundleSection } from "@/components/bundle/BundleSection";
+import { ProductPageFeatures } from "@/components/features";
 
 const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000";
 
@@ -71,9 +77,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductDetailPage({ params }: Props) {
   const t = await getTranslations({ locale: params.locale, namespace: "product" });
 
-  const [product, relatedResult] = await Promise.allSettled([
+  const [product, relatedResult, fvSettings] = await Promise.allSettled([
     fetchProduct(params.slug, params.locale),
     fetchProducts({ locale: params.locale as "de" | "en" | "es", limit: 4 }),
+    fetchFeatureVisualSettings(),
   ]);
 
   if (product.status === "rejected" || !product.value) notFound();
@@ -81,6 +88,18 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const related = relatedResult.status === "fulfilled"
     ? relatedResult.value.items.filter((item) => item.slug !== params.slug).slice(0, 3)
+    : [];
+
+  const fvSettingsValue = fvSettings.status === "fulfilled" ? fvSettings.value : null;
+  const showFeatureVisuals = isFeatureVisualsEnabled(fvSettingsValue, "product_page");
+
+  // Resolve feature visuals server-side (parallel to other fetches)
+  const resolvedFeatures = showFeatureVisuals
+    ? await resolveProductFeatures(p.features, {
+        productId: p.id,
+        categoryId: p.category?.id,
+        locale: params.locale,
+      })
     : [];
 
   const mainImage = p.images.length > 0
@@ -187,6 +206,16 @@ export default async function ProductDetailPage({ params }: Props) {
                     </div>
                   ))}
                 </dl>
+              </div>
+            )}
+
+            {/* ─── Feature Visuals ──────────────────────────────── */}
+            {showFeatureVisuals && resolvedFeatures.length > 0 && (
+              <div className="mt-4">
+                <ProductPageFeatures
+                  features={resolvedFeatures}
+                  settings={fvSettingsValue}
+                />
               </div>
             )}
           </div>
