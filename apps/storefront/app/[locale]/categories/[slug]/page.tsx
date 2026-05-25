@@ -5,6 +5,12 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { fetchCategory } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
+import type { ResolvedFeatureVisual } from "@wsp/contracts";
+import {
+  resolveMiniatureVisuals,
+  fetchFeatureVisualSettings,
+  isFeatureVisualsEnabled,
+} from "@/lib/feature-visuals";
 
 type Props = {
   params: { slug: string; locale: string };
@@ -51,8 +57,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CategoryDetailPage({ params }: Props) {
   const t = await getTranslations({ locale: params.locale, namespace: "categories" });
-  const category = await fetchCategory(params.slug, params.locale);
+  const [category, visualSettings] = await Promise.all([
+    fetchCategory(params.slug, params.locale),
+    fetchFeatureVisualSettings().catch(() => null),
+  ]);
   if (!category) notFound();
+
+  // Batch-resolve miniature visuals for category products (only if enabled)
+  const miniatureEnabled = isFeatureVisualsEnabled(visualSettings, "miniature");
+  const productVisualsMap = new Map<string, ResolvedFeatureVisual[]>();
+
+  if (miniatureEnabled && category.products.length > 0) {
+    await Promise.all(
+      category.products.map(async (product) => {
+        const visuals = await resolveMiniatureVisuals(product.features, {
+          productId: product.id,
+          locale: params.locale,
+          maxIcons: visualSettings?.miniature_max_icons ?? 4,
+        }).catch(() => []);
+        if (visuals.length > 0) {
+          productVisualsMap.set(product.id, visuals);
+        }
+      }),
+    );
+  }
 
   const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://webshop.wsp-solarenergie.de";
 
@@ -134,7 +162,11 @@ export default async function CategoryDetailPage({ params }: Props) {
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 list-none p-0 m-0">
             {category.products.map((product) => (
               <li key={product.id} className="flex">
-                <ProductCard product={product} showCategory={false} />
+                <ProductCard
+                  product={product}
+                  showCategory={false}
+                  featureVisuals={productVisualsMap.get(product.id)}
+                />
               </li>
             ))}
           </ul>

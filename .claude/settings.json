@@ -1,6 +1,8 @@
 {
   "permissions": {
-    "allow": [],
+    "allow": [
+      "PowerShell($headers = @{\"X-Admin-Key\" = \"7d63e7f50a3dc357a5761a2ceb6e579d70b852cb3\"; \"Content-Type\" = \"application/json\"}; try { $r = Invoke-RestMethod -Uri \"https://commerce-api-production-614e.up.railway.app/api/admin/affiliate/stats\" -Headers $headers; $r | ConvertTo-Json -Depth 3 } catch { $_.Exception.Message })"
+    ],
     "deny": []
   }
 }

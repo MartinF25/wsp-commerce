@@ -70,6 +70,7 @@ export function toProductSummary(
     coverImageAlt: coverImage?.alt ?? null,
     affiliateEnabled: product.affiliate_enabled,
     affiliateProvider: product.affiliate_provider ?? null,
+    features: toStringArray(t?.features),
     stickers,
   };
 }

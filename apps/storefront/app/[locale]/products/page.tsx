@@ -5,6 +5,12 @@ import { Link } from "@/i18n/navigation";
 import { fetchProducts, fetchCategories } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
 import type { CategorySummary } from "@wsp/types";
+import type { ResolvedFeatureVisual } from "@wsp/contracts";
+import {
+  resolveMiniatureVisuals,
+  fetchFeatureVisualSettings,
+  isFeatureVisualsEnabled,
+} from "@/lib/feature-visuals";
 
 type Props = { params: { locale: string }; searchParams: { category?: string } };
 
@@ -42,10 +48,30 @@ export default async function ProductsPage({ params, searchParams }: Props) {
   const t = await getTranslations({ locale: params.locale, namespace: "products" });
   const selectedCategory = searchParams.category;
 
-  const [result, categories] = await Promise.all([
+  const [result, categories, visualSettings] = await Promise.all([
     fetchProducts({ locale: params.locale as "de" | "en" | "es", ...(selectedCategory ? { category: selectedCategory } : {}) }).catch(() => null),
     fetchCategories(params.locale).catch(() => []),
+    fetchFeatureVisualSettings().catch(() => null),
   ]);
+
+  // Batch-resolve miniature visuals for all products (only if feature is enabled)
+  const miniatureEnabled = isFeatureVisualsEnabled(visualSettings, "miniature");
+  const productVisualsMap = new Map<string, ResolvedFeatureVisual[]>();
+
+  if (miniatureEnabled && result && result.items.length > 0) {
+    await Promise.all(
+      result.items.map(async (product) => {
+        const visuals = await resolveMiniatureVisuals(product.features, {
+          productId: product.id,
+          locale: params.locale,
+          maxIcons: visualSettings?.miniature_max_icons ?? 4,
+        }).catch(() => []);
+        if (visuals.length > 0) {
+          productVisualsMap.set(product.id, visuals);
+        }
+      }),
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -127,7 +153,11 @@ export default async function ProductsPage({ params, searchParams }: Props) {
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 list-none p-0 m-0">
           {result.items.map((product) => (
             <li key={product.id} className="flex">
-              <ProductCard product={product} showCategory={!selectedCategory} />
+              <ProductCard
+                product={product}
+                showCategory={!selectedCategory}
+                featureVisuals={productVisualsMap.get(product.id)}
+              />
             </li>
           ))}
         </ul>

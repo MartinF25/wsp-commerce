@@ -130,6 +130,8 @@ export const ProductSummarySchema = z.object({
   coverImageAlt: z.string().nullable(),
   affiliateEnabled: z.boolean(),
   affiliateProvider: z.string().nullable(),
+  /** Feature-Strings (locale-aufgelöst) – für Feature-Visual-Miniatur-Icons auf Karten. */
+  features: z.array(z.string()),
   /** Aufgelöste Sticker für dieses Produkt (nach Regelauswertung, sortiert nach Priorität). */
   stickers: z.array(StickerDisplaySchema),
 });
