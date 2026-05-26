@@ -53,8 +53,11 @@ export function createApp() {
 
   // ─── Routen ─────────────────────────────────────────────────────────────────
 
-  app.route("/api/catalog", catalogRoutes);
+  // WICHTIG: /api/catalog/feature-visuals muss VOR /api/catalog registriert
+  // werden, da Hono Prefix-Routen beim ersten Match stoppt und /api/catalog
+  // sonst alle Requests unter diesem Präfix abfängt.
   app.route("/api/catalog/feature-visuals", publicFeatureVisualRoutes);
+  app.route("/api/catalog", catalogRoutes);
   app.route("/api/blog", blogRoutes);
   app.route("/api/admin", adminRoutes);
   app.route("/api/admin/bundles", adminBundleRoutes);
