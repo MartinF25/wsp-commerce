@@ -121,6 +121,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Affiliate</div>
               <Link href="/affiliate">Klick-Statistiken</Link>
               <Link href="/import">Produkt-Import</Link>
+              <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Feature Visuals</div>
+              <Link href="/feature-definitions">Definitionen</Link>
+              <Link href="/feature-visuals">Visuals</Link>
+              <Link href="/feature-visuals/settings">Einstellungen</Link>
               <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Markt</div>
               <Link href="/market">SkyWind Markt</Link>
             </nav>
