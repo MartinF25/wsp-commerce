@@ -833,7 +833,7 @@ packages:
     resolution: {integrity: sha512-FxIY+U81R3LGKCxaHHFRQ5+g6/iRgGLmeHWdp2Amj4ljQRrEIWHmZyDfDYBRZlpyqA7qKxtS9DD1dhk8RnRIVQ==}
 
   '@wsp/contracts@file:apps/commerce/wsp-contracts-0.0.1.tgz':
-    resolution: {integrity: sha512-6L5u+FYceOThiiG16NQ+TjMBGhzsOL/K28YThxBGttNOHIgpXOmzYoH6KZf/BHD/aSO9Y87MetM0hiLuDoDAMA==, tarball: file:apps/commerce/wsp-contracts-0.0.1.tgz}
+    resolution: {integrity: sha512-PMZGBc+K+zUqMyDyzcED1FZqb3YvKQPdi/oPqMWE7m1Esj8sWwxAl/U6IHDS7/UrR46tFpwV/GRrz4oY3IVZog==, tarball: file:apps/commerce/wsp-contracts-0.0.1.tgz}
     version: 0.0.1
 
   '@wsp/contracts@file:packages/contracts/wsp-contracts-0.0.1.tgz':
