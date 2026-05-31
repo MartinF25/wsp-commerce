@@ -28,6 +28,8 @@ export function GoogleAnalytics({ gaId }: Props) {
         window.dataLayer = window.dataLayer || [];
         function gtag(){window.dataLayer.push(arguments);}
         window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', '${gaId}');
       `}</Script>
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
@@ -35,8 +37,6 @@ export function GoogleAnalytics({ gaId }: Props) {
         onLoad={() => {
           window.__gaScriptLoaded = true;
           window.__gaScriptFailed = false;
-          window.gtag?.("js", new Date());
-          window.gtag?.("config", gaId);
         }}
         onError={() => {
           window.__gaScriptLoaded = false;
