@@ -118,6 +118,8 @@ Im Vercel Dashboard unter **Settings → Environment Variables** für Environmen
 | `NEXT_PUBLIC_STOREFRONT_URL` | Für Share-Links und SEO (`<meta>` canonical) | Vercel Preview-URL einsetzen, z. B. `https://storefront-git-main-yourteam.vercel.app` – nach erstem Deploy bekannt |
 | `NEXT_PUBLIC_PAYPAL_URL` | PayPal-Zahlungslink | Leer lassen für Staging → Button wird als „nicht konfiguriert" dargestellt |
 
+| `NEXT_PUBLIC_GA_ID` | Google Analytics 4 Mess-ID | Nur setzen, wenn ein aktiver Web-Stream existiert; Beispiel `G-SH1YKYJ8GV` |
+
 ### Wann sind Env-Updates wirksam?
 
 > Nach jeder Änderung an Environment Variables muss ein neues Deployment ausgelöst werden  
@@ -129,6 +131,7 @@ Für Production (`main`-Branch) erst setzen, wenn:
 - echte Commerce API mit Produktionsdaten deployed
 - echte Firebase Function deployed
 - Custom Domain konfiguriert
+- aktive GA4 Mess-ID im Vercel-Environment gesetzt (`NEXT_PUBLIC_GA_ID`)
 
 ---
 
