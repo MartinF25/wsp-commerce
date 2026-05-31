@@ -181,7 +181,7 @@ export default async function LocaleLayout({
               strategy="afterInteractive"
             />
             <Script id="ga-init" strategy="afterInteractive">
-              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config','${GA_ID}',{send_page_view:false});`}
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config','${GA_ID}');`}
             </Script>
             <GoogleAnalyticsTracker gaId={GA_ID} />
           </>

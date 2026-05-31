@@ -19,6 +19,7 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
   const searchParams = useSearchParams();
   const lastTrackedUrl = useRef<string | null>(null);
   const debugPingSent = useRef(false);
+  const hasInitialized = useRef(false);
   const [debugState, setDebugState] = useState("idle");
 
   useEffect(() => {
@@ -34,56 +35,59 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
       window.localStorage.removeItem("ga_debug");
     }
 
-    if (lastTrackedUrl.current === pagePath) return;
-    lastTrackedUrl.current = pagePath;
-
     const debugMode =
       window.location.hostname === "localhost" ||
       window.localStorage.getItem("ga_debug") === "1";
-
-    let cancelled = false;
-
-    const sendEvents = () => {
-      if (cancelled || typeof window.gtag !== "function") return false;
-      if (lastTrackedUrl.current === pagePath) return true;
-
-      lastTrackedUrl.current = pagePath;
-      window.gtag("event", "page_view", {
-        send_to: gaId,
-        page_path: pagePath,
-        page_location: window.location.href,
-        page_title: document.title,
-        debug_mode: debugMode,
-      });
-
-      if (debugMode && !debugPingSent.current) {
-        debugPingSent.current = true;
-        window.gtag("event", "debug_ping", {
-          send_to: gaId,
-          debug_mode: true,
-          page_path: pagePath,
-        });
-      }
-
-      if (debugMode) {
-        setDebugState(`sent:${pagePath}`);
-      }
-
-      return true;
-    };
 
     if (debugMode) {
       setDebugState(typeof window.gtag === "function" ? "ready" : "waiting_for_gtag");
     }
 
-    if (sendEvents()) {
-      return;
-    }
+    let cancelled = false;
 
     let attempts = 0;
     const interval = window.setInterval(() => {
       attempts += 1;
-      if (sendEvents()) {
+      if (cancelled || typeof window.gtag !== "function") {
+        if (attempts >= 40) {
+          window.clearInterval(interval);
+          if (debugMode) {
+            setDebugState("gtag_not_available");
+          }
+        }
+        return;
+      }
+
+      if (!hasInitialized.current) {
+        hasInitialized.current = true;
+        lastTrackedUrl.current = pagePath;
+
+        if (debugMode && !debugPingSent.current) {
+          debugPingSent.current = true;
+          window.gtag("event", "debug_ping", {
+            send_to: gaId,
+            debug_mode: true,
+            page_path: pagePath,
+          });
+          setDebugState(`sent:${pagePath}`);
+        }
+
+        window.clearInterval(interval);
+        return;
+      }
+
+      if (lastTrackedUrl.current !== pagePath) {
+        lastTrackedUrl.current = pagePath;
+        window.gtag("event", "page_view", {
+          send_to: gaId,
+          page_path: pagePath,
+          page_location: window.location.href,
+          page_title: document.title,
+          debug_mode: debugMode,
+        });
+        if (debugMode) {
+          setDebugState(`sent:${pagePath}`);
+        }
         window.clearInterval(interval);
         return;
       }
@@ -91,7 +95,7 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
       if (attempts >= 40) {
         window.clearInterval(interval);
         if (debugMode) {
-          setDebugState("gtag_not_available");
+          setDebugState(`ready:${pagePath}`);
         }
       }
     }, 250);
