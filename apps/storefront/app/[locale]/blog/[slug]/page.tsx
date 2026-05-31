@@ -12,6 +12,22 @@ const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localho
 
 type Props = { params: { slug: string; locale: string } };
 
+function stripLeadingMarkdownH1(content: string, title: string): string {
+  const normalizedTitle = title.trim().toLowerCase();
+  const lines = content.split(/\r?\n/);
+  const firstLine = lines[0]?.trim();
+  const headingMatch = firstLine?.match(/^#\s+(.+)$/);
+
+  if (!headingMatch) return content;
+
+  const headingTitle = headingMatch[1].trim().toLowerCase();
+  if (!headingTitle.includes(normalizedTitle) && !normalizedTitle.includes(headingTitle)) {
+    return content;
+  }
+
+  return lines.slice(1).join("\n").replace(/^\s+/, "");
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = params.locale as BlogLocale;
   const post = await fetchBlogPost(params.slug, locale);
@@ -62,6 +78,7 @@ export default async function BlogPostPage({ params }: Props) {
   const locale = params.locale as BlogLocale;
   const post = await fetchBlogPost(params.slug, locale);
   if (!post) notFound();
+  const content = stripLeadingMarkdownH1(post.content, post.title);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -197,7 +214,14 @@ export default async function BlogPostPage({ params }: Props) {
 
         {/* ── Body ── */}
         <div className="prose prose-lg max-w-none text-brand-text prose-headings:font-display prose-headings:text-brand-text prose-a:text-brand-accent prose-strong:text-brand-text prose-img:rounded-xl">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h1: ({ children }) => <h2>{children}</h2>,
+            }}
+          >
+            {content}
+          </ReactMarkdown>
         </div>
 
         {/* ── Available in other locales ── */}
