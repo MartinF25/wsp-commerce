@@ -15,6 +15,7 @@ import { TickerBarServer } from "@/components/storefront/ticker-bar-server";
 import { CartProvider } from "@/contexts/CartContext";
 import { CartButton } from "@/components/cart/CartButton";
 import { CartSidebar } from "@/components/cart/CartSidebar";
+import { GoogleAnalyticsTracker } from "@/components/GoogleAnalyticsTracker";
 import "../globals.css";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -180,8 +181,9 @@ export default async function LocaleLayout({
               strategy="afterInteractive"
             />
             <Script id="ga-init" strategy="afterInteractive">
-              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{page_path:window.location.pathname});`}
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config','${GA_ID}',{send_page_view:false});`}
             </Script>
+            <GoogleAnalyticsTracker gaId={GA_ID} />
           </>
         )}
       </body>
