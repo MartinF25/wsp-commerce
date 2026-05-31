@@ -18,6 +18,7 @@ import type {
   FeatureVisualSettings,
 } from "@wsp/contracts";
 import { FeatureBadge } from "./FeatureBadge";
+import { renderText } from "@/lib/render-text";
 
 interface FeatureGridProps {
   features: FeatureWithVisual[];
@@ -112,11 +113,11 @@ function GroupedFeatures({
                     showTooltip={showTooltips}
                     animate={animate}
                   />
-                  <span>{f.value ?? f.raw}</span>
+                  <span>{renderText(f.value ?? f.raw)}</span>
                 </span>
               ) : (
                 <span key={f.raw} className="text-sm text-brand-text">
-                  {f.value ?? f.raw}
+                  {renderText(f.value ?? f.raw)}
                 </span>
               ),
             )}
@@ -136,7 +137,7 @@ function GroupedFeatures({
         ) : (
           <span key={f.raw} className="text-sm text-brand-text flex items-center gap-2">
             <span className="text-brand-muted">•</span>
-            {f.raw}
+            {renderText(f.raw)}
           </span>
         ),
       )}
@@ -249,11 +250,11 @@ export function FeatureGrid({
               <span>
                 {f.key ? (
                   <>
-                    <span className="text-brand-muted">{f.key}: </span>
-                    <span className="font-medium">{f.value}</span>
+                    <span className="text-brand-muted">{renderText(f.key)}: </span>
+                    <span className="font-medium">{renderText(f.value)}</span>
                   </>
                 ) : (
-                  f.raw
+                  renderText(f.raw)
                 )}
               </span>
             </span>

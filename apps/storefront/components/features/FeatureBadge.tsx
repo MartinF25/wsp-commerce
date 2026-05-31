@@ -17,6 +17,7 @@ import type { ResolvedFeatureVisual, FeatureDisplayMode } from "@wsp/contracts";
 import { ICON_SIZE_CLASSES } from "@wsp/contracts";
 import Image from "next/image";
 import { FeatureTooltip } from "./FeatureTooltip";
+import { renderText } from "@/lib/render-text";
 
 interface FeatureBadgeProps {
   visual: ResolvedFeatureVisual;
@@ -39,8 +40,11 @@ export function FeatureBadge({
 }: FeatureBadgeProps) {
   const iconSizeClass = ICON_SIZE_CLASSES[iconSize] ?? ICON_SIZE_CLASSES["md"];
   const hasVisual = visual.imageUrl || visual.svgContent;
-  const hasLabel = showLabel && visual.label;
-  const hasTooltip = showTooltip && visual.tooltip;
+  const safeLabel = renderText(visual.label);
+  const safeTooltip = renderText(visual.tooltip);
+  const safeFeatureValue = renderText(visual.featureValue);
+  const hasLabel = showLabel && safeLabel.length > 0;
+  const hasTooltip = showTooltip && safeTooltip.length > 0;
 
   const wrapperClass = `
     inline-flex items-center gap-1.5
@@ -95,13 +99,13 @@ export function FeatureBadge({
           {displayMode === "icon_name_value" || displayMode === "grouped" ? (
             // Show both name + value separated
             <span className="flex flex-col leading-tight">
-              <span className="text-xs text-brand-muted">{visual.featureValue ? visual.label.split(":")[0]?.trim() : visual.label}</span>
-              {visual.featureValue && (
-                <span className="font-semibold text-brand-text">{visual.featureValue}</span>
+              <span className="text-xs text-brand-muted">{safeFeatureValue ? safeLabel.split(":")[0]?.trim() : safeLabel}</span>
+              {safeFeatureValue && (
+                <span className="font-semibold text-brand-text">{safeFeatureValue}</span>
               )}
             </span>
           ) : (
-            visual.label
+            safeLabel
           )}
         </span>
       )}
@@ -115,7 +119,7 @@ export function FeatureBadge({
       target={visual.linkTarget ?? "_self"}
       rel={visual.linkRel ?? (visual.linkTarget === "_blank" ? "noopener noreferrer" : undefined)}
       className="focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-1 rounded"
-      aria-label={visual.altText || visual.label}
+      aria-label={renderText(visual.altText) || safeLabel}
     >
       {inner}
     </a>
@@ -124,7 +128,7 @@ export function FeatureBadge({
   // Wrap with tooltip if configured
   if (hasTooltip && displayMode !== "tooltip_only") {
     return (
-      <FeatureTooltip content={visual.tooltip}>
+      <FeatureTooltip content={safeTooltip}>
         {linked}
       </FeatureTooltip>
     );
@@ -132,7 +136,7 @@ export function FeatureBadge({
 
   if (displayMode === "tooltip_only" && hasTooltip) {
     return (
-      <FeatureTooltip content={visual.tooltip}>
+      <FeatureTooltip content={safeTooltip}>
         <span tabIndex={0} className="cursor-help">
           {inner}
         </span>

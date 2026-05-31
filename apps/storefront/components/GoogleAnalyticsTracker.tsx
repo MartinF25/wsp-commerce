@@ -11,6 +11,8 @@ declare global {
   interface Window {
     dataLayer: unknown[];
     gtag?: (...args: unknown[]) => void;
+    __gaScriptLoaded?: boolean;
+    __gaScriptFailed?: boolean;
   }
 }
 
@@ -39,14 +41,21 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
       window.location.hostname === "localhost" ||
       window.localStorage.getItem("ga_debug") === "1";
 
-    if (debugMode) {
-      setDebugState(typeof window.gtag === "function" ? "ready" : "waiting_for_gtag");
-    }
+    const getStatus = () => {
+      if (window.__gaScriptFailed) return "script_error";
+      if (!window.__gaScriptLoaded) return "waiting_for_script";
+      if (typeof window.gtag !== "function") return "waiting_for_gtag";
+      return "ready";
+    };
+
+    if (debugMode) setDebugState(getStatus());
 
     let cancelled = false;
 
     const emitRouteTracking = () => {
-      if (cancelled || typeof window.gtag !== "function") return false;
+      if (cancelled || !window.__gaScriptLoaded || typeof window.gtag !== "function") {
+        return false;
+      }
 
       if (!hasInitialized.current) {
         hasInitialized.current = true;
@@ -107,11 +116,11 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
     let attempts = 0;
     const interval = window.setInterval(() => {
       attempts += 1;
-      if (cancelled || typeof window.gtag !== "function") {
+      if (cancelled || !window.__gaScriptLoaded || typeof window.gtag !== "function") {
         if (attempts >= 40) {
           window.clearInterval(interval);
           if (debugMode) {
-            setDebugState("gtag_not_available");
+            setDebugState(getStatus());
           }
         }
         return;

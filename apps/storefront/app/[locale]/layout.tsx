@@ -3,7 +3,6 @@ import { Sora, Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import Script from "next/script";
 import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
 import { SalesPopup } from "@/components/SalesPopup";
@@ -15,7 +14,7 @@ import { TickerBarServer } from "@/components/storefront/ticker-bar-server";
 import { CartProvider } from "@/contexts/CartContext";
 import { CartButton } from "@/components/cart/CartButton";
 import { CartSidebar } from "@/components/cart/CartSidebar";
-import { GoogleAnalyticsTracker } from "@/components/GoogleAnalyticsTracker";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import "../globals.css";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -174,18 +173,7 @@ export default async function LocaleLayout({
           </CartProvider>
         </NextIntlClientProvider>
 
-        {GA_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="ga-init" strategy="afterInteractive">
-              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config','${GA_ID}');`}
-            </Script>
-            <GoogleAnalyticsTracker gaId={GA_ID} />
-          </>
-        )}
+        {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
       </body>
     </html>
   );
