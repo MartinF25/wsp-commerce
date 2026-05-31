@@ -17,6 +17,8 @@ declare global {
 export function GoogleAnalyticsTracker({ gaId }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const search = searchParams.toString();
+  const debugParam = searchParams.get("ga_debug");
   const lastTrackedUrl = useRef<string | null>(null);
   const debugPingSent = useRef(false);
   const hasInitialized = useRef(false);
@@ -25,9 +27,7 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const search = searchParams.toString();
     const pagePath = search ? `${pathname}?${search}` : pathname;
-    const debugParam = searchParams.get("ga_debug");
 
     if (debugParam === "1") {
       window.localStorage.setItem("ga_debug", "1");
@@ -45,6 +45,65 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
 
     let cancelled = false;
 
+    const emitRouteTracking = () => {
+      if (cancelled || typeof window.gtag !== "function") return false;
+
+      if (!hasInitialized.current) {
+        hasInitialized.current = true;
+        lastTrackedUrl.current = pagePath;
+
+        if (debugMode) {
+          window.gtag("config", gaId, {
+            page_path: pagePath,
+            page_location: window.location.href,
+            page_title: document.title,
+            debug_mode: true,
+          });
+        }
+
+        if (debugMode && !debugPingSent.current) {
+          debugPingSent.current = true;
+          window.gtag("event", "debug_ping", {
+            send_to: gaId,
+            debug_mode: true,
+            page_path: pagePath,
+          });
+        }
+
+        if (debugMode) {
+          setDebugState(`sent:${pagePath}`);
+        }
+
+        return true;
+      }
+
+      if (lastTrackedUrl.current === pagePath) {
+        if (debugMode) {
+          setDebugState(`ready:${pagePath}`);
+        }
+        return true;
+      }
+
+      lastTrackedUrl.current = pagePath;
+      window.gtag("event", "page_view", {
+        send_to: gaId,
+        page_path: pagePath,
+        page_location: window.location.href,
+        page_title: document.title,
+        debug_mode: debugMode,
+      });
+
+      if (debugMode) {
+        setDebugState(`sent:${pagePath}`);
+      }
+
+      return true;
+    };
+
+    if (emitRouteTracking()) {
+      return;
+    }
+
     let attempts = 0;
     const interval = window.setInterval(() => {
       attempts += 1;
@@ -58,36 +117,7 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
         return;
       }
 
-      if (!hasInitialized.current) {
-        hasInitialized.current = true;
-        lastTrackedUrl.current = pagePath;
-
-        if (debugMode && !debugPingSent.current) {
-          debugPingSent.current = true;
-          window.gtag("event", "debug_ping", {
-            send_to: gaId,
-            debug_mode: true,
-            page_path: pagePath,
-          });
-          setDebugState(`sent:${pagePath}`);
-        }
-
-        window.clearInterval(interval);
-        return;
-      }
-
-      if (lastTrackedUrl.current !== pagePath) {
-        lastTrackedUrl.current = pagePath;
-        window.gtag("event", "page_view", {
-          send_to: gaId,
-          page_path: pagePath,
-          page_location: window.location.href,
-          page_title: document.title,
-          debug_mode: debugMode,
-        });
-        if (debugMode) {
-          setDebugState(`sent:${pagePath}`);
-        }
+      if (emitRouteTracking()) {
         window.clearInterval(interval);
         return;
       }
@@ -104,7 +134,7 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [gaId, pathname, searchParams]);
+  }, [debugParam, gaId, pathname, search]);
 
   const showDebugOverlay =
     typeof window !== "undefined" &&
