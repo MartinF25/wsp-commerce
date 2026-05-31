@@ -24,7 +24,12 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
   const lastTrackedUrl = useRef<string | null>(null);
   const debugPingSent = useRef(false);
   const hasInitialized = useRef(false);
+  const [mounted, setMounted] = useState(false);
   const [debugState, setDebugState] = useState("idle");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -145,9 +150,10 @@ export function GoogleAnalyticsTracker({ gaId }: Props) {
     };
   }, [debugParam, gaId, pathname, search]);
 
+  if (!mounted || typeof window === "undefined") return null;
+
   const showDebugOverlay =
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" || window.localStorage.getItem("ga_debug") === "1");
+    window.location.hostname === "localhost" || window.localStorage.getItem("ga_debug") === "1";
 
   if (!showDebugOverlay) return null;
 
