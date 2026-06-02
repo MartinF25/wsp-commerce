@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { fetchProducts, fetchCategories } from "@/lib/catalog";
 import { fetchBlogPosts } from "@/lib/blog";
 
+export const revalidate = 3600; // stündlich neu generieren
+
 const BASE = (process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000").trim().replace(/\/$/, "");
 
 function localeUrl(locale: string, path: string): string {
