@@ -8,7 +8,6 @@ import type { BlogPostSummary } from "@/lib/blog";
 import type { Locale } from "@/i18n/routing";
 import type { ProductSummary, CategorySummary } from "@wsp/types";
 import { OfferCountdown } from "@/components/storefront/offer-countdown";
-import { PersonalizationSection } from "@/components/personalization/PersonalizationSection";
 
 const STOREFRONT_URL = "https://webshop.wsp-solarenergie.de";
 const LOGO_URL = `${STOREFRONT_URL}/favicon.svg`;
@@ -232,8 +231,6 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ── Personalisierung ── */}
-      <PersonalizationSection />
 
       {/* ── FAQ ── */}
       <section className="py-16">
