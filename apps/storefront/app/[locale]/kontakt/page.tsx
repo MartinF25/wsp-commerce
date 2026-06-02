@@ -16,16 +16,34 @@ type Props = { params: { locale: string } };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "kontakt" });
   const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/kontakt` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/${params.locale}/kontakt`;
+  const base = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
+  const title = `${t("breadcrumb")} – Solarzaun & SkyWind`;
+  const description = t("sub");
+  const ogImage = `${base}/images/hero-bg.png`;
   return {
-    title: `${t("breadcrumb")} – Solarzaun & SkyWind`,
-    description: t("sub"),
+    title,
+    description,
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/kontakt`,
-        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/en/kontakt`,
-        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/es/kontakt`,
+        de: `${base}/kontakt`,
+        en: `${base}/en/kontakt`,
+        es: `${base}/es/kontakt`,
       },
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: "Solarzaun & SkyWind",
+      type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
     },
   };
 }

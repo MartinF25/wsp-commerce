@@ -10,6 +10,7 @@ type Props = {
     kombiloesungen: string;
     products: string;
     blog: string;
+    skywindNg?: string;
   };
 };
 
@@ -72,6 +73,7 @@ export function MobileNav({ labels }: Props) {
       >
         <div className="max-w-7xl mx-auto">
           <Link href="/solarzaun" onClick={close} className={linkClass}>{labels.solarzaun}</Link>
+          <Link href="/skywind-ng" onClick={close} className={linkClass}>{labels.skywindNg ?? "SkyWind NG"}</Link>
           <Link href="/skywind" onClick={close} className={linkClass}>{labels.skywind}</Link>
           <Link href="/kombiloesungen" onClick={close} className={linkClass}>{labels.kombiloesungen}</Link>
           <Link href="/products" onClick={close} className={linkClass}>{labels.products}</Link>

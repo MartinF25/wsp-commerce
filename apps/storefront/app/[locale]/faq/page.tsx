@@ -8,31 +8,58 @@ type Props = { params: { locale: string } };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "faq" });
   const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/faq` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/${params.locale}/faq`;
-  return { 
-    title: t("meta_title"), 
+  const base = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
+  const ogImage = `${base}/images/hero-bg.png`;
+  return {
+    title: t("meta_title"),
     description: t("meta_desc"),
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/faq`,
-        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/en/faq`,
-        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/es/faq`,
+        de: `${base}/faq`,
+        en: `${base}/en/faq`,
+        es: `${base}/es/faq`,
       },
     },
+    openGraph: {
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      url: canonicalUrl,
+      siteName: "Solarzaun & SkyWind",
+      type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: t("meta_title") }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      images: [ogImage],
+    },
   };
+}
+
+function extractText(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join("");
+  if (node !== null && typeof node === "object" && "props" in node) {
+    const children = (node as { props?: { children?: ReactNode } }).props?.children;
+    if (children !== undefined) return extractText(children);
+  }
+  return "";
 }
 
 export default async function FAQPage({ params }: Props) {
   const t = await getTranslations({ locale: params.locale, namespace: "faq" });
 
   const faqJsonLd = FAQ_SECTIONS.flatMap((section) =>
-    section.items
-      .filter((item): item is { question: string; answer: string } => typeof item.answer === "string")
-      .map((item) => ({
-        "@type": "Question",
-        name: item.question,
-        acceptedAnswer: { "@type": "Answer", text: item.answer },
-      }))
+    section.items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: typeof item.answer === "string" ? item.answer : extractText(item.answer),
+      },
+    }))
   );
 
   return (

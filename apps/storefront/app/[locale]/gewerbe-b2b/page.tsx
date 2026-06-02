@@ -7,16 +7,32 @@ type Props = { params: { locale: string } };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "gewerbe_b2b" });
   const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/gewerbe-b2b` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/${params.locale}/gewerbe-b2b`;
-  return { 
-    title: t("meta_title"), 
+  const base = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
+  const ogImage = `${base}/images/hero-bg.png`;
+  return {
+    title: t("meta_title"),
     description: t("meta_desc"),
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/gewerbe-b2b`,
-        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/en/gewerbe-b2b`,
-        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/es/gewerbe-b2b`,
+        de: `${base}/gewerbe-b2b`,
+        en: `${base}/en/gewerbe-b2b`,
+        es: `${base}/es/gewerbe-b2b`,
       },
+    },
+    openGraph: {
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      url: canonicalUrl,
+      siteName: "Solarzaun & SkyWind",
+      type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: t("meta_title") }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      images: [ogImage],
     },
   };
 }

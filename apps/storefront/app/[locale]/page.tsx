@@ -8,6 +8,10 @@ import type { BlogPostSummary } from "@/lib/blog";
 import type { Locale } from "@/i18n/routing";
 import type { ProductSummary, CategorySummary } from "@wsp/types";
 import { OfferCountdown } from "@/components/storefront/offer-countdown";
+import { PersonalizationSection } from "@/components/personalization/PersonalizationSection";
+
+const STOREFRONT_URL = "https://webshop.wsp-solarenergie.de";
+const LOGO_URL = `${STOREFRONT_URL}/favicon.svg`;
 
 export default async function HomePage({
   params,
@@ -56,8 +60,8 @@ export default async function HomePage({
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "WSP Solarenergie",
-            url: "https://webshop.wsp-solarenergie.de",
-            logo: "https://webshop.wsp-solarenergie.de/images/logo.png",
+            url: STOREFRONT_URL,
+            logo: LOGO_URL,
             description: "Experte für Solarzaun und SkyWind Kleinwindanlagen – nachhaltige Energie für Privat und Gewerbe.",
             address: {
               "@type": "PostalAddress",
@@ -67,7 +71,7 @@ export default async function HomePage({
               "@type": "ContactPoint",
               contactType: "customer service",
               availableLanguage: ["German", "English", "Spanish"],
-              url: "https://webshop.wsp-solarenergie.de/kontakt",
+              url: `${STOREFRONT_URL}/kontakt`,
             },
           }),
         }}
@@ -79,8 +83,16 @@ export default async function HomePage({
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "WSP Solarenergie",
-            url: "https://webshop.wsp-solarenergie.de",
+            url: STOREFRONT_URL,
             description: "Solarzaun und SkyWind Kleinwindanlagen – nachhaltige Energie für Ihr Zuhause und Gewerbe.",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: {
+                "@type": "EntryPoint",
+                urlTemplate: `${STOREFRONT_URL}/products?q={search_term_string}`,
+              },
+              "query-input": "required name=search_term_string",
+            },
           }),
         }}
       />
@@ -92,7 +104,7 @@ export default async function HomePage({
             "@type": "ProfessionalService",
             name: "WSP Solarenergie",
             description: "Beratung und Installation von Solarzaun und SkyWind Kleinwindanlagen für nachhaltige Energie.",
-            url: "https://webshop.wsp-solarenergie.de",
+            url: STOREFRONT_URL,
             address: {
               "@type": "PostalAddress",
               addressCountry: "DE",
@@ -219,6 +231,9 @@ export default async function HomePage({
           </div>
         </div>
       </section>
+
+      {/* ── Personalisierung ── */}
+      <PersonalizationSection />
 
       {/* ── FAQ ── */}
       <section className="py-16">

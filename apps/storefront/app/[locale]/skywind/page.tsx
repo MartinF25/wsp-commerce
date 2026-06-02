@@ -9,16 +9,32 @@ import type { ProductSummary } from "@wsp/types";
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "skywind" });
   const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/skywind` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/${params.locale}/skywind`;
-  return { 
-    title: t("meta_title"), 
+  const base = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
+  const ogImage = `${base}/images/skywind-hero.png`;
+  return {
+    title: t("meta_title"),
     description: t("meta_desc"),
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/skywind`,
-        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/en/skywind`,
-        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/es/skywind`,
+        de: `${base}/skywind`,
+        en: `${base}/en/skywind`,
+        es: `${base}/es/skywind`,
       },
+    },
+    openGraph: {
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      url: canonicalUrl,
+      siteName: "Solarzaun & SkyWind",
+      type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: t("meta_title") }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      images: [ogImage],
     },
   };
 }
@@ -49,8 +65,23 @@ export default async function SkyWindPage({ params }: { params: { locale: string
     products = [];
   }
 
+  const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: t("breadcrumb_home"), item: STOREFRONT_URL },
+              { "@type": "ListItem", position: 2, name: "SkyWind", item: `${STOREFRONT_URL}/skywind` },
+            ],
+          }),
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -182,6 +213,31 @@ export default async function SkyWindPage({ params }: { params: { locale: string
                 </div>
               </details>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SkyWind NG Deeplink Banner ── */}
+      <section className="py-12 bg-gray-50 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl border border-brand-accent/20 shadow-sm p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="flex-1">
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">SkyWind NG</p>
+              <h2 className="font-display text-xl font-bold text-brand-text mb-2">
+                Speziell zum SkyWind NG Modell – Preise, Technische Daten & Erfahrungen
+              </h2>
+              <p className="text-sm text-brand-muted leading-relaxed">
+                Auf unserer SkyWind NG Seite finden Sie alle Informationen zum konkreten Modell:
+                technische Spezifikationen, Modellvergleich (1&nbsp;kW vs. 2&nbsp;kW), Ertragsprognosen
+                und 11 häufige Fragen ausführlich beantwortet.
+              </p>
+            </div>
+            <Link
+              href="/skywind-ng"
+              className="flex-shrink-0 inline-block bg-brand-accent text-white font-semibold px-7 py-3 rounded-xl hover:bg-green-600 transition-colors duration-150 text-sm text-center"
+            >
+              SkyWind NG im Detail →
+            </Link>
           </div>
         </div>
       </section>

@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: canonicalUrl,
-      type: "website",
+      type: "product",
       ...(image && { images: [{ url: image, alt: product.name }] }),
     },
     twitter: {
@@ -124,6 +124,7 @@ export default async function ProductDetailPage({ params }: Props) {
             url: `${STOREFRONT_URL}/products/${p.slug}`,
             ...(p.images[0] && { image: p.images[0].url }),
             ...(p.category && { category: p.category.name }),
+            brand: { "@type": "Brand", name: "WSP Solarenergie" },
             // Affiliate-Produkte: kein eigenes Preisangebot in JSON-LD –
             // Preis und Verfügbarkeit liegen bei Amazon, nicht bei uns.
             offers: p.priceDisplay.minCents && p.product_type !== "affiliate_external"

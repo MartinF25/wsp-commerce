@@ -9,16 +9,32 @@ import type { ProductSummary } from "@wsp/types";
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "solarzaun" });
   const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/solarzaun` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/${params.locale}/solarzaun`;
-  return { 
-    title: t("meta_title"), 
+  const base = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
+  const ogImage = `${base}/images/solarzaun-house.png`;
+  return {
+    title: t("meta_title"),
     description: t("meta_desc"),
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/solarzaun`,
-        en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/en/solarzaun`,
-        es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/es/solarzaun`,
+        de: `${base}/solarzaun`,
+        en: `${base}/en/solarzaun`,
+        es: `${base}/es/solarzaun`,
       },
+    },
+    openGraph: {
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      url: canonicalUrl,
+      siteName: "Solarzaun & SkyWind",
+      type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: t("meta_title") }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("meta_title"),
+      description: t("meta_desc"),
+      images: [ogImage],
     },
   };
 }
@@ -37,8 +53,23 @@ export default async function SolarzaunPage({ params }: { params: { locale: stri
     products = [];
   }
 
+  const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de";
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: t("breadcrumb_home"), item: STOREFRONT_URL },
+              { "@type": "ListItem", position: 2, name: "Solarzaun", item: `${STOREFRONT_URL}/solarzaun` },
+            ],
+          }),
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

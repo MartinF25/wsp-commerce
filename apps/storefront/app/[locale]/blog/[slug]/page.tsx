@@ -86,9 +86,19 @@ export default async function BlogPostPage({ params }: Props) {
     headline: post.title,
     description: post.excerpt,
     author: { "@type": "Person", name: post.authorName ?? t("author_default") },
+    publisher: {
+      "@type": "Organization",
+      name: "WSP Solarenergie",
+      logo: { "@type": "ImageObject", url: `${STOREFRONT_URL}/favicon.svg` },
+    },
     datePublished: post.publishedAt,
+    dateModified: post.publishedAt,
     url: `${STOREFRONT_URL}/${locale === "de" ? "" : `${locale}/`}blog/${post.slug}`,
     ...(post.coverImageUrl && { image: post.coverImageUrl }),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${STOREFRONT_URL}/${locale === "de" ? "" : `${locale}/`}blog/${post.slug}`,
+    },
   };
 
   return (

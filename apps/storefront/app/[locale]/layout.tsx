@@ -24,14 +24,14 @@ const sora = Sora({
   variable: "--font-sora",
   display: "swap",
   weight: ["400", "500", "600", "700"],
-  preload: false,
+  preload: true,
 });
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
-  preload: false,
+  preload: true,
 });
 
 export function generateStaticParams() {
@@ -52,6 +52,7 @@ export async function generateMetadata({
     alternates: {
       canonical: canonicalUrl,
       languages: {
+        "x-default": `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/`,
         de: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/`,
         en: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/en`,
         es: `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/es`,
@@ -79,6 +80,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
+      site: "@WSPSolarenergie",
       title: t("meta_title"),
       description: t("meta_description"),
       images: [`${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/images/hero-bg.png`],
@@ -125,6 +127,9 @@ export default async function LocaleLayout({
               <nav className="hidden lg:flex items-center gap-5">
                 <Link href="/solarzaun" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150">
                   {t("solarzaun")}
+                </Link>
+                <Link href="/skywind-ng" className="text-sm font-medium text-brand-muted hover:text-brand-text transition-colors duration-150">
+                  SkyWind NG
                 </Link>
                 <Link href="/skywind" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150">
                   {t("skywind")}
