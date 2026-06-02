@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: canonicalUrl,
-      type: "product",
+      type: "website",
       ...(image && { images: [{ url: image, alt: product.name }] }),
     },
     twitter: {
