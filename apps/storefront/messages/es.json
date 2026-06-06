@@ -47,8 +47,8 @@
   },
   "announcement": "Consulta gratuita para todos los proyectos · Planificación individual · Consulta ahora y verifica opciones de subvención",
   "home": {
-    "meta_title": "Valla Solar & SkyWind – Soluciones Energéticas Modernas",
-    "meta_description": "Vallas solares, aerogeneradores SkyWind y soluciones combinadas para uso privado, comercial y agrícola. Descubre y pide ahora.",
+    "meta_title": "SkyWind NG Aerogenerador & Valla Solar | WSP",
+    "meta_description": "Aerogeneradores SkyWind NG y vallas solares para hogares, granjas y empresas. Sistemas solares-eólicos híbridos planificados individualmente.",
     "hero_eyebrow": "Valla Solar · SkyWind · Soluciones Combinadas",
     "hero_h1_line1": "Energía desde",
     "hero_h1_line2": "tu propio terreno.",
@@ -132,8 +132,8 @@
     "blog_read_more": "Leer más →"
   },
   "skywind": {
-    "meta_title": "SkyWind – Pequeños Aerogeneradores para Uso Privado y Comercial",
-    "meta_desc": "Los aerogeneradores SkyWind generan electricidad incluso cuando no brilla el sol. Compactos, silenciosos y diseñados para emplazamientos individuales.",
+    "meta_title": "SkyWind Aerogenerador Pequeño para Hogar y Empresa",
+    "meta_desc": "Aerogeneradores SkyWind para hogar y empresa – compactos, silenciosos, aptos para off-grid. Genera energía cuando el solar no puede. Análisis gratuito.",
     "breadcrumb_home": "Inicio",
     "eyebrow": "SkyWind",
     "h1_line1": "Energía incluso cuando",
@@ -243,13 +243,19 @@
     "cta_eyebrow": "Próximo paso",
     "cta_h2_line1": "¿Es SkyWind la solución correcta",
     "cta_h2_line2": "para tu emplazamiento?",
-    "cta_sub": "Cuéntanos sobre tu emplazamiento y tus objetivos. Evaluaremos el potencial eólico y te daremos una evaluación honesta en un plazo de dos días hábiles."
+    "cta_sub": "Cuéntanos sobre tu emplazamiento y tus objetivos. Evaluaremos el potencial eólico y te daremos una evaluación honesta en un plazo de dos días hábiles.",
+    "products_eyebrow": "Productos",
+    "products_title": "Productos SkyWind de un vistazo",
+    "products_desc": "Todas las turbinas SkyWind disponibles y accesorios — listos para pedir o configurables bajo pedido.",
+    "ng_banner_title": "SkyWind NG – Especificaciones técnicas y comparación de modelos",
+    "ng_banner_body": "Nuestra página SkyWind NG cubre el modelo en detalle: especificaciones técnicas, comparación de modelos (1 kW vs. 2 kW), previsiones de rendimiento y preguntas frecuentes.",
+    "ng_banner_cta": "SkyWind NG en detalle →"
   },
   "products": {
     "breadcrumb_home": "Inicio",
     "page_title": "Todos los Productos",
-    "meta_title": "Productos – Valla Solar & SkyWind",
-    "meta_desc": "Vallas solares, aerogeneradores SkyWind y soluciones combinadas – compra directamente o configura. Todos los productos de un vistazo.",
+    "meta_title": "Productos – SkyWind NG, Valla Solar & Energía Eólica",
+    "meta_desc": "Aerogeneradores SkyWind NG, vallas solares y sistemas solares-eólicos. Compra directa o solicita presupuesto personalizado. Consulta gratuita.",
     "buy": "Pedir ahora",
     "inquiry": "Solicitar Asesoría",
     "learn": "Más información",
@@ -373,8 +379,8 @@
     "stock_out_of_stock": "Sin existencias"
   },
   "blog": {
-    "meta_title": "Blog – Energía Renovable | Valla Solar & SkyWind",
-    "meta_desc": "Guías, noticias y conocimiento práctico sobre vallas solares, pequeños aerogeneradores y energía renovable para uso privado y comercial.",
+    "meta_title": "Blog – Aerogeneradores, Valla Solar & Energía Renovable",
+    "meta_desc": "Guías y conocimiento práctico sobre aerogeneradores SkyWind NG, vallas solares y sistemas de energía renovable – para hogares, empresas y granjas.",
     "eyebrow": "Conocimiento y Guías",
     "h1": "Blog",
     "sub": "Conocimiento práctico sobre vallas solares, pequeños aerogeneradores y soluciones de energía renovable – para uso privado, comercial y agrícola.",
@@ -529,8 +535,8 @@
     "img_thumb": "Mostrar imagen {number}"
   },
   "solarzaun": {
-    "meta_title": "Valla Solar – Vallado y Energía en Uno",
-    "meta_desc": "La valla solar combina el vallado de la propiedad con la generación de electricidad – sin necesidad de espacio adicional. Para propiedades privadas, instalaciones comerciales y agricultura.",
+    "meta_title": "Valla Solar – Vallado con Fotovoltaica Integrada",
+    "meta_desc": "La valla solar combina el vallado de la propiedad con la generación fotovoltaica – sin espacio adicional. Para uso privado, comercial y agrícola.",
     "breadcrumb_home": "Inicio",
     "eyebrow": "Valla Solar",
     "h1_line1": "Vallado y Energía.",
@@ -638,11 +644,14 @@
     "cta_eyebrow": "Próximo paso",
     "cta_h2_line1": "Tu proyecto de valla solar",
     "cta_h2_line2": "empieza con una conversación.",
-    "cta_sub": "Cuéntanos sobre la situación de tu propiedad y tus necesidades. Nos pondremos en contacto en un plazo de dos días hábiles con una propuesta inicial de concepto – sin compromiso y sin ofertas estándar."
+    "cta_sub": "Cuéntanos sobre la situación de tu propiedad y tus necesidades. Nos pondremos en contacto en un plazo de dos días hábiles con una propuesta inicial de concepto – sin compromiso y sin ofertas estándar.",
+    "products_eyebrow": "Productos",
+    "products_title": "Productos de Valla Solar",
+    "products_desc": "Productos de valla solar disponibles — listos para pedir o configurables bajo pedido."
   },
   "kombiloesungen": {
-    "meta_title": "Soluciones Combinadas – Solar y Eólica. Trabajando juntos.",
-    "meta_desc": "Máximo autoabastecimiento a través de la interacción de valla solar, fotovoltaica, almacenamiento y energía eólica. Planificación individual del sistema de una sola fuente.",
+    "meta_title": "Sistema Solar-Eólico Híbrido | Soluciones Combinadas",
+    "meta_desc": "Sistema solar-eólico híbrido con valla solar, fotovoltaica y almacenamiento. Planificación individual para máxima autonomía energética.",
     "breadcrumb_home": "Inicio",
     "eyebrow": "Soluciones Combinadas",
     "h1_line1": "Solar y Eólica.",
@@ -754,11 +763,14 @@
     "cta_h2_line2": "con un análisis.",
     "cta_sub": "Cuéntanos sobre tu propiedad, tus necesidades y tus objetivos. Analizaremos qué combinación tiene sentido para ti – sin prejuicios y sin ofertas estándar.",
     "cta_primary": "Solicitar Asesoría",
-    "cta_secondary": "Descubrir valla solar"
+    "cta_secondary": "Descubrir valla solar",
+    "products_eyebrow": "Productos",
+    "products_title": "Productos de Sistemas Combinados",
+    "products_desc": "Productos de sistemas combinados disponibles — valla solar, aerogeneradores y sistemas de almacenamiento."
   },
   "privatkunden": {
-    "meta_title": "Para Clientes Privados – Valla Solar, SkyWind y Soluciones Combinadas",
-    "meta_desc": "Tu propia electricidad de tu propio terreno. Valla solar, SkyWind y soluciones combinadas para propietarios, constructores y hogares con aspiraciones de autoabastecimiento.",
+    "meta_title": "Energía Renovable en Casa – SkyWind NG & Valla Solar",
+    "meta_desc": "Aerogenerador SkyWind NG y valla solar para propietarios. Sistemas de energía renovable adaptados a tu propiedad. Consulta inicial gratuita.",
     "breadcrumb_home": "Inicio",
     "eyebrow": "Para Clientes Privados",
     "h1_line1": "Tu propia electricidad",
@@ -881,8 +893,8 @@
     "cta_secondary": "Preguntas Frecuentes"
   },
   "gewerbe_b2b": {
-    "meta_title": "Empresas & B2B – Soluciones Energéticas para tu Proyecto",
-    "meta_desc": "Valla solar, SkyWind y soluciones combinadas para uso comercial, agrícola y desarrollo de proyectos. Planificación individual, sistemas escalables, colaboración asociativa.",
+    "meta_title": "Empresas & B2B – Energía Solar-Eólica para Proyectos",
+    "meta_desc": "Valla solar y SkyWind NG para proyectos comerciales y agrícolas. Sistemas de energía híbrida solar-eólica escalables, planificación individual.",
     "breadcrumb_home": "Inicio",
     "breadcrumb": "Empresas & B2B",
     "eyebrow": "Empresas & B2B",
@@ -1034,8 +1046,8 @@
     "cta_secondary": "Preguntas Frecuentes"
   },
   "faq": {
-    "meta_title": "FAQ – Preguntas Frecuentes sobre Valla Solar, SkyWind y Soluciones Combinadas",
-    "meta_desc": "Respuestas a preguntas frecuentes sobre vallas solares, SkyWind, soluciones combinadas y nuestro proceso de consulta.",
+    "meta_title": "FAQ – SkyWind NG, Valla Solar & Aerogeneradores",
+    "meta_desc": "Respuestas a preguntas frecuentes sobre vallas solares, SkyWind NG, soluciones combinadas y nuestro proceso de consulta.",
     "breadcrumb_home": "Inicio",
     "eyebrow": "Preguntas Frecuentes",
     "h1_line1": "Lo que quieres",
@@ -1071,9 +1083,33 @@
       "offerActive": "Oferta actual · válida hasta {date}"
     }
   },
+  "skywind_ng": {
+    "meta_title": "SkyWind NG Miniturbina Eólica – Compra Directa",
+    "meta_desc": "SkyWind NG 1kW y 2kW: especificaciones técnicas, potencia y precio en un vistazo. Compra directa o consulta gratuita."
+  },
+  "micro_wind_turbine": {
+    "meta_title": "Micro Aerogenerador – SkyWind NG Turbina Eólica",
+    "meta_desc": "Miniturbinas eólicas SkyWind NG para hogar y empresa. Compactas, silenciosas y eficientes – desde 1kW. Análisis de emplazamiento gratuito."
+  },
+  "small_wind_turbine_home": {
+    "meta_title": "Aerogenerador Pequeño para Casa | SkyWind NG",
+    "meta_desc": "Aerogenerador SkyWind NG para uso doméstico – genera electricidad todo el año. Ideal con paneles solares. Consulta gratuita."
+  },
+  "rooftop_wind_turbine": {
+    "meta_title": "Aerogenerador de Tejado | SkyWind NG",
+    "meta_desc": "Instala un aerogenerador SkyWind NG en tu tejado y genera energía limpia. Diseño compacto, funcionamiento silencioso, instalación profesional."
+  },
+  "off_grid_wind_turbine": {
+    "meta_title": "Aerogenerador Off-Grid | SkyWind NG Aislada",
+    "meta_desc": "Aerogenerador SkyWind NG off-grid para independencia energética total. Funciona con batería para suministro 24/7. Diseño de sistema gratuito."
+  },
+  "hybrid_solar_wind": {
+    "meta_title": "Sistema Solar-Eólico Híbrido | Solar & Viento",
+    "meta_desc": "Sistema híbrido solar-eólico con SkyWind NG y valla solar – máxima autosuficiencia todo el año. Planificación del sistema gratuita."
+  },
   "categories": {
-    "meta_title": "Categorías – Valla Solar & SkyWind",
-    "meta_desc": "Explora vallas solares, aerogeneradores SkyWind y soluciones combinadas por categoría – encuentra la solución energética ideal para tu hogar, negocio o granja.",
+    "meta_title": "Categorías – SkyWind NG, Valla Solar & Energía Eólica",
+    "meta_desc": "Explora aerogeneradores SkyWind NG, vallas solares y sistemas de energía combinada – encuentra la solución renovable ideal para tu propiedad.",
     "breadcrumb_home": "Inicio",
     "page_title": "Categorías",
     "error_title": "Categorías",

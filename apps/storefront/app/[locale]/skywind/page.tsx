@@ -116,9 +116,9 @@ export default async function SkyWindPage({ params }: { params: { locale: string
       />
 
       <SolutionProductsSection
-        eyebrow="Produkte"
-        title="SkyWind-Produkte im Überblick"
-        description="Alle verfügbaren SkyWind-Anlagen und passendes Zubehör – direkt bestellbar oder auf Anfrage."
+        eyebrow={t("products_eyebrow")}
+        title={t("products_title")}
+        description={t("products_desc")}
         products={products}
       />
 
@@ -224,19 +224,17 @@ export default async function SkyWindPage({ params }: { params: { locale: string
             <div className="flex-1">
               <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">SkyWind NG</p>
               <h2 className="font-display text-xl font-bold text-brand-text mb-2">
-                Speziell zum SkyWind NG Modell – Preise, Technische Daten & Erfahrungen
+                {t("ng_banner_title")}
               </h2>
               <p className="text-sm text-brand-muted leading-relaxed">
-                Auf unserer SkyWind NG Seite finden Sie alle Informationen zum konkreten Modell:
-                technische Spezifikationen, Modellvergleich (1&nbsp;kW vs. 2&nbsp;kW), Ertragsprognosen
-                und 11 häufige Fragen ausführlich beantwortet.
+                {t("ng_banner_body")}
               </p>
             </div>
             <Link
               href="/skywind-ng"
               className="flex-shrink-0 inline-block bg-brand-accent text-white font-semibold px-7 py-3 rounded-xl hover:bg-green-600 transition-colors duration-150 text-sm text-center"
             >
-              SkyWind NG im Detail →
+              {t("ng_banner_cta")}
             </Link>
           </div>
         </div>

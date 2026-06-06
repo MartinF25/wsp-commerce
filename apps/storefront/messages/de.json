@@ -46,8 +46,8 @@
   },
   "announcement": "Kostenlose Beratung für alle Projekte · Individuelle Planung · Jetzt anfragen und Förderoptionen prüfen",
   "home": {
-    "meta_title": "Solarzaun kaufen & SkyWind Kleinwindanlage – WSP Solarenergie",
-    "meta_description": "Solarzaun, SkyWind-Kleinwindanlagen und Kombilösungen für Privat, Gewerbe und Landwirtschaft. Jetzt Produkte entdecken, konfigurieren und direkt bestellen.",
+    "meta_title": "Solarzaun & SkyWind NG Windanlage | WSP Solarenergie",
+    "meta_description": "Solarzaun und SkyWind NG Kleinwindanlagen für Privat, Gewerbe und Landwirtschaft. Direkt bestellen oder individuelle Beratung anfragen.",
     "hero_eyebrow": "Solarzaun · SkyWind · Kombilösungen",
     "hero_h1_line1": "Energie vom",
     "hero_h1_line2": "eigenen Grund.",
@@ -100,8 +100,8 @@
     "blog_read_more": "Weiterlesen →"
   },
   "skywind": {
-    "meta_title": "SkyWind Kleinwindanlage kaufen – Strom auch ohne Sonne | WSP Solarenergie",
-    "meta_desc": "SkyWind-Kleinwindanlagen erzeugen Strom auch dann, wenn die Sonne nicht scheint. Kompakt, geräuscharm, für Privatgrundstücke und Gewerbeflächen – Beratung kostenlos.",
+    "meta_title": "SkyWind Kleinwindanlage für Haus & Gewerbe | WSP",
+    "meta_desc": "SkyWind Kleinwindanlagen erzeugen Strom auch ohne Sonne. Kompakt, geräuscharm, für Privatgrundstücke und Gewerbeflächen. Standortanalyse kostenlos.",
     "breadcrumb_home": "Start",
     "eyebrow": "SkyWind",
     "h1_line1": "Strom auch dann,",
@@ -149,13 +149,19 @@
     "cta_h2_line2": "für Ihren Standort?",
     "cta_sub": "Schildern Sie uns Ihren Standort und Ihre Ziele. Wir prüfen das Windpotenzial und geben Ihnen innerhalb von zwei Werktagen eine ehrliche Einschätzung.",
     "cta_primary": "Beratung anfragen",
-    "cta_secondary": "Kombilösungen entdecken"
+    "cta_secondary": "Kombilösungen entdecken",
+    "products_eyebrow": "Produkte",
+    "products_title": "SkyWind-Produkte im Überblick",
+    "products_desc": "Alle verfügbaren SkyWind-Anlagen und passendes Zubehör – direkt bestellbar oder auf Anfrage.",
+    "ng_banner_title": "SkyWind NG – Preise, Technische Daten & Modellvergleich",
+    "ng_banner_body": "Auf unserer SkyWind NG Seite finden Sie alle Informationen zum konkreten Modell: technische Spezifikationen, Modellvergleich (1 kW vs. 2 kW), Ertragsprognosen und häufige Fragen ausführlich beantwortet.",
+    "ng_banner_cta": "SkyWind NG im Detail →"
   },
   "products": {
     "breadcrumb_home": "Start",
     "page_title": "Alle Produkte",
-    "meta_title": "Produkte kaufen – Solarzaun, SkyWind & Kombilösungen | WSP Solarenergie",
-    "meta_desc": "Alle Produkte: Solarzaun, SkyWind-Kleinwindanlagen und Kombilösungen – direkt kaufen, konfigurieren oder Beratung anfragen. Kostenlose Lieferung ab Lager.",
+    "meta_title": "Produkte – Solarzaun, SkyWind NG & Solar-Wind",
+    "meta_desc": "Solarzaun, SkyWind NG Kleinwindanlagen und Solar-Wind-Kombilösungen. Direkt bestellen, konfigurieren oder kostenlos beraten lassen.",
     "buy": "Jetzt bestellen",
     "inquiry": "Beratung anfragen",
     "learn": "Mehr erfahren",
@@ -263,8 +269,8 @@
     "stock_out_of_stock": "Kein Lagerbestand"
   },
   "blog": {
-    "meta_title": "Blog – Erneuerbare Energie | Solarzaun & SkyWind",
-    "meta_desc": "Ratgeber, News und Praxiswissen rund um Solarzäune, Kleinwindanlagen und erneuerbare Energie für Privat und Gewerbe.",
+    "meta_title": "Blog – SkyWind NG, Solarzaun & Erneuerbare Energie",
+    "meta_desc": "Ratgeber zu SkyWind NG, Kleinwindanlagen, Solarzaun und erneuerbaren Energiesystemen – für Privat, Gewerbe und Landwirtschaft.",
     "eyebrow": "Wissen & Ratgeber",
     "h1": "Blog",
     "sub": "Praxiswissen rund um Solarzäune, Kleinwindanlagen und erneuerbare Energielösungen – für Privat, Gewerbe und Landwirtschaft.",
@@ -385,8 +391,8 @@
     "img_thumb": "Bild {number} anzeigen"
   },
   "solarzaun": {
-    "meta_title": "Solarzaun kaufen – Einfriedung und Solaranlage in einem | WSP Solarenergie",
-    "meta_desc": "Solarzaun: Grundstückseinfriedung mit integrierter Photovoltaik – ohne zusätzlichen Platzbedarf. Für Privatgrundstücke, Gewerbeflächen und Landwirtschaft. Jetzt anfragen.",
+    "meta_title": "Solarzaun kaufen – Solar & Zaun in einem | WSP",
+    "meta_desc": "Solarzaun kombiniert Einfriedung mit Photovoltaik – ohne Flächenverlust. Für Privatgrundstücke, Gewerbeflächen und Landwirtschaft. Jetzt anfragen.",
     "breadcrumb_home": "Start",
     "eyebrow": "Solarzaun",
     "h1_line1": "Einfriedung und Energie.",
@@ -430,11 +436,14 @@
     "cta_eyebrow": "Nächster Schritt",
     "cta_h2_line1": "Ihr Solarzaun-Projekt",
     "cta_h2_line2": "beginnt mit einem Gespräch.",
-    "cta_sub": "Schildern Sie uns Ihre Grundstückssituation und Ihren Bedarf. Wir melden uns innerhalb von zwei Werktagen mit einem ersten Konzeptvorschlag – unverbindlich und ohne Standardangebote."
+    "cta_sub": "Schildern Sie uns Ihre Grundstückssituation und Ihren Bedarf. Wir melden uns innerhalb von zwei Werktagen mit einem ersten Konzeptvorschlag – unverbindlich und ohne Standardangebote.",
+    "products_eyebrow": "Produkte",
+    "products_title": "Passende Solarzaun-Produkte",
+    "products_desc": "Aktive Produkte aus der Kategorie Solarzaun, passend zu dieser Lösung."
   },
   "kombiloesungen": {
-    "meta_title": "Solar & Wind Kombilösung – Maximale Eigenversorgung | WSP Solarenergie",
-    "meta_desc": "Kombilösungen aus Solarzaun, Photovoltaik, SkyWind und Speicher – aufeinander abgestimmt für maximale Eigenversorgung. Individuelle Planung für Privat und Gewerbe.",
+    "meta_title": "Solar-Wind-Kombilösung – Hybrid-Energiesystem",
+    "meta_desc": "Solarzaun, Photovoltaik, SkyWind NG und Speicher kombiniert – individuell geplant für maximale Eigenversorgung. Für Privat und Gewerbe.",
     "breadcrumb_home": "Start",
     "eyebrow": "Kombilösungen",
     "h1_line1": "Solar und Wind.",
@@ -482,11 +491,14 @@
     "cta_h2_line2": "mit einer Analyse.",
     "cta_sub": "Schildern Sie uns Ihr Grundstück, Ihren Bedarf und Ihre Ziele. Wir analysieren, welche Kombination für Sie sinnvoll ist – ohne Vorfestlegung und ohne Standardangebote.",
     "cta_primary": "Beratung anfragen",
-    "cta_secondary": "Solarzaun entdecken"
+    "cta_secondary": "Solarzaun entdecken",
+    "products_eyebrow": "Produkte",
+    "products_title": "Passende Produkte für Kombilösungen",
+    "products_desc": "Aktive Produkte aus der Kategorie Kombilösung, passend zu Solar-, Wind- und Systemprojekten."
   },
   "privatkunden": {
-    "meta_title": "Für Privatkunden – Solarzaun, SkyWind und Kombilösungen",
-    "meta_desc": "Eigenstrom vom eigenen Grundstück. Solarzaun, SkyWind und Kombilösungen für Eigenheimbesitzer, Bauherren und Haushalte mit Eigenversorgungsanspruch.",
+    "meta_title": "Eigenstrom für Privat – Solarzaun & SkyWind NG",
+    "meta_desc": "SkyWind NG Windanlage und Solarzaun für Eigenheimbesitzer. Erneuerbare Energie individuell geplant – kostenlose Erstberatung für Ihr Grundstück.",
     "breadcrumb_home": "Start",
     "eyebrow": "Für Privatkunden",
     "h1_line1": "Eigenstrom vom",
@@ -538,8 +550,8 @@
     "cta_secondary": "Häufige Fragen"
   },
   "gewerbe_b2b": {
-    "meta_title": "Gewerbe & B2B – Energielösungen für Ihr Projekt",
-    "meta_desc": "Solarzaun, SkyWind und Kombilösungen für Gewerbe, Landwirtschaft und Projektentwicklung. Individuelle Planung, skalierbare Systeme, partnerschaftliche Zusammenarbeit.",
+    "meta_title": "Gewerbe & B2B – Solar-Wind-Energie für Betriebe",
+    "meta_desc": "Solarzaun und SkyWind NG für Gewerbe, Landwirtschaft und Projektentwicklung. Individuelle Planung, skalierbare Systeme, partnerschaftliche Zusammenarbeit.",
     "breadcrumb_home": "Start",
     "breadcrumb": "Gewerbe & B2B",
     "eyebrow": "Gewerbe & B2B",
@@ -603,8 +615,8 @@
     "cta_secondary": "Häufige Fragen"
   },
   "faq": {
-    "meta_title": "FAQ – Häufige Fragen zu Solarzaun, SkyWind und Kombilösungen",
-    "meta_desc": "Antworten auf häufige Fragen zu Solarzaun, SkyWind, Kombilösungen und dem Beratungsablauf.",
+    "meta_title": "FAQ – SkyWind NG, Solarzaun & Kombilösungen",
+    "meta_desc": "Antworten auf häufige Fragen zu Solarzaun, SkyWind NG, Kombilösungen und dem Beratungsablauf.",
     "breadcrumb_home": "Start",
     "eyebrow": "Häufige Fragen",
     "h1_line1": "Was Sie wissen",
@@ -640,9 +652,33 @@
       "offerActive": "Aktuelles Angebot · gültig bis {date}"
     }
   },
+  "skywind_ng": {
+    "meta_title": "SkyWind NG Kleinwindanlage kaufen | WSP Solar",
+    "meta_desc": "SkyWind NG 1kW & 2kW: Technische Daten, Ertrag und Preis im Überblick. Jetzt kaufen oder kostenlos beraten lassen."
+  },
+  "micro_wind_turbine": {
+    "meta_title": "Micro Wind Turbine – SkyWind NG Kleinwindanlage",
+    "meta_desc": "SkyWind NG Micro Wind Turbine für Eigenheim und Gewerbe. Kompakt, leise und effizient – ab 1kW Leistung. Kostenlose Standortprüfung inklusive."
+  },
+  "small_wind_turbine_home": {
+    "meta_title": "Kleinwindanlage für Zuhause | SkyWind NG",
+    "meta_desc": "SkyWind NG Kleinwindanlage für Eigenheimbesitzer – ganzjährig Strom erzeugen. Ideal mit Solarzaun. Kostenlose Erstberatung."
+  },
+  "rooftop_wind_turbine": {
+    "meta_title": "Dachwindanlage | SkyWind NG Dachmontage",
+    "meta_desc": "SkyWind NG Dachwindanlage – erneuerbare Energie direkt vom Dach. Kompakte Bauweise, leiser Betrieb, professionelle Montage."
+  },
+  "off_grid_wind_turbine": {
+    "meta_title": "Off-Grid Windanlage | SkyWind NG Inselbetrieb",
+    "meta_desc": "SkyWind NG für den Inselbetrieb – vollständige Energieunabhängigkeit mit Batteriespeicher. 24/7 Stromversorgung ohne Netz."
+  },
+  "hybrid_solar_wind": {
+    "meta_title": "Hybrid Solar-Wind-System | Solar & Wind",
+    "meta_desc": "Solar-Wind-Kombisystem mit SkyWind NG und Solarzaun – maximale Eigenversorgung das ganze Jahr. Individuelle Systemplanung kostenlos."
+  },
   "categories": {
-    "meta_title": "Kategorien – Solarzaun & SkyWind",
-    "meta_desc": "Solarzaun, SkyWind und Kombilösungen nach Kategorie durchsuchen – finden Sie die passende Energielösung für Ihr Privatgrundstück, Gewerbeobjekt oder Ihren Hof.",
+    "meta_title": "Kategorien – SkyWind NG, Solarzaun & Solar-Wind",
+    "meta_desc": "Solarzaun, SkyWind NG und Solar-Wind-Kombilösungen nach Kategorie – finden Sie die passende Energielösung für Privatgrundstück, Gewerbeobjekt oder Hof.",
     "breadcrumb_home": "Start",
     "page_title": "Kategorien",
     "error_title": "Kategorien",

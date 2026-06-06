@@ -104,9 +104,9 @@ export default async function SolarzaunPage({ params }: { params: { locale: stri
       />
 
       <SolutionProductsSection
-        eyebrow="Produkte"
-        title="Passende Solarzaun-Produkte"
-        description="Aktive Produkte aus der Kategorie Solarzaun, passend zu dieser Lösung."
+        eyebrow={t("products_eyebrow")}
+        title={t("products_title")}
+        description={t("products_desc")}
         products={products}
       />
 

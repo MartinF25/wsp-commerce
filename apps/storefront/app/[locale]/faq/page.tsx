@@ -51,7 +51,11 @@ function extractText(node: ReactNode): string {
 export default async function FAQPage({ params }: Props) {
   const t = await getTranslations({ locale: params.locale, namespace: "faq" });
 
-  const faqJsonLd = FAQ_SECTIONS.flatMap((section) =>
+  const locale = params.locale;
+  const sections = locale === "en" ? FAQ_SECTIONS_EN : locale === "es" ? FAQ_SECTIONS_ES : FAQ_SECTIONS;
+  const categories = locale === "en" ? CATEGORIES_EN : locale === "es" ? CATEGORIES_ES : CATEGORIES;
+
+  const faqJsonLd = sections.flatMap((section) =>
     section.items.map((item) => ({
       "@type": "Question",
       name: item.question,
@@ -109,7 +113,7 @@ export default async function FAQPage({ params }: Props) {
             <aside className="hidden lg:block lg:col-span-1">
               <div className="sticky top-24 space-y-2">
                 <p className="text-xs font-medium text-brand-muted uppercase tracking-widest mb-4">{t("topics_label")}</p>
-                {CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                   <a
                     key={cat.id}
                     href={`#${cat.id}`}
@@ -121,7 +125,7 @@ export default async function FAQPage({ params }: Props) {
               </div>
             </aside>
             <div className="lg:col-span-3 space-y-14">
-              {FAQ_SECTIONS.map((section) => (
+              {sections.map((section) => (
                 <FAQBlock key={section.id} {...section} />
               ))}
             </div>
@@ -149,7 +153,7 @@ export default async function FAQPage({ params }: Props) {
   );
 }
 
-// ─── Statische Daten (Deutsch – JSX-Antworten nicht übersetzbar via JSON) ──────
+// ─── Locale-aware static data ─────────────────────────────────────────────────
 
 const CATEGORIES = [
   { id: "allgemein", label: "Allgemein" },
@@ -157,6 +161,22 @@ const CATEGORIES = [
   { id: "skywind", label: "SkyWind" },
   { id: "kombilösungen", label: "Kombilösungen" },
   { id: "beratung", label: "Beratung & Ablauf" },
+] as const;
+
+const CATEGORIES_EN = [
+  { id: "allgemein", label: "General" },
+  { id: "solarzaun", label: "Solar Fence" },
+  { id: "skywind", label: "SkyWind" },
+  { id: "kombilösungen", label: "Combined Solutions" },
+  { id: "beratung", label: "Advice & Process" },
+] as const;
+
+const CATEGORIES_ES = [
+  { id: "allgemein", label: "General" },
+  { id: "solarzaun", label: "Valla Solar" },
+  { id: "skywind", label: "SkyWind" },
+  { id: "kombilösungen", label: "Soluciones Combinadas" },
+  { id: "beratung", label: "Consulta & Proceso" },
 ] as const;
 
 interface FAQItemData {
@@ -358,6 +378,300 @@ const FAQ_SECTIONS: FAQSectionData[] = [
               Kontaktformular
             </Link>
             . Keine ungebetenen Folgeanrufe.
+          </>
+        ),
+      },
+    ],
+  },
+];
+
+const FAQ_SECTIONS_EN: FAQSectionData[] = [
+  {
+    id: "allgemein",
+    label: "General",
+    eyebrow: "General",
+    items: [
+      {
+        question: "What solutions do you offer?",
+        answer: (
+          <>
+            We offer three product lines:{" "}
+            <Link href="/solarzaun" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">Solar Fence</Link>{" "}
+            (fencing and photovoltaic system in one),{" "}
+            <Link href="/skywind" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">SkyWind</Link>{" "}
+            (small wind turbines for private and commercial sites) and{" "}
+            <Link href="/kombiloesungen" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">Combined Solutions</Link>{" "}
+            (coordinated systems of solar, wind and storage). All three solutions are individually planned – no standard off-the-shelf products.
+          </>
+        ),
+      },
+      {
+        question: "Who are your solutions suitable for?",
+        answer: "Our solutions are aimed at private customers (residential properties, gardens, plots), commercial businesses (premises, car parks, logistics areas), farmers and rural operators (large open spaces with fencing requirements) and dealers and installation companies who wish to partner with us. The right solution for your situation is clarified in an initial consultation.",
+      },
+      {
+        question: "Are your products eligible for subsidies?",
+        answer: "Depending on the country, type of installation and use, there are various funding options – through national programmes, regional development banks or local schemes. We inform you in the consultation about currently available programmes relevant to your specific project.",
+      },
+    ],
+  },
+  {
+    id: "solarzaun",
+    label: "Solar Fence",
+    eyebrow: "Solar Fence",
+    link: { href: "/solarzaun", label: "More about Solar Fence" },
+    items: [
+      {
+        question: "What is a solar fence and how does it work?",
+        answer: "A solar fence is a fencing solution in which photovoltaic modules are integrated into the fence structure. It fulfils the function of a conventional fence – boundary, privacy, security – and generates electricity at the same time. Depending on the configuration, electricity can be fed into the grid or used directly. No additional space is required on your property.",
+      },
+      {
+        question: "Which properties are suitable for a solar fence?",
+        answer: "Basically any property that requires a fence. A solar fence is particularly advantageous with longer fence lines and a favourable orientation (south, south-east, south-west). Whether a solar fence is worthwhile at your site is clarified in a no-obligation initial consultation.",
+      },
+      {
+        question: "How does a solar fence differ from a rooftop PV system?",
+        answer: "The solar fence uses the fence area instead of the roof. This is particularly interesting when the roof is already occupied, unfavourably oriented or unavailable. Both systems can also be combined – the solar fence then supplements an existing rooftop system.",
+      },
+      {
+        question: "Do I need planning permission for a solar fence?",
+        answer: "This depends on the municipality and local building regulations. In many cases no separate approval process is required. We support you in clarifying the relevant requirements at an early stage.",
+      },
+    ],
+  },
+  {
+    id: "skywind",
+    label: "SkyWind",
+    eyebrow: "SkyWind",
+    link: { href: "/skywind", label: "More about SkyWind" },
+    items: [
+      {
+        question: "Which sites are suitable for SkyWind?",
+        answer: "SkyWind is suitable for sites with sufficient and reliable wind resources. Open locations, coastal areas or elevated properties are generally more favourable than sheltered inner-city positions. We assess your site specifically before making a recommendation – SkyWind is only recommended when it is economically viable.",
+      },
+      {
+        question: "How much electricity does a SkyWind system produce?",
+        answer: "This depends on the site, wind conditions and system size. In our consultation we determine the realistic annual output together based on your site data. Blanket kilowatt-hour promises are not credible here.",
+      },
+      {
+        question: "Can SkyWind be combined with a solar system?",
+        answer: (
+          <>
+            Yes – this is one of the most common configurations. Solar and wind complement each other across seasons and times of day: when cloudy skies reduce solar yields, wind often blows. The combination significantly increases self-sufficiency. Details can be found on our{" "}
+            <Link href="/kombiloesungen" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">
+              Combined Solutions
+            </Link>{" "}
+            page.
+          </>
+        ),
+      },
+      {
+        question: "Do I need planning permission for a small wind turbine?",
+        answer: "This depends on the height of the installation, the site and local regulations. In some municipalities planning permission is required, in others not. We support you in clarifying the relevant requirements at an early stage.",
+      },
+    ],
+  },
+  {
+    id: "kombilösungen",
+    label: "Combined Solutions",
+    eyebrow: "Combined Solutions",
+    link: { href: "/kombiloesungen", label: "More about Combined Solutions" },
+    items: [
+      {
+        question: "What is a combined solution?",
+        answer: (
+          <>
+            A combined solution is not a single product, but a coordinated system – consisting of different components such as{" "}
+            <Link href="/solarzaun" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">Solar Fence</Link>
+            , rooftop or open-area photovoltaics,{" "}
+            <Link href="/skywind" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">SkyWind</Link>{" "}
+            and electricity storage. Which components make sense depends on location, available area and goals.
+          </>
+        ),
+      },
+      {
+        question: "Which components are part of a combined solution?",
+        answer: "A combined solution can include a solar fence, rooftop or open-area photovoltaics, a SkyWind small wind turbine and electricity storage. Not every project needs all components. We put together a system that fits your situation.",
+      },
+      {
+        question: "Is a combined solution worthwhile for my property?",
+        answer: "This depends on your available space, energy needs and local conditions. A combined solution is particularly worthwhile where multiple energy sources are available and a high self-sufficiency target exists. In our consultation we analyse your specific case – sometimes a single solution makes more sense.",
+      },
+      {
+        question: "Can I build a combined solution step by step?",
+        answer: "Yes – many projects begin with one element, e.g. the solar fence, and are later expanded with storage or wind power. It is important that the first component is designed so that expansion remains technically possible. We take this into account in the planning.",
+      },
+    ],
+  },
+  {
+    id: "beratung",
+    label: "Advice & Process",
+    eyebrow: "Advice & Process",
+    items: [
+      {
+        question: "How does a consultation work?",
+        answer: "First we talk informally about your project, your available space and your goals. On this basis we develop an initial concept proposal – without standard offers, without pressure. You then decide if and how you want to proceed.",
+      },
+      {
+        question: "What does an initial consultation cost?",
+        answer: "The initial consultation is non-binding and free of charge. We jointly clarify whether and which solution makes sense for your project. Only when you want a concrete concept do we discuss next steps.",
+      },
+      {
+        question: "How quickly do we receive a first response?",
+        answer: (
+          <>
+            We respond within two working days of receiving your enquiry – by email or phone, depending on your preference in the{" "}
+            <Link href="/kontakt" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">
+              contact form
+            </Link>
+            . No unsolicited follow-up calls.
+          </>
+        ),
+      },
+    ],
+  },
+];
+
+const FAQ_SECTIONS_ES: FAQSectionData[] = [
+  {
+    id: "allgemein",
+    label: "General",
+    eyebrow: "General",
+    items: [
+      {
+        question: "¿Qué soluciones ofrecéis?",
+        answer: (
+          <>
+            Ofrecemos tres líneas de productos:{" "}
+            <Link href="/solarzaun" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">Valla Solar</Link>{" "}
+            (cerramiento y sistema fotovoltaico en uno),{" "}
+            <Link href="/skywind" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">SkyWind</Link>{" "}
+            (pequeñas turbinas eólicas para uso privado y comercial) y{" "}
+            <Link href="/kombiloesungen" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">Soluciones Combinadas</Link>{" "}
+            (sistemas coordinados de solar, eólico y almacenamiento). Las tres soluciones se planifican individualmente.
+          </>
+        ),
+      },
+      {
+        question: "¿Para quién son adecuadas vuestras soluciones?",
+        answer: "Nuestras soluciones están dirigidas a clientes privados (propiedades residenciales, jardines), empresas (instalaciones comerciales, aparcamientos), agricultores y operadores rurales, así como distribuidores e instaladores que deseen trabajar como socios.",
+      },
+      {
+        question: "¿Son vuestros productos elegibles para subvenciones?",
+        answer: "Dependiendo del país, tipo de instalación y uso, existen diversas opciones de financiación a través de programas nacionales, bancos de desarrollo regionales o programas locales. Te informamos en la consulta sobre los programas disponibles relevantes para tu proyecto.",
+      },
+    ],
+  },
+  {
+    id: "solarzaun",
+    label: "Valla Solar",
+    eyebrow: "Valla Solar",
+    link: { href: "/solarzaun", label: "Más sobre la Valla Solar" },
+    items: [
+      {
+        question: "¿Qué es una valla solar y cómo funciona?",
+        answer: "Una valla solar es una solución de cerramiento en la que los módulos fotovoltaicos están integrados en la estructura de la valla. Cumple la función de una valla convencional – delimitación, privacidad, seguridad – y genera electricidad al mismo tiempo. No se requiere espacio adicional en tu propiedad.",
+      },
+      {
+        question: "¿Para qué propiedades es adecuada una valla solar?",
+        answer: "Básicamente para cualquier propiedad que necesite una valla. Es especialmente ventajosa con líneas de valla más largas y orientación favorable. En una consulta inicial sin compromiso aclaramos si una valla solar es rentable en tu ubicación.",
+      },
+      {
+        question: "¿Necesito permiso de obras para una valla solar?",
+        answer: "Depende del municipio y las normativas locales de construcción. En muchos casos no se requiere un proceso de aprobación específico. Te apoyamos en aclarar los requisitos relevantes con antelación.",
+      },
+      {
+        question: "¿En qué se diferencia la valla solar de un sistema fotovoltaico en tejado?",
+        answer: "La valla solar utiliza la superficie de la valla en lugar del tejado. Ambos sistemas también pueden combinarse – la valla solar complementa una instalación existente en tejado.",
+      },
+    ],
+  },
+  {
+    id: "skywind",
+    label: "SkyWind",
+    eyebrow: "SkyWind",
+    link: { href: "/skywind", label: "Más sobre SkyWind" },
+    items: [
+      {
+        question: "¿Para qué ubicaciones es adecuado SkyWind?",
+        answer: "SkyWind es adecuado para ubicaciones con recursos eólicos suficientes y fiables. Las ubicaciones abiertas, zonas costeras o propiedades elevadas son generalmente más favorables. Evaluamos tu ubicación específicamente antes de hacer una recomendación.",
+      },
+      {
+        question: "¿Cuánta electricidad produce un sistema SkyWind?",
+        answer: "Depende de la ubicación, las condiciones eólicas y el tamaño del sistema. En nuestra consulta determinamos la producción anual realista basándonos en los datos de tu ubicación.",
+      },
+      {
+        question: "¿Se puede combinar SkyWind con un sistema solar?",
+        answer: (
+          <>
+            Sí – es una de las configuraciones más comunes. Solar y eólico se complementan entre sí en distintas estaciones y momentos del día. La combinación aumenta significativamente la autosuficiencia. Más detalles en nuestra página de{" "}
+            <Link href="/kombiloesungen" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">
+              Soluciones Combinadas
+            </Link>
+            .
+          </>
+        ),
+      },
+      {
+        question: "¿Necesito permiso para una pequeña turbina eólica?",
+        answer: "Depende de la altura de la instalación, la ubicación y las normativas locales. En algunos municipios se requiere permiso de obras, en otros no. Te apoyamos en aclarar los requisitos relevantes.",
+      },
+    ],
+  },
+  {
+    id: "kombilösungen",
+    label: "Soluciones Combinadas",
+    eyebrow: "Soluciones Combinadas",
+    link: { href: "/kombiloesungen", label: "Más sobre Soluciones Combinadas" },
+    items: [
+      {
+        question: "¿Qué es una solución combinada?",
+        answer: (
+          <>
+            Una solución combinada no es un producto único, sino un sistema coordinado que consiste en diferentes componentes como{" "}
+            <Link href="/solarzaun" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">Valla Solar</Link>
+            , fotovoltaica en tejado o superficie libre,{" "}
+            <Link href="/skywind" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">SkyWind</Link>{" "}
+            y almacenamiento. Qué componentes tienen sentido depende de la ubicación, el área disponible y los objetivos.
+          </>
+        ),
+      },
+      {
+        question: "¿Qué componentes forman parte de una solución combinada?",
+        answer: "Una solución combinada puede incluir valla solar, fotovoltaica, una pequeña turbina eólica SkyWind y almacenamiento de electricidad. No todos los proyectos necesitan todos los componentes. Diseñamos un sistema que se adapta a tu situación.",
+      },
+      {
+        question: "¿Vale la pena una solución combinada para mi propiedad?",
+        answer: "Depende de tu espacio disponible, necesidades energéticas y condiciones locales. En nuestra consulta analizamos tu caso específico.",
+      },
+      {
+        question: "¿Puedo construir una solución combinada paso a paso?",
+        answer: "Sí – muchos proyectos comienzan con un elemento, por ejemplo la valla solar, y se amplían más tarde con almacenamiento o energía eólica. Es importante que el primer componente se diseñe de manera que la ampliación posterior sea técnicamente posible.",
+      },
+    ],
+  },
+  {
+    id: "beratung",
+    label: "Consulta & Proceso",
+    eyebrow: "Consulta & Proceso",
+    items: [
+      {
+        question: "¿Cómo funciona una consulta?",
+        answer: "Primero hablamos informalmente sobre tu proyecto, tu espacio disponible y tus objetivos. Sobre esta base desarrollamos una propuesta de concepto inicial – sin ofertas estándar, sin presión. Tú decides si y cómo quieres continuar.",
+      },
+      {
+        question: "¿Qué cuesta una consulta inicial?",
+        answer: "La consulta inicial es sin compromiso y gratuita. Aclaramos conjuntamente si y qué solución tiene sentido para tu proyecto. Solo cuando desees un concepto concreto discutimos los próximos pasos.",
+      },
+      {
+        question: "¿Con qué rapidez recibimos una primera respuesta?",
+        answer: (
+          <>
+            Respondemos en dos días hábiles tras recibir tu consulta – por correo electrónico o teléfono, según tu preferencia en el{" "}
+            <Link href="/kontakt" className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150">
+              formulario de contacto
+            </Link>
+            . Sin llamadas de seguimiento no solicitadas.
           </>
         ),
       },

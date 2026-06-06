@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { fetchProducts } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
+import { FaqSection } from "@/components/FaqSection";
+import { SKYWIND_FAQ_ITEMS } from "@/lib/skywindFaq";
 import type { ProductSummary } from "@wsp/types";
 
 const BASE = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "https://webshop.wsp-solarenergie.de";
@@ -11,13 +14,13 @@ const MAIN_SITE = "https://www.wsp-solarenergie.de";
 type Props = { params: { locale: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: "skywind_ng" });
   const isDE = params.locale === "de";
   const localePrefix = isDE ? "" : `/${params.locale}`;
   const canonicalUrl = `${BASE}${localePrefix}/skywind-ng`;
 
-  const title = "SkyWind NG Kleinwindanlage kaufen – Technische Daten, Preis & Erfahrungen | WSP Solarenergie";
-  const description =
-    "SkyWind NG Kleinwindanlage: Technische Daten, Preis, Erfahrungen, Ertrag und Genehmigung auf einen Blick. Jetzt SkyWind NG 1kW oder 2kW kaufen oder kostenlos beraten lassen.";
+  const title = t("meta_title");
+  const description = t("meta_desc");
 
   return {
     title,
@@ -35,9 +38,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: canonicalUrl,
-      siteName: "Solarzaun & SkyWind – WSP Solarenergie",
+      siteName: "SkyWind NG Micro Wind Turbine – WSP Solar",
       type: "website",
-      images: [{ url: `${BASE}/images/skywind-hero.png`, width: 1200, height: 630, alt: "SkyWind NG Kleinwindanlage" }],
+      images: [
+        {
+          url: `${BASE}/images/skywind-hero.png`,
+          width: 1200,
+          height: 630,
+          alt: "SkyWind NG micro wind turbine installed on residential rooftop",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
@@ -49,64 +59,58 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const FAQ_ITEMS = [
-  {
-    q: "Was ist die SkyWind NG Kleinwindanlage?",
-    a: "Die SkyWind NG ist eine kompakte Kleinwindanlage für private und gewerbliche Standorte. Sie ist in zwei Leistungsklassen erhältlich: SkyWind NG 1kW und SkyWind NG 2kW. Die Anlage erzeugt auch bei niedrigen Windgeschwindigkeiten Strom und eignet sich besonders als Ergänzung zu einer Photovoltaik-Anlage.",
-  },
-  {
-    q: "Wie viel Strom erzeugt die SkyWind NG?",
-    a: "Der Ertrag hängt stark vom Standort ab. Bei einer mittleren Windgeschwindigkeit von 5 m/s kann die SkyWind NG 1kW rund 1.500–2.000 kWh pro Jahr erzeugen, die 2kW-Variante entsprechend mehr. Wir führen vor einem Kauf immer eine individuelle Standortprüfung durch.",
-  },
-  {
-    q: "Ab welcher Windgeschwindigkeit läuft die SkyWind NG an?",
-    a: "Die SkyWind NG beginnt ab einer Windgeschwindigkeit von ca. 2,5 m/s mit der Stromerzeugung (Cut-in-Speed). Die Nennleistung wird bei etwa 10–12 m/s erreicht. Die Anlage arbeitet geräuscharm und vibrationsarm.",
-  },
-  {
-    q: "Brauche ich eine Genehmigung für die SkyWind NG?",
-    a: "Das hängt von Bundesland und Gemeinde ab. In vielen Fällen gilt die SkyWind NG als verfahrensfreies Vorhaben, wenn sie eine bestimmte Höhe nicht überschreitet. In Bebauungsplan-Gebieten kann eine Baugenehmigung erforderlich sein. Wir unterstützen Sie dabei, die Genehmigungspflicht für Ihren Standort zu klären.",
-  },
-  {
-    q: "Wie laut ist die SkyWind NG?",
-    a: "Die SkyWind NG arbeitet sehr geräuscharm. Bei Nennwindgeschwindigkeit liegt der Schallpegel bei ca. 45 dB(A) in 10 m Entfernung – vergleichbar mit einem leisen Gespräch. Sie ist damit für Wohngebiete geeignet.",
-  },
-  {
-    q: "Kann ich die SkyWind NG mit einer Solaranlage kombinieren?",
-    a: "Ja – das ist sogar der empfohlene Betrieb. Solar und Wind ergänzen sich saisonal ideal: Im Winter und bei bewölktem Himmel liefert Wind mehr Energie, im Sommer übernimmt die Photovoltaik. Zusammen mit einem Speicher erreichen Sie deutlich höhere Autarkiequoten. Auf unserer Seite zu Kombilösungen finden Sie mehr Informationen.",
-  },
-  {
-    q: "Was kostet die SkyWind NG inklusive Montage?",
-    a: "Der Preis der SkyWind NG hängt von der Leistungsklasse (1kW oder 2kW), dem benötigten Mast und den Montagekosten ab. Aktuelle Preise finden Sie direkt in unserem Shop. Für eine vollständige Projektkalkulation inklusive Montage beraten wir Sie kostenlos und unverbindlich.",
-  },
-  {
-    q: "Welchen Mast brauche ich für die SkyWind NG?",
-    a: "Die SkyWind NG wird an einem Flanschmast montiert. Wir bieten Mastvarianten ab 3 m Länge an – die optimale Masthöhe hängt von Ihrer Gebäudestruktur und Hindernissen in der Umgebung ab. Der Mast ist separat erhältlich und wird passend zur Anlage geliefert.",
-  },
-  {
-    q: "Gibt es Fördermittel für die SkyWind NG?",
-    a: "Je nach Bundesland und Anlagentyp gibt es verschiedene Fördermöglichkeiten über KfW, Landesförderbanken oder kommunale Programme. Außerdem kann die Einspeisung ins Netz über das EEG vergütet werden. Wir informieren Sie im Beratungsgespräch über aktuell verfügbare Programme für Ihren Standort.",
-  },
-  {
-    q: "Wo wird die SkyWind NG montiert?",
-    a: "Die SkyWind NG kann auf dem Dach, an der Fassade oder auf einem freistehenden Mast auf dem Grundstück installiert werden. Die Dach- oder Mastmontage hängt von Ihren baulichen Gegebenheiten und der optimalen Windausbeute ab.",
-  },
-  {
-    q: "Ist die SkyWind NG netzgekoppelt oder inselbetriebsfähig?",
-    a: "Die SkyWind NG ist sowohl für den netzgekoppelten Betrieb (Einspeisung oder Eigenverbrauch) als auch für den Inselbetrieb mit Batteriespeicher geeignet. Die genaue Konfiguration wird im Beratungsgespräch auf Ihren Bedarf abgestimmt.",
-  },
+const SPECS = [
+  { label: "Models", value: "SkyWind NG 1kW · SkyWind NG 2kW" },
+  { label: "Rated Power", value: "1,000 W / 2,000 W" },
+  { label: "Rotor Diameter", value: "1.8 m / 2.5 m" },
+  { label: "Cut-in Wind Speed", value: "approx. 2.5 m/s (9 km/h)" },
+  { label: "Rated Wind Speed", value: "approx. 10–12 m/s" },
+  { label: "Noise Level", value: "≤ 45 dB(A) at 10 m" },
+  { label: "Mast Compatibility", value: "Flange mast from 3 m" },
+  { label: "Output", value: "230 V / 50 Hz or DC battery charging" },
+  { label: "Operating Temperature", value: "−20 °C to +50 °C" },
+  { label: "Warranty", value: "2-year manufacturer warranty" },
+  { label: "Installation", value: "Rooftop · Freestanding mast · Facade" },
+  { label: "Grid / Off-Grid", value: "Grid-tied & off-grid compatible" },
 ];
 
-const SPECS = [
-  { label: "Modelle", value: "SkyWind NG 1kW · SkyWind NG 2kW" },
-  { label: "Nennleistung", value: "1.000 W / 2.000 W" },
-  { label: "Rotordurchmesser", value: "1,8 m / 2,5 m" },
-  { label: "Cut-in-Speed", value: "ca. 2,5 m/s" },
-  { label: "Nennwindgeschwindigkeit", value: "ca. 10–12 m/s" },
-  { label: "Schallpegel", value: "ca. 45 dB(A) @ 10 m" },
-  { label: "Mastkompatibilität", value: "Flanschmast ab 3 m" },
-  { label: "Anschluss", value: "230 V / 50 Hz" },
-  { label: "Betriebstemperatur", value: "−20 °C bis +50 °C" },
-  { label: "Garantie", value: "2 Jahre Herstellergarantie" },
+const USE_CASES = [
+  {
+    icon: "⚡",
+    title: "Off-Grid Battery Charging",
+    desc: "Charge 12V–48V battery banks independently of the grid. Ideal for remote properties, cabins, and energy-independent homes.",
+    href: "/off-grid-wind-turbine",
+  },
+  {
+    icon: "🏠",
+    title: "Small Wind Turbine for Home",
+    desc: "Reduce electricity bills and increase self-sufficiency. The compact NG 1kW fits residential lots and low-wind locations.",
+    href: "/small-wind-turbine-for-home",
+  },
+  {
+    icon: "🏗",
+    title: "Rooftop Wind Turbine",
+    desc: "Mount directly on your roof with a flange mast. Low vibration and whisper-quiet operation for neighbourhood use.",
+    href: "/rooftop-wind-turbine",
+  },
+  {
+    icon: "☀",
+    title: "Hybrid Solar Wind System",
+    desc: "Pair with solar PV for year-round generation. Wind covers winter gaps; solar covers summer. Maximum self-sufficiency.",
+    href: "/hybrid-solar-wind-system",
+  },
+  {
+    icon: "🌿",
+    title: "Agricultural & Farm Use",
+    desc: "Power outbuildings, irrigation pumps, and livestock facilities. Scales from 1kW to multi-unit arrays on open farmland.",
+    href: "/kontakt",
+  },
+  {
+    icon: "🏭",
+    title: "Commercial & Industrial",
+    desc: "Reduce commercial energy costs and meet sustainability targets. Multiple units can be combined for higher output.",
+    href: "/gewerbe-b2b",
+  },
 ];
 
 export default async function SkywindNgPage({ params }: Props) {
@@ -118,7 +122,8 @@ export default async function SkywindNgPage({ params }: Props) {
     products = [];
   }
 
-  const canonicalUrl = `${BASE}${params.locale === "de" ? "" : `/${params.locale}`}/skywind-ng`;
+  const localePrefix = params.locale === "de" ? "" : `/${params.locale}`;
+  const canonicalUrl = `${BASE}${localePrefix}/skywind-ng`;
 
   return (
     <main>
@@ -130,50 +135,54 @@ export default async function SkywindNgPage({ params }: Props) {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Start", item: BASE },
-              { "@type": "ListItem", position: 2, name: "SkyWind", item: `${BASE}/skywind` },
-              { "@type": "ListItem", position: 3, name: "SkyWind NG", item: `${BASE}/skywind-ng` },
+              { "@type": "ListItem", position: 1, name: "Home", item: BASE },
+              { "@type": "ListItem", position: 2, name: "SkyWind Wind Turbines", item: `${BASE}/skywind` },
+              { "@type": "ListItem", position: 3, name: "SkyWind NG Micro Wind Turbine", item: canonicalUrl },
             ],
           }),
         }}
       />
 
-      {/* ── Schema: FAQPage ── */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: FAQ_ITEMS.map((item) => ({
-              "@type": "Question",
-              name: item.q,
-              acceptedAnswer: { "@type": "Answer", text: item.a },
-            })),
-          }),
-        }}
-      />
-
-      {/* ── Schema: Product (generisch für SkyWind NG) ── */}
+      {/* ── Schema: Product ── */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Product",
-            name: "SkyWind NG Kleinwindanlage",
+            name: "SkyWind NG Micro Wind Turbine",
             description:
-              "Die SkyWind NG ist eine kompakte Kleinwindkraftanlage für Eigenheim und Gewerbe. Verfügbar als NG 1kW und NG 2kW. Ideal zur Kombination mit Photovoltaik.",
+              "The SkyWind NG is a compact micro wind turbine for residential, commercial, and off-grid use. Available as SkyWind NG 1kW and SkyWind NG 2kW. Ideal for hybrid solar wind systems and off-grid battery charging.",
             brand: { "@type": "Brand", name: "SkyWind" },
+            category: "Micro Wind Turbine",
+            model: "SkyWind NG 1kW / SkyWind NG 2kW",
+            image: `${BASE}/images/skywind-hero.png`,
+            url: canonicalUrl,
+            additionalProperty: [
+              { "@type": "PropertyValue", name: "Rated Power", value: "1000–2000 W" },
+              { "@type": "PropertyValue", name: "Cut-in Wind Speed", value: "2.5 m/s" },
+              { "@type": "PropertyValue", name: "Rotor Diameter", value: "1.8–2.5 m" },
+              { "@type": "PropertyValue", name: "Noise Level", value: "≤45 dB(A) at 10 m" },
+              { "@type": "PropertyValue", name: "Operating Temperature", value: "-20°C to +50°C" },
+              { "@type": "PropertyValue", name: "Grid Compatibility", value: "Grid-tied and off-grid" },
+            ],
             offers: {
               "@type": "AggregateOffer",
               priceCurrency: "EUR",
               availability: "https://schema.org/InStock",
-              url: `${BASE}/skywind-ng`,
-              seller: { "@type": "Organization", name: "WSP Solarenergie", url: BASE },
+              url: `${BASE}/products`,
+              seller: {
+                "@type": "Organization",
+                name: "WSP Solarenergie",
+                url: BASE,
+              },
             },
-            url: `${BASE}/skywind-ng`,
-            image: `${BASE}/images/skywind-hero.png`,
+            hasMerchantReturnPolicy: {
+              "@type": "MerchantReturnPolicy",
+              applicableCountry: ["DE", "AT", "CH", "NL", "BE", "FR", "PL", "ES", "IT"],
+              returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+              merchantReturnDays: 14,
+            },
           }),
         }}
       />
@@ -182,7 +191,7 @@ export default async function SkywindNgPage({ params }: Props) {
       <section className="relative overflow-hidden min-h-[55vh] sm:min-h-[75vh] flex items-center">
         <Image
           src="/images/skywind-hero.png"
-          alt="SkyWind NG Kleinwindanlage auf modernem Grundstück"
+          alt="SkyWind NG micro wind turbine installed on residential rooftop with solar panels"
           fill
           className="object-cover object-center"
           priority
@@ -191,9 +200,8 @@ export default async function SkywindNgPage({ params }: Props) {
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/20" />
         <div className="relative w-full">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20">
-            {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-xs text-white/60 mb-6">
-              <Link href="/" className="hover:text-white transition-colors duration-150">Start</Link>
+              <Link href="/" className="hover:text-white transition-colors duration-150">Home</Link>
               <span>/</span>
               <Link href="/skywind" className="hover:text-white transition-colors duration-150">SkyWind</Link>
               <span>/</span>
@@ -202,30 +210,44 @@ export default async function SkywindNgPage({ params }: Props) {
 
             <div className="max-w-2xl">
               <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-4">
-                SkyWind NG · Kleinwindanlage
+                SkyWind NG · Micro Wind Turbine
               </p>
               <h1 className="font-display text-3xl sm:text-5xl font-bold text-white leading-tight mb-5">
                 SkyWind NG:<br />
-                <span className="text-brand-accent">Windstrom für Eigenheim</span><br />
-                und Gewerbe.
+                <span className="text-brand-accent">Micro Wind Turbine</span><br />
+                for Home &amp; Off-Grid.
               </h1>
-              <p className="text-base sm:text-lg text-white/80 leading-relaxed mb-8 max-w-xl">
-                Die SkyWind NG Kleinwindkraftanlage erzeugt Strom auch bei bewölktem Himmel –
-                kompakt, geräuscharm und ideal zur Kombination mit Photovoltaik. Verfügbar als
-                NG&nbsp;1&nbsp;kW und NG&nbsp;2&nbsp;kW.
+              <p className="text-base sm:text-lg text-white/80 leading-relaxed mb-6 max-w-xl">
+                The SkyWind NG is a compact small wind turbine that generates clean electricity even
+                in low winds — day and night, grid-tied or off-grid. Available as NG&nbsp;1&nbsp;kW
+                and NG&nbsp;2&nbsp;kW. Ships across Europe.
               </p>
+
+              {/* Trust badges */}
+              <div className="flex flex-wrap gap-3 mb-8">
+                {["EU Shipping", "2-Year Warranty", "Free Site Check", "Grid & Off-Grid"].map((badge) => (
+                  <span
+                    key={badge}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium bg-white/10 border border-white/20 text-white rounded-full px-3 py-1.5"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-accent flex-shrink-0" />
+                    {badge}
+                  </span>
+                ))}
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   href="/kontakt"
                   className="inline-block bg-brand-accent text-white font-semibold px-8 py-3 rounded-xl hover:bg-green-600 transition-colors duration-150 text-center"
                 >
-                  Beratung anfragen
+                  Request Free Consultation
                 </Link>
                 <a
-                  href="#produkte"
+                  href="#products"
                   className="inline-block border border-white/40 text-white font-semibold px-8 py-3 rounded-xl hover:border-white hover:bg-white/10 transition-colors duration-150 text-center"
                 >
-                  Produkte ansehen
+                  View Products
                 </a>
               </div>
             </div>
@@ -238,10 +260,10 @@ export default async function SkywindNgPage({ params }: Props) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { number: "2,5 m/s", label: "Anlaufwindgeschwindigkeit" },
-              { number: "45 dB", label: "Schallpegel @ 10 m" },
-              { number: "1–2 kW", label: "Nennleistung (NG)" },
-              { number: "2 Jahre", label: "Herstellergarantie" },
+              { number: "2.5 m/s", label: "Cut-in wind speed" },
+              { number: "≤ 45 dB", label: "Noise level at 10 m" },
+              { number: "1–2 kW", label: "Rated power output" },
+              { number: "2 Years", label: "Manufacturer warranty" },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <p className="font-display text-2xl font-bold text-brand-accent">{s.number}</p>
@@ -252,29 +274,36 @@ export default async function SkywindNgPage({ params }: Props) {
         </div>
       </div>
 
-      {/* ── Was ist die SkyWind NG? ── */}
+      {/* ── What is the SkyWind NG? ── */}
       <section className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Produktübersicht</p>
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Product Overview</p>
               <h2 className="font-display text-3xl font-bold text-brand-text mb-5 leading-snug">
-                Was ist die SkyWind NG Kleinwindanlage?
+                What Is the SkyWind NG Small Wind Turbine?
               </h2>
               <p className="text-brand-muted leading-relaxed mb-4">
-                Die <strong>SkyWind NG</strong> ist eine moderne Kleinwindkraftanlage, die speziell für den Einsatz
-                auf privaten Grundstücken, Gewerbeflächen und landwirtschaftlichen Betrieben entwickelt wurde.
-                Sie ist in zwei Leistungsklassen erhältlich: <strong>SkyWind NG 1kW</strong> und <strong>SkyWind NG 2kW</strong>.
+                The <strong>SkyWind NG</strong> is a modern micro wind turbine engineered for private
+                properties, commercial premises, and agricultural operations. It is available in two output
+                classes: <strong>SkyWind NG 1kW</strong> and <strong>SkyWind NG 2kW</strong>.
               </p>
               <p className="text-brand-muted leading-relaxed mb-4">
-                Im Unterschied zu klassischen Dachsolaranlagen erzeugt die SkyWind NG auch dann Strom,
-                wenn die Sonne nicht scheint – an bewölkten Tagen, in der Nacht und in den Wintermonaten,
-                wenn die Winderträge typischerweise am höchsten sind.
+                Unlike rooftop solar panels, the SkyWind NG generates electricity around the clock —
+                on overcast days, at night, and especially during winter months when wind energy
+                output is typically at its seasonal peak. This makes it the ideal complement to any
+                solar PV system in a <strong>hybrid solar wind setup</strong>.
+              </p>
+              <p className="text-brand-muted leading-relaxed mb-4">
+                The SkyWind NG is equally suitable for <strong>off-grid battery charging</strong> and
+                grid-tied operation. Whether you want to power a remote cabin, reduce your home energy
+                bill, or achieve near-total energy independence — the SkyWind NG delivers reliable,
+                low-maintenance output year-round.
               </p>
               <p className="text-brand-muted leading-relaxed mb-6">
-                Als autorisiierter Händler und Installationspartner bieten wir die SkyWind NG inklusive
-                individueller Standortprüfung, Beratung, Lieferung und optionaler Montage an.
-                Weitere Informationen zu unserem Unternehmen finden Sie auf{" "}
+                As authorised distributor and installation partner, WSP Solar provides the SkyWind NG
+                including individual site assessment, delivery across Europe, and optional professional
+                installation. Learn more at{" "}
                 <a
                   href={MAIN_SITE}
                   target="_blank"
@@ -290,13 +319,13 @@ export default async function SkywindNgPage({ params }: Props) {
                   href="/kontakt"
                   className="inline-block bg-brand-accent text-white font-semibold px-6 py-3 rounded-xl hover:bg-green-600 transition-colors duration-150 text-center text-sm"
                 >
-                  Standort prüfen lassen
+                  Get a Free Site Assessment
                 </Link>
                 <Link
-                  href="/kombiloesungen"
+                  href="/hybrid-solar-wind-system"
                   className="inline-block border border-gray-200 text-brand-text font-semibold px-6 py-3 rounded-xl hover:border-brand-accent hover:text-brand-accent transition-colors duration-150 text-center text-sm"
                 >
-                  Solar + Wind kombinieren
+                  Hybrid Solar + Wind →
                 </Link>
               </div>
             </div>
@@ -304,7 +333,7 @@ export default async function SkywindNgPage({ params }: Props) {
             <div className="relative h-72 sm:h-96 rounded-2xl overflow-hidden shadow-lg">
               <Image
                 src="/images/skywind-rooftop.png"
-                alt="SkyWind NG auf Hausdach mit Photovoltaik"
+                alt="SkyWind NG small wind turbine on rooftop alongside solar panels — hybrid solar wind system"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -314,21 +343,50 @@ export default async function SkywindNgPage({ params }: Props) {
         </div>
       </section>
 
-      {/* ── Technische Daten ── */}
+      {/* ── Use Cases ── */}
       <section className="bg-gray-50 py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl mb-10">
-            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Technische Daten</p>
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Applications</p>
             <h2 className="font-display text-3xl font-bold text-brand-text">
-              SkyWind NG – Technische Spezifikationen
+              Where the SkyWind NG Delivers
+            </h2>
+            <p className="text-brand-muted mt-2">
+              From off-grid cabins to commercial rooftops — the SkyWind NG adapts to every site and use case.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {USE_CASES.map((uc) => (
+              <Link
+                key={uc.title}
+                href={uc.href as any}
+                className="group bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-3 hover:border-brand-accent hover:shadow-md transition-all duration-150"
+              >
+                <span className="text-2xl">{uc.icon}</span>
+                <h3 className="font-display font-bold text-brand-text text-base group-hover:text-brand-accent transition-colors">{uc.title}</h3>
+                <p className="text-sm text-brand-muted leading-relaxed">{uc.desc}</p>
+                <span className="text-xs font-semibold text-brand-accent mt-auto">Learn more →</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Technical Specifications ── */}
+      <section className="py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-xl mb-10">
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Technical Data</p>
+            <h2 className="font-display text-3xl font-bold text-brand-text">
+              SkyWind NG – Technical Specifications
             </h2>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden max-w-3xl">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">Merkmal</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">Wert</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">Specification</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">Value</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -342,12 +400,11 @@ export default async function SkywindNgPage({ params }: Props) {
             </table>
           </div>
           <p className="mt-4 text-xs text-brand-muted max-w-3xl">
-            Technische Daten können je nach Konfiguration und Modellgeneration abweichen. Verbindliche
-            Angaben finden Sie im jeweiligen{" "}
+            Technical data may vary by configuration and model generation. Refer to the individual{" "}
             <Link href="/products" className="text-brand-accent hover:underline">
-              Produktdatenblatt
+              product datasheet
             </Link>{" "}
-            oder auf{" "}
+            or{" "}
             <a
               href={`${MAIN_SITE}/skywind`}
               target="_blank"
@@ -355,37 +412,39 @@ export default async function SkywindNgPage({ params }: Props) {
               className="text-brand-accent hover:underline"
             >
               wsp-solarenergie.de/skywind
-            </a>
-            .
+            </a>{" "}
+            for binding specifications.
           </p>
         </div>
       </section>
 
-      {/* ── Modelle: NG 1kW vs 2kW ── */}
-      <section className="py-16 sm:py-20">
+      {/* ── Model Comparison ── */}
+      <section className="bg-gray-50 py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl mb-10">
-            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Modellvergleich</p>
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Model Comparison</p>
             <h2 className="font-display text-3xl font-bold text-brand-text">
-              SkyWind NG 1kW oder 2kW – welches Modell passt zu Ihnen?
+              SkyWind NG 1kW or 2kW – Which Model Fits Your Project?
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
             {[
               {
                 model: "SkyWind NG 1kW",
-                ideal: "Eigenheim, Kleingrundstück, Ergänzung zur PV",
-                leistung: "1.000 W",
-                rotor: "ca. 1,8 m",
-                ertrag: "ca. 1.500–2.500 kWh/Jahr*",
+                ideal: "Home, residential lot, solar PV supplement",
+                power: "1,000 W",
+                rotor: "approx. 1.8 m",
+                yield: "approx. 1,500–2,500 kWh/year*",
+                bestFor: "Small wind turbine for home, off-grid cabin, battery charging",
                 highlight: false,
               },
               {
                 model: "SkyWind NG 2kW",
-                ideal: "Gewerbe, Landwirtschaft, größere Anlage",
-                leistung: "2.000 W",
-                rotor: "ca. 2,5 m",
-                ertrag: "ca. 3.000–5.000 kWh/Jahr*",
+                ideal: "Commercial, agriculture, larger installations",
+                power: "2,000 W",
+                rotor: "approx. 2.5 m",
+                yield: "approx. 3,000–5,000 kWh/year*",
+                bestFor: "Rooftop wind turbine, farm, hybrid solar wind system",
                 highlight: true,
               },
             ].map((m) => (
@@ -399,15 +458,16 @@ export default async function SkywindNgPage({ params }: Props) {
               >
                 {m.highlight && (
                   <span className="self-start text-xs font-semibold text-white bg-brand-accent px-2.5 py-1 rounded-full">
-                    Empfohlen
+                    Most Popular
                   </span>
                 )}
                 <h3 className="font-display text-xl font-bold text-brand-text">{m.model}</h3>
                 <ul className="space-y-2 text-sm text-brand-muted">
-                  <li><span className="font-medium text-brand-text">Ideal für:</span> {m.ideal}</li>
-                  <li><span className="font-medium text-brand-text">Nennleistung:</span> {m.leistung}</li>
-                  <li><span className="font-medium text-brand-text">Rotordurchmesser:</span> {m.rotor}</li>
-                  <li><span className="font-medium text-brand-text">Typischer Jahresertrag:</span> {m.ertrag}</li>
+                  <li><span className="font-medium text-brand-text">Ideal for:</span> {m.ideal}</li>
+                  <li><span className="font-medium text-brand-text">Rated Power:</span> {m.power}</li>
+                  <li><span className="font-medium text-brand-text">Rotor Diameter:</span> {m.rotor}</li>
+                  <li><span className="font-medium text-brand-text">Annual Yield:</span> {m.yield}</li>
+                  <li><span className="font-medium text-brand-text">Best use case:</span> {m.bestFor}</li>
                 </ul>
                 <Link
                   href="/kontakt"
@@ -417,30 +477,30 @@ export default async function SkywindNgPage({ params }: Props) {
                       : "border border-gray-200 text-brand-text hover:border-brand-accent hover:text-brand-accent"
                   }`}
                 >
-                  Beratung anfragen
+                  Request a Quote
                 </Link>
               </div>
             ))}
           </div>
           <p className="mt-4 text-xs text-brand-muted">
-            * Jahresertrag ist standortabhängig und basiert auf einer mittleren Windgeschwindigkeit von 5–6 m/s.
-            Individuelle Ertragsprognose erfolgt im Beratungsgespräch.
+            * Annual yield is site-dependent and based on an average wind speed of 5–6 m/s.
+            Individual yield forecasts are provided during your free consultation.
           </p>
         </div>
       </section>
 
-      {/* ── Produkte ── */}
+      {/* ── Products ── */}
       {products.length > 0 && (
-        <section id="produkte" className="bg-gray-50 py-16 sm:py-20">
+        <section id="products" className="py-16 sm:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-10">
-              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Direkt kaufen</p>
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Shop</p>
               <h2 className="font-display text-3xl font-bold text-brand-text">
-                SkyWind NG jetzt kaufen oder konfigurieren
+                Buy the SkyWind NG – Direct from Stock
               </h2>
               <p className="text-brand-muted mt-2 max-w-xl">
-                Alle SkyWind NG Produkte inklusive Masten, Zubehör und Komplettpaketen – direkt bestellbar
-                oder auf Anfrage konfigurierbar.
+                All SkyWind NG models including masts, accessories, and complete packages —
+                available to order directly or configurable on request. EU shipping included.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -453,116 +513,115 @@ export default async function SkywindNgPage({ params }: Props) {
                 href="/products"
                 className="inline-block border border-gray-200 text-brand-text font-semibold px-6 py-3 rounded-xl hover:border-brand-accent hover:text-brand-accent transition-colors duration-150 text-sm"
               >
-                Alle Produkte ansehen →
+                View All Products →
               </Link>
             </div>
           </div>
         </section>
       )}
 
-      {/* ── Ertrag & Wirtschaftlichkeit ── */}
-      <section className="py-16 sm:py-20">
+      {/* ── Energy Yield & ROI ── */}
+      <section className="bg-gray-50 py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             <div>
-              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Wirtschaftlichkeit</p>
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Return on Investment</p>
               <h2 className="font-display text-3xl font-bold text-brand-text mb-5">
-                Lohnt sich die SkyWind NG – Ertrag und Amortisation
+                Is the SkyWind NG Worth It? Yield &amp; Payback
               </h2>
               <p className="text-brand-muted leading-relaxed mb-4">
-                Die Wirtschaftlichkeit der SkyWind NG hängt primär vom Windpotenzial Ihres Standorts ab.
-                Mit einer mittleren Windgeschwindigkeit von 5 m/s kann die <strong>SkyWind NG 1kW</strong> rund
-                1.500 bis 2.500 kWh pro Jahr erzeugen – genug, um einen Haushalt zu einem erheblichen
-                Teil mit Eigenstrom zu versorgen.
+                The economics of the SkyWind NG depend primarily on your site&apos;s wind resource.
+                At an average wind speed of 5 m/s, the <strong>SkyWind NG 1kW</strong> can generate
+                1,500–2,500 kWh per year — enough to cover a significant share of a typical
+                household&apos;s electricity demand.
               </p>
               <p className="text-brand-muted leading-relaxed mb-4">
-                Bei einem Strompreis von 0,30 €/kWh entspricht das einer jährlichen Einsparung von
-                450–750 € allein durch Eigenverbrauch. Hinzu kommt die Einspeisevergütung nach EEG
-                für nicht verbrauchten Strom.
+                At €0.30/kWh, that translates to annual savings of €450–750 from self-consumption
+                alone — before any feed-in revenue or subsidies. Payback periods of 8–12 years are
+                realistic at good wind sites, dropping further when combined with solar PV.
               </p>
               <p className="text-brand-muted leading-relaxed mb-6">
-                Amortisationszeiträume von 8–12 Jahren sind bei geeigneten Standorten realistisch.
-                Bei Kombination mit einer Photovoltaik-Anlage und einem Batteriespeicher können
-                Autarkiequoten von über 70 % erreicht werden.
+                In a hybrid solar wind system with battery storage, self-sufficiency rates above
+                70% are achievable — significantly reducing dependence on grid electricity and
+                protecting against future price increases.
               </p>
-              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                <p className="text-xs font-semibold text-brand-muted uppercase tracking-wider mb-3">Windpotenzial prüfen</p>
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <p className="text-xs font-semibold text-brand-muted uppercase tracking-wider mb-3">Check Wind Potential at Your Site</p>
                 <p className="text-sm text-brand-muted mb-4">
-                  Den Windatlas Deutschland des Deutschen Wetterdienstes (DWD) können Sie nutzen,
-                  um das Windpotenzial Ihres Standorts vorab einzuschätzen.
+                  Use the Global Wind Atlas to estimate average wind speeds for any location worldwide
+                  before requesting a detailed site assessment.
                 </p>
                 <a
-                  href="https://www.dwd.de/DE/klimaumwelt/klimaatlas/klimaatlas_node.html"
+                  href="https://globalwindatlas.info"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block text-sm font-semibold text-brand-accent hover:underline"
                 >
-                  DWD Klimaatlas öffnen →
+                  Open Global Wind Atlas →
                 </a>
               </div>
             </div>
 
             <div className="space-y-4">
               {[
-                { label: "Standort optimal (> 6 m/s)", ertrag: "3.000–5.000 kWh/Jahr", saving: "900–1.500 €/Jahr", color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-                { label: "Standort gut (4–6 m/s)", ertrag: "1.500–3.000 kWh/Jahr", saving: "450–900 €/Jahr", color: "text-brand-accent bg-green-50 border-green-200" },
-                { label: "Standort bedingt (3–4 m/s)", ertrag: "500–1.500 kWh/Jahr", saving: "150–450 €/Jahr", color: "text-amber-600 bg-amber-50 border-amber-200" },
-                { label: "Standort ungeeignet (< 3 m/s)", ertrag: "Wirtschaftlichkeit fraglich", saving: "Wir empfehlen PV", color: "text-red-600 bg-red-50 border-red-200" },
+                { label: "Excellent site (> 6 m/s)", yield: "3,000–5,000 kWh/year", saving: "€900–1,500/year", color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+                { label: "Good site (4–6 m/s)", yield: "1,500–3,000 kWh/year", saving: "€450–900/year", color: "text-brand-accent bg-green-50 border-green-200" },
+                { label: "Moderate site (3–4 m/s)", yield: "500–1,500 kWh/year", saving: "€150–450/year", color: "text-amber-600 bg-amber-50 border-amber-200" },
+                { label: "Low wind site (< 3 m/s)", yield: "Limited economics", saving: "We recommend solar PV", color: "text-red-600 bg-red-50 border-red-200" },
               ].map((row) => (
                 <div key={row.label} className={`rounded-xl border p-5 ${row.color}`}>
                   <p className="font-semibold text-sm mb-1">{row.label}</p>
-                  <p className="text-xs">Ertrag (NG 2kW): {row.ertrag}</p>
-                  <p className="text-xs">Einsparung: {row.saving}</p>
+                  <p className="text-xs">Yield (NG 2kW): {row.yield}</p>
+                  <p className="text-xs">Annual savings: {row.saving}</p>
                 </div>
               ))}
               <p className="text-xs text-brand-muted pt-2">
-                Alle Werte sind Richtwerte basierend auf typischen Standortbedingungen. Die individuelle
-                Standortprüfung ist Grundlage jedes Angebots.
+                Values are indicative based on typical site conditions. A free individual site
+                assessment is the basis for every quotation.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── SkyWind NG + Solar = Kombilösung ── */}
+      {/* ── Hybrid Solar Wind System ── */}
       <section className="bg-brand-text py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-4">Kombilösung</p>
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-4">Hybrid Solar Wind System</p>
               <h2 className="font-display text-3xl font-bold text-white mb-5 leading-snug">
-                SkyWind NG + Solarzaun:<br />
-                Die optimale Hybridlösung.
+                SkyWind NG + Solar Fence:<br />
+                The Optimal Hybrid Energy System.
               </h2>
               <p className="text-gray-300 leading-relaxed mb-4">
-                Solar und Wind ergänzen sich nach Jahreszeit und Tageszeit ideal. Während Photovoltaik
-                im Sommer und bei Sonnenschein am meisten produziert, liefert die SkyWind NG besonders
-                in den Wintermonaten und bei bewölktem Himmel zuverlässig Strom.
+                Solar PV and wind turbines are complementary by nature. Solar produces the most energy
+                on sunny summer days; the SkyWind NG delivers reliably during winter, at night, and
+                on overcast days when panels underperform.
               </p>
               <p className="text-gray-300 leading-relaxed mb-6">
-                Kombiniert mit einem Batteriespeicher erreichen Hybridanlagen aus SkyWind NG und
-                Photovoltaik Eigenversorgungsquoten von deutlich über 70 % – für nahezu vollständige
-                Unabhängigkeit vom Stromnetz.
+                Combined with battery storage, a hybrid solar wind system achieves self-sufficiency
+                rates well above 70% — delivering genuine energy independence from grid price fluctuations.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
-                  href="/kombiloesungen"
+                  href="/hybrid-solar-wind-system"
                   className="inline-block bg-brand-accent text-white font-semibold px-7 py-3 rounded-xl hover:bg-green-600 transition-colors duration-150 text-center text-sm"
                 >
-                  Kombilösungen entdecken
+                  Hybrid Systems →
                 </Link>
                 <Link
                   href="/solarzaun"
                   className="inline-block border border-gray-600 text-white font-semibold px-7 py-3 rounded-xl hover:border-gray-400 transition-colors duration-150 text-center text-sm"
                 >
-                  Solarzaun ansehen
+                  Solar Fence (Solarzaun)
                 </Link>
               </div>
             </div>
             <div className="relative h-64 sm:h-80 rounded-2xl overflow-hidden">
               <Image
                 src="/images/skywind-rooftop.png"
-                alt="SkyWind NG und Solarzaun als Kombilösung"
+                alt="SkyWind NG wind turbine combined with solar panels — hybrid solar wind energy system"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -572,25 +631,25 @@ export default async function SkywindNgPage({ params }: Props) {
         </div>
       </section>
 
-      {/* ── Genehmigung ── */}
+      {/* ── International Shipping & Delivery ── */}
       <section className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Genehmigung</p>
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Shipping &amp; Delivery</p>
             <h2 className="font-display text-3xl font-bold text-brand-text mb-5">
-              SkyWind NG Genehmigung – Was Sie wissen müssen
+              SkyWind NG – International Availability
             </h2>
-            <p className="text-brand-muted leading-relaxed mb-4">
-              Die Genehmigungspflicht für eine SkyWind NG Kleinwindanlage ist in Deutschland
-              Ländersache und hängt von Faktoren wie Anlagenhöhe, Standort und kommunalem Bebauungsplan ab.
-              In vielen Bundesländern gilt die SkyWind NG als <strong>verfahrensfreies Vorhaben</strong>,
-              wenn sie bestimmte Größenkriterien einhält.
+            <p className="text-brand-muted leading-relaxed mb-6">
+              WSP Solar ships the SkyWind NG to customers across Europe. For destinations outside
+              the EU, contact us directly for a freight quotation. Professional installation teams
+              are available in Germany, Austria, and Switzerland; for other countries we work with
+              certified local partners.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               {[
-                { region: "Nord- & Ostdeutschland", note: "Häufig genehmigungsfrei bei Masthöhe < 10 m", color: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-                { region: "Süd- & Westdeutschland", note: "Baugenehmigung bei Höhe > 10 m oft erforderlich", color: "border-amber-200 bg-amber-50 text-amber-700" },
-                { region: "Alle Bundesländer", note: "Bebauungsplan und Abstandsflächen immer prüfen", color: "border-gray-200 bg-gray-50 text-brand-muted" },
+                { region: "Germany, Austria, Switzerland", note: "Delivery 3–7 business days · Installation available", color: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+                { region: "EU Countries", note: "Delivery 5–10 business days · Local installer network", color: "border-brand-accent/30 bg-green-50 text-brand-accent" },
+                { region: "International (non-EU)", note: "Contact us for freight quote · Documentation included", color: "border-gray-200 bg-gray-50 text-brand-muted" },
               ].map((r) => (
                 <div key={r.region} className={`rounded-xl border p-4 ${r.color}`}>
                   <p className="font-semibold text-sm mb-1">{r.region}</p>
@@ -599,70 +658,119 @@ export default async function SkywindNgPage({ params }: Props) {
               ))}
             </div>
             <p className="text-brand-muted leading-relaxed">
-              Wir unterstützen Sie dabei, die Genehmigungsanforderungen für Ihren konkreten Standort
-              frühzeitig zu klären – kostenfrei und unverbindlich.{" "}
+              All SkyWind NG units include CE certification, manufacturer documentation, and a
+              2-year warranty. Installation manuals available in German, English, and Spanish.{" "}
               <Link href="/kontakt" className="text-brand-accent hover:underline font-medium">
-                Jetzt Beratung anfragen →
+                Contact us for a shipping quote →
               </Link>
             </p>
           </div>
         </div>
       </section>
 
-      {/* ── FAQ ── */}
+      {/* ── Permits & Installation ── */}
       <section className="bg-gray-50 py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-xl mb-10">
-            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">FAQ</p>
-            <h2 className="font-display text-3xl font-bold text-brand-text">
-              Häufige Fragen zur SkyWind NG Kleinwindanlage
+          <div className="max-w-3xl">
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Installation &amp; Permits</p>
+            <h2 className="font-display text-3xl font-bold text-brand-text mb-5">
+              Planning Permission – What You Need to Know
             </h2>
-          </div>
-          <div className="max-w-3xl divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden">
-            {FAQ_ITEMS.map((item) => (
-              <details key={item.q} className="group bg-white">
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-6 py-5 font-display font-semibold text-brand-text hover:text-brand-accent transition-colors duration-150 [&::-webkit-details-marker]:hidden">
-                  <span>{item.q}</span>
-                  <span className="mt-0.5 flex-shrink-0 text-brand-muted text-sm transition-transform duration-200 group-open:rotate-180">↓</span>
-                </summary>
-                <div className="px-6 pb-5">
-                  <p className="text-sm text-brand-muted leading-relaxed">{item.a}</p>
+            <p className="text-brand-muted leading-relaxed mb-4">
+              Permit requirements for the SkyWind NG vary by country, region, and installation type.
+              In Germany, small wind turbines below a defined height threshold are often{" "}
+              <strong>permit-free</strong> (verfahrensfreies Vorhaben). In other EU countries,
+              local building regulations and planning laws apply.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              {[
+                { region: "Northern Germany / rural areas", note: "Often permit-free for mast height < 10 m", color: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+                { region: "Southern / Western Germany", note: "Building permit may be required above 10 m", color: "border-amber-200 bg-amber-50 text-amber-700" },
+                { region: "EU / International", note: "Local planning authority approval — we advise", color: "border-gray-200 bg-gray-50 text-brand-muted" },
+              ].map((r) => (
+                <div key={r.region} className={`rounded-xl border p-4 ${r.color}`}>
+                  <p className="font-semibold text-sm mb-1">{r.region}</p>
+                  <p className="text-xs">{r.note}</p>
                 </div>
-              </details>
-            ))}
-          </div>
-          <div className="mt-6">
-            <Link
-              href="/faq"
-              className="inline-block text-sm font-semibold text-brand-text border border-gray-200 rounded-xl px-5 py-2.5 hover:border-brand-accent hover:text-brand-accent transition-colors duration-150"
-            >
-              Alle FAQ ansehen →
-            </Link>
+              ))}
+            </div>
+            <p className="text-brand-muted leading-relaxed">
+              We help you clarify permit requirements for your specific site at no cost.{" "}
+              <Link href="/kontakt" className="text-brand-accent hover:underline font-medium">
+                Request planning advice →
+              </Link>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ── Über WSP Solarenergie ── */}
+      {/* ── FAQ (shared component with Schema.org FAQPage) ── */}
+      <FaqSection
+        items={SKYWIND_FAQ_ITEMS}
+        title="Frequently Asked Questions – SkyWind NG Micro Wind Turbine"
+        bg="white"
+      />
+
+      {/* ── Related Topics ── */}
+      <section className="bg-gray-50 py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-xl mb-8">
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Related Topics</p>
+            <h2 className="font-display text-2xl font-bold text-brand-text">
+              Explore More Wind Energy Guides
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { href: "/micro-wind-turbine", label: "Micro Wind Turbine", desc: "Technology, specs, and applications for micro-scale wind power." },
+              { href: "/small-wind-turbine-for-home", label: "Small Wind Turbine for Home", desc: "Choosing the right small turbine for your home and property." },
+              { href: "/rooftop-wind-turbine", label: "Rooftop Wind Turbine", desc: "Installation options, mounting systems, and planning guide." },
+              { href: "/off-grid-wind-turbine", label: "Off-Grid Wind Turbine", desc: "Battery charging, off-grid systems, and energy independence." },
+              { href: "/hybrid-solar-wind-system", label: "Hybrid Solar Wind System", desc: "Combining solar PV and wind for maximum self-sufficiency." },
+              { href: "/kombiloesungen", label: "Kombilösungen (DE)", desc: "Solarzaun and SkyWind NG combined energy solutions." },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href as any}
+                className="group bg-white rounded-2xl border border-gray-100 p-5 hover:border-brand-accent hover:shadow-sm transition-all duration-150"
+              >
+                <p className="font-display font-semibold text-brand-text text-sm mb-1 group-hover:text-brand-accent transition-colors">{link.label}</p>
+                <p className="text-xs text-brand-muted">{link.desc}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── About WSP Solar ── */}
       <section className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Ihr Partner</p>
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">Your Partner</p>
             <h2 className="font-display text-2xl font-bold text-brand-text mb-4">
-              Warum WSP Solarenergie?
+              Why WSP Solar?
             </h2>
             <p className="text-brand-muted leading-relaxed mb-4">
-              Wir sind spezialisiert auf nachhaltige Energielösungen für Eigenheim, Gewerbe und
-              Landwirtschaft. Neben der SkyWind NG führen wir{" "}
-              <Link href="/solarzaun" className="text-brand-accent hover:underline">Solarzaunanlagen</Link>{" "}
-              und{" "}
-              <Link href="/kombiloesungen" className="text-brand-accent hover:underline">Kombilösungen</Link>{" "}
-              aus Solar und Wind.
+              We specialise in sustainable energy systems for homes, businesses, and agriculture.
+              In addition to the SkyWind NG, we supply{" "}
+              <Link href="/solarzaun" className="text-brand-accent hover:underline">solar fence systems (Solarzaun)</Link>{" "}
+              and{" "}
+              <Link href="/kombiloesungen" className="text-brand-accent hover:underline">hybrid solar wind solutions</Link>
+              .
             </p>
-            <p className="text-brand-muted leading-relaxed mb-6">
-              Jede Beratung beginnt mit einer ehrlichen Standortanalyse. Wir empfehlen die SkyWind NG
-              nur dann, wenn sie an Ihrem Standort wirtschaftlich sinnvoll ist. Wenn nicht, sagen wir
-              das – und zeigen Ihnen Alternativen.
+            <p className="text-brand-muted leading-relaxed mb-4">
+              Every consultation starts with an honest site analysis. We only recommend the SkyWind NG
+              when it makes economic sense for your specific location. If the wind resource is
+              insufficient, we&apos;ll tell you — and show you the best alternative.
             </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+              {["CE Certified", "2-Year Warranty", "Free Assessment", "EU Shipping"].map((trust) => (
+                <div key={trust} className="flex items-center gap-2 text-sm text-brand-muted">
+                  <span className="text-brand-accent font-bold">✓</span>
+                  {trust}
+                </div>
+              ))}
+            </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <a
                 href={MAIN_SITE}
@@ -679,36 +787,36 @@ export default async function SkywindNgPage({ params }: Props) {
                 href="/kontakt"
                 className="inline-block text-sm font-semibold text-white bg-brand-accent rounded-xl px-5 py-2.5 hover:bg-green-600 transition-colors duration-150 text-center"
               >
-                Beratungsgespräch buchen
+                Book a Consultation
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Abschluss CTA ── */}
+      {/* ── Final CTA ── */}
       <section className="bg-brand-text py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-5">Nächster Schritt</p>
+          <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-5">Next Step</p>
           <h2 className="font-display text-4xl font-bold text-white mb-4 leading-tight">
-            Ist die SkyWind NG die richtige Lösung<br />für Ihren Standort?
+            Is the SkyWind NG the Right Wind Turbine<br />for Your Site?
           </h2>
           <p className="text-gray-400 text-lg leading-relaxed max-w-2xl mx-auto mb-10">
-            Schildern Sie uns Ihren Standort und Ihre Ziele. Wir prüfen das Windpotenzial und
-            geben Ihnen innerhalb von zwei Werktagen eine ehrliche, kostenfreie Einschätzung.
+            Tell us about your location and energy goals. We assess the wind potential and provide
+            an honest, no-cost site evaluation within two business days.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/kontakt"
               className="inline-block bg-brand-accent text-white font-semibold px-9 py-3.5 rounded-xl hover:bg-green-600 transition-colors duration-150"
             >
-              Beratung anfragen
+              Request Free Consultation
             </Link>
             <Link
               href="/products"
               className="inline-block border border-gray-600 text-white font-semibold px-9 py-3.5 rounded-xl hover:border-gray-400 transition-colors duration-150"
             >
-              Produkte ansehen
+              View All Products
             </Link>
           </div>
         </div>

@@ -107,9 +107,9 @@ export default async function KombilösungenPage({ params }: Props) {
       />
 
       <SolutionProductsSection
-        eyebrow="Produkte"
-        title="Passende Produkte für Kombilösungen"
-        description="Aktive Produkte aus der Kategorie Kombilösung, passend zu Solar-, Wind- und Systemprojekten."
+        eyebrow={t("products_eyebrow")}
+        title={t("products_title")}
+        description={t("products_desc")}
         products={products}
       />
 

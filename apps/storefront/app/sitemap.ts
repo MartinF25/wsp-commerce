@@ -144,6 +144,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
       alternates: { languages: { "x-default": `${BASE}/kontakt`, de: `${BASE}/kontakt`, en: `${BASE}/en/kontakt`, es: `${BASE}/es/kontakt` } },
     },
+    {
+      url: `${BASE}/micro-wind-turbine`,
+      changeFrequency: "monthly",
+      priority: 0.8,
+      alternates: { languages: { "x-default": `${BASE}/micro-wind-turbine`, de: `${BASE}/micro-wind-turbine`, en: `${BASE}/en/micro-wind-turbine`, es: `${BASE}/es/micro-wind-turbine` } },
+    },
+    {
+      url: `${BASE}/small-wind-turbine-for-home`,
+      changeFrequency: "monthly",
+      priority: 0.8,
+      alternates: { languages: { "x-default": `${BASE}/small-wind-turbine-for-home`, de: `${BASE}/small-wind-turbine-for-home`, en: `${BASE}/en/small-wind-turbine-for-home`, es: `${BASE}/es/small-wind-turbine-for-home` } },
+    },
+    {
+      url: `${BASE}/rooftop-wind-turbine`,
+      changeFrequency: "monthly",
+      priority: 0.8,
+      alternates: { languages: { "x-default": `${BASE}/rooftop-wind-turbine`, de: `${BASE}/rooftop-wind-turbine`, en: `${BASE}/en/rooftop-wind-turbine`, es: `${BASE}/es/rooftop-wind-turbine` } },
+    },
+    {
+      url: `${BASE}/off-grid-wind-turbine`,
+      changeFrequency: "monthly",
+      priority: 0.8,
+      alternates: { languages: { "x-default": `${BASE}/off-grid-wind-turbine`, de: `${BASE}/off-grid-wind-turbine`, en: `${BASE}/en/off-grid-wind-turbine`, es: `${BASE}/es/off-grid-wind-turbine` } },
+    },
+    {
+      url: `${BASE}/hybrid-solar-wind-system`,
+      changeFrequency: "monthly",
+      priority: 0.8,
+      alternates: { languages: { "x-default": `${BASE}/hybrid-solar-wind-system`, de: `${BASE}/hybrid-solar-wind-system`, en: `${BASE}/en/hybrid-solar-wind-system`, es: `${BASE}/es/hybrid-solar-wind-system` } },
+    },
   ];
 
   return [

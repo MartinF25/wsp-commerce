@@ -47,8 +47,8 @@
   },
   "announcement": "Free consultation for all projects · Individual planning · Enquire now and check subsidy options",
   "home": {
-    "meta_title": "Solar Fence & SkyWind – Modern Energy Solutions",
-    "meta_description": "Solar fences, SkyWind turbines and combo solutions for private, commercial and agricultural use. Discover and order now.",
+    "meta_title": "SkyWind NG Micro Wind Turbine & Solar Fence | WSP",
+    "meta_description": "SkyWind NG micro wind turbines and solar fences for homes, farms and businesses. Hybrid solar wind systems – individually planned.",
     "hero_eyebrow": "Solar Fence · SkyWind · Combo Solutions",
     "hero_h1_line1": "Energy from",
     "hero_h1_line2": "your own ground.",
@@ -132,8 +132,8 @@
     "blog_read_more": "Read more →"
   },
   "skywind": {
-    "meta_title": "SkyWind – Small Wind Turbines for Private and Commercial Sites",
-    "meta_desc": "SkyWind small wind turbines generate electricity even when the sun is not shining. Compact, quiet and designed for individual sites.",
+    "meta_title": "SkyWind Small Wind Turbine for Home & Business",
+    "meta_desc": "SkyWind small wind turbines for home and business – compact, quiet and off-grid capable. Generates power when solar doesn't. Free site assessment.",
     "breadcrumb_home": "Home",
     "eyebrow": "SkyWind",
     "h1_line1": "Power even when",
@@ -243,13 +243,19 @@
     "cta_eyebrow": "Next step",
     "cta_h2_line1": "Is SkyWind the right solution",
     "cta_h2_line2": "for your site?",
-    "cta_sub": "Tell us about your site and your goals. We'll assess the wind potential and give you an honest assessment within two working days."
+    "cta_sub": "Tell us about your site and your goals. We'll assess the wind potential and give you an honest assessment within two working days.",
+    "products_eyebrow": "Products",
+    "products_title": "SkyWind Products at a Glance",
+    "products_desc": "All available SkyWind turbines and accessories — ready to order or configurable on request.",
+    "ng_banner_title": "SkyWind NG – Specs, Technical Data & Model Comparison",
+    "ng_banner_body": "Our SkyWind NG page covers the specific model in detail: technical specifications, model comparison (1 kW vs. 2 kW), yield forecasts and frequently asked questions.",
+    "ng_banner_cta": "SkyWind NG in Detail →"
   },
   "products": {
     "breadcrumb_home": "Home",
     "page_title": "All Products",
-    "meta_title": "Products – Solar Fence & SkyWind",
-    "meta_desc": "Solar fences, SkyWind turbines and combo solutions – buy directly or configure. All products at a glance.",
+    "meta_title": "Products – SkyWind NG Wind Turbines & Solar Fence",
+    "meta_desc": "SkyWind NG wind turbines, solar fences and hybrid solar wind systems. Buy direct or request a custom quote. Free consultation.",
     "buy": "Order now",
     "inquiry": "Request Advice",
     "learn": "Learn more",
@@ -373,8 +379,8 @@
     "stock_out_of_stock": "Out of stock"
   },
   "blog": {
-    "meta_title": "Blog – Renewable Energy | Solar Fence & SkyWind",
-    "meta_desc": "Guides, news and practical knowledge on solar fences, small wind turbines and renewable energy for private and commercial use.",
+    "meta_title": "Blog – Small Wind Turbines, Solar Fence & Renewable Energy",
+    "meta_desc": "Guides and practical knowledge on SkyWind NG turbines, solar fences and renewable energy systems – for homes, businesses and farms.",
     "eyebrow": "Knowledge & Guides",
     "h1": "Blog",
     "sub": "Practical knowledge on solar fences, small wind turbines and renewable energy solutions – for private, commercial and agricultural use.",
@@ -529,8 +535,8 @@
     "img_thumb": "Show image {number}"
   },
   "solarzaun": {
-    "meta_title": "Solar Fence – Fencing and Energy in One",
-    "meta_desc": "The solar fence combines property fencing with electricity generation – without additional space requirements. For private properties, commercial premises and agriculture.",
+    "meta_title": "Solar Fence – Integrated PV Fencing for Any Property",
+    "meta_desc": "Solar fence combines property fencing with PV power generation – no extra space needed. For private, commercial and agricultural use. Free consultation.",
     "breadcrumb_home": "Home",
     "eyebrow": "Solar Fence",
     "h1_line1": "Fencing and Energy.",
@@ -638,11 +644,14 @@
     "cta_eyebrow": "Next step",
     "cta_h2_line1": "Your solar fence project",
     "cta_h2_line2": "starts with a conversation.",
-    "cta_sub": "Tell us about your property situation and your needs. We will get back to you within two working days with an initial concept proposal – without obligation and without standard offers."
+    "cta_sub": "Tell us about your property situation and your needs. We will get back to you within two working days with an initial concept proposal – without obligation and without standard offers.",
+    "products_eyebrow": "Products",
+    "products_title": "Solar Fence Products",
+    "products_desc": "Available Solarzaun products — ready to order or configurable on request."
   },
   "kombiloesungen": {
-    "meta_title": "Combined Solutions – Solar and Wind. Working Together.",
-    "meta_desc": "Maximum self-sufficiency through the interplay of solar fence, photovoltaics, storage and wind power. Individual system planning from a single source.",
+    "meta_title": "Hybrid Solar Wind System | Combined Energy Solutions",
+    "meta_desc": "Hybrid solar wind system with solar fence, photovoltaics and battery storage. Maximum self-sufficiency – individually planned for homes and businesses.",
     "breadcrumb_home": "Home",
     "eyebrow": "Combined Solutions",
     "h1_line1": "Solar and Wind.",
@@ -754,11 +763,14 @@
     "cta_h2_line2": "with an analysis.",
     "cta_sub": "Tell us about your property, your needs and your goals. We'll analyse which combination makes sense for you – without preconceptions and without standard offers.",
     "cta_primary": "Request Advice",
-    "cta_secondary": "Discover solar fence"
+    "cta_secondary": "Discover solar fence",
+    "products_eyebrow": "Products",
+    "products_title": "Combined Energy System Products",
+    "products_desc": "Available combined system products — solar fence, wind turbines and storage systems."
   },
   "privatkunden": {
-    "meta_title": "For Private Customers – Solar Fence, SkyWind and Combined Solutions",
-    "meta_desc": "Your own electricity from your own property. Solar fence, SkyWind and combined solutions for homeowners, builders and households with self-supply ambitions.",
+    "meta_title": "Renewable Energy for Homes – SkyWind NG & Solar Fence",
+    "meta_desc": "SkyWind NG small wind turbine and solar fence for homeowners. Renewable energy systems tailored to your property. Free initial consultation.",
     "breadcrumb_home": "Home",
     "eyebrow": "For Private Customers",
     "h1_line1": "Your own electricity from",
@@ -881,8 +893,8 @@
     "cta_secondary": "Frequently Asked Questions"
   },
   "gewerbe_b2b": {
-    "meta_title": "Commercial & B2B – Energy Solutions for Your Project",
-    "meta_desc": "Solar fence, SkyWind and combined solutions for commercial, agricultural and project development. Individual planning, scalable systems, collaborative partnerships.",
+    "meta_title": "Commercial Wind & Solar Energy Solutions | B2B",
+    "meta_desc": "Solar fence and SkyWind NG wind turbines for commercial and agricultural projects. Scalable hybrid energy systems, individual planning.",
     "breadcrumb_home": "Home",
     "breadcrumb": "Commercial & B2B",
     "eyebrow": "Commercial & B2B",
@@ -1034,8 +1046,8 @@
     "cta_secondary": "Frequently Asked Questions"
   },
   "faq": {
-    "meta_title": "FAQ – Frequently Asked Questions about Solar Fence, SkyWind and Combined Solutions",
-    "meta_desc": "Answers to frequently asked questions about solar fences, SkyWind, combined solutions and our consultation process.",
+    "meta_title": "FAQ – SkyWind NG, Solar Fence & Wind Turbines",
+    "meta_desc": "Answers to frequently asked questions about solar fences, SkyWind NG, combined solutions and our consultation process.",
     "breadcrumb_home": "Home",
     "eyebrow": "Frequently Asked Questions",
     "h1_line1": "What you want",
@@ -1071,9 +1083,33 @@
       "offerActive": "Current offer · valid until {date}"
     }
   },
+  "skywind_ng": {
+    "meta_title": "SkyWind NG Micro Wind Turbine – Buy Direct",
+    "meta_desc": "SkyWind NG 1kW & 2kW micro wind turbine: full specs, power output and pricing. Buy direct or request a free consultation."
+  },
+  "micro_wind_turbine": {
+    "meta_title": "Micro Wind Turbine – SkyWind NG Small Wind System",
+    "meta_desc": "Shop SkyWind NG micro wind turbines for homes and businesses. Compact, quiet and efficient – from 1kW output. Free site assessment included."
+  },
+  "small_wind_turbine_home": {
+    "meta_title": "Small Wind Turbine for Home | SkyWind NG",
+    "meta_desc": "SkyWind NG small wind turbine for home use – generate your own electricity year-round. Ideal with solar panels. Expert consultation free."
+  },
+  "rooftop_wind_turbine": {
+    "meta_title": "Rooftop Wind Turbine | SkyWind NG Roof Mount",
+    "meta_desc": "Install a SkyWind NG rooftop wind turbine and generate clean power from above. Compact design, quiet operation, professional installation."
+  },
+  "off_grid_wind_turbine": {
+    "meta_title": "Off Grid Wind Turbine | SkyWind NG Off-Grid",
+    "meta_desc": "SkyWind NG off-grid wind turbine for complete energy independence. Works with battery storage for 24/7 power supply. Free system design."
+  },
+  "hybrid_solar_wind": {
+    "meta_title": "Hybrid Solar Wind System | Solar + Wind Power",
+    "meta_desc": "Build the ultimate hybrid solar wind system with SkyWind NG turbines and solar panels. Maximum self-sufficiency, year-round energy production."
+  },
   "categories": {
-    "meta_title": "Categories – Solar Fence & SkyWind",
-    "meta_desc": "Browse solar fence, SkyWind and combined energy solutions by category – find the right system for your home, commercial property or farm.",
+    "meta_title": "Categories – SkyWind NG, Solar Fence & Wind Systems",
+    "meta_desc": "Browse SkyWind NG wind turbines, solar fences and combined energy systems by category – find the right renewable energy solution for your property.",
     "breadcrumb_home": "Home",
     "page_title": "Categories",
     "error_title": "Categories",

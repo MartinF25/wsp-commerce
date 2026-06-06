@@ -141,9 +141,9 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const source: string = Array.isArray(body) ? "kleinanzeigen" : ((body as any)?.source ?? "kleinanzeigen");
+  const source: string = (Array.isArray(body) ? "kleinanzeigen" : ((body as any)?.source ?? "kleinanzeigen")).toLowerCase().trim();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const keyword: string = Array.isArray(body) ? "skywind" : ((body as any)?.keyword ?? "skywind");
+  const keyword: string = (Array.isArray(body) ? "skywind" : ((body as any)?.keyword ?? "skywind")).toLowerCase().trim();
 
   const _listings = listings as Array<{
       adId?: string;
@@ -185,7 +185,8 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
         listing_url: item.url ?? null,
         image_url: item.image ?? null,
         shipping: item.shipping ?? null,
-        listed_at,
+        // listed_at only set if we have a value; keeps original date on re-scrape
+        ...(listed_at !== null ? { listed_at } : {}),
         scraped_at: now,
       },
       create: {
@@ -224,26 +225,31 @@ adminMarketListingRoutes.post("/cleanup", async (c) => {
     where: { keyword: { notIn: VALID_KEYWORDS } },
   });
 
-  // 2. For remaining listings: check if the keyword appears in the title
-  //    - keyword found in title → keep (correctly classified)
+  // 2. For remaining listings: check if the keyword appears in title or description.
+  //    Brand-name keywords (e.g. "skywind") are often absent from titles on Kleinanzeigen,
+  //    so we also check the description before treating a listing as a false positive.
+  //    - keyword found in title or description → keep (correctly classified)
   //    - different valid keyword found in title → re-classify
-  //    - no valid keyword found in title → delete (false positive from search)
+  //    - no valid keyword found in title or description → delete (false positive)
   const all = await prisma.marketListing.findMany({
-    select: { id: true, keyword: true, title: true },
+    select: { id: true, keyword: true, title: true, description: true },
   });
 
   const toDelete: string[] = [];
   const toReclassify: Array<{ id: string; keyword: string }> = [];
 
   for (const listing of all) {
-    const lower = listing.title.toLowerCase();
-    if (lower.includes(listing.keyword.toLowerCase())) continue; // correctly classified
+    const lowerTitle = listing.title.toLowerCase();
+    const lowerDesc = (listing.description ?? "").toLowerCase();
+    const kw = listing.keyword.toLowerCase();
 
-    const match = VALID_KEYWORDS.find((k) => lower.includes(k));
-    if (match) {
-      toReclassify.push({ id: listing.id, keyword: match });
+    if (lowerTitle.includes(kw) || lowerDesc.includes(kw)) continue; // correctly classified
+
+    const matchInTitle = VALID_KEYWORDS.find((k) => lowerTitle.includes(k));
+    if (matchInTitle) {
+      toReclassify.push({ id: listing.id, keyword: matchInTitle });
     } else {
-      toDelete.push(listing.id); // no valid keyword in title → false positive
+      toDelete.push(listing.id); // no valid keyword in title or description → false positive
     }
   }
 
