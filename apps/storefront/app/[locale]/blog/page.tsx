@@ -96,12 +96,8 @@ export default async function BlogListPage({ params, searchParams }: Props) {
             {categories.map((cat) => (
               <Link
                 key={cat.id}
-                href={`/blog?category=${cat.slug}`}
-                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-150 ${
-                  selectedCategory === cat.slug
-                    ? "bg-brand-accent border-brand-accent text-white"
-                    : "bg-white border-gray-200 text-brand-muted hover:border-brand-accent hover:text-brand-accent"
-                }`}
+                href={`/blog/category/${cat.slug}` as any}
+                className="px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-150 bg-white border-gray-200 text-brand-muted hover:border-brand-accent hover:text-brand-accent"
               >
                 {cat.name}
               </Link>

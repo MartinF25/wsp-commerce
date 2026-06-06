@@ -400,7 +400,12 @@
     "all_categories": "Todos los temas",
     "category_label": "Categoría",
     "featured_label": "Destacado",
-    "fallback_notice": "Este artículo aún no está disponible en español."
+    "fallback_notice": "Este artículo aún no está disponible en español.",
+    "category_eyebrow": "Categoría",
+    "related_guides": "Guías y Productos Relacionados",
+    "related_guides_eyebrow": "Explorar",
+    "related_articles": "Artículos Relacionados",
+    "view_all_posts": "Ver todos los artículos →"
   },
   "kontakt": {
     "breadcrumb_home": "Inicio",

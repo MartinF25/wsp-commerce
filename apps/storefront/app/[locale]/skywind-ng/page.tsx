@@ -727,7 +727,9 @@ export default async function SkywindNgPage({ params }: Props) {
               { href: "/rooftop-wind-turbine", label: "Rooftop Wind Turbine", desc: "Installation options, mounting systems, and planning guide." },
               { href: "/off-grid-wind-turbine", label: "Off-Grid Wind Turbine", desc: "Battery charging, off-grid systems, and energy independence." },
               { href: "/hybrid-solar-wind-system", label: "Hybrid Solar Wind System", desc: "Combining solar PV and wind for maximum self-sufficiency." },
-              { href: "/kombiloesungen", label: "Kombilösungen (DE)", desc: "Solarzaun and SkyWind NG combined energy solutions." },
+              { href: "/kombiloesungen", label: "Combined Energy Solutions", desc: "Solarzaun and SkyWind NG combined energy solutions." },
+              { href: "/blog/how-much-energy-does-a-micro-wind-turbine-produce", label: "Turbine Energy Output Guide", desc: "Real yield data — annual kWh by wind speed from actual SkyWind NG installations." },
+              { href: "/blog/category/micro-wind-energy", label: "Micro Wind Energy Guides", desc: "Articles, comparisons and site-assessment tips for small wind turbines." },
             ].map((link) => (
               <Link
                 key={link.href}

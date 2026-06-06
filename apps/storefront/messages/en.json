@@ -400,7 +400,12 @@
     "all_categories": "All topics",
     "category_label": "Category",
     "featured_label": "Featured",
-    "fallback_notice": "This post is not yet available in English."
+    "fallback_notice": "This post is not yet available in English.",
+    "category_eyebrow": "Category",
+    "related_guides": "Related Guides & Products",
+    "related_guides_eyebrow": "Explore",
+    "related_articles": "Related Articles",
+    "view_all_posts": "View all articles →"
   },
   "kontakt": {
     "breadcrumb_home": "Home",

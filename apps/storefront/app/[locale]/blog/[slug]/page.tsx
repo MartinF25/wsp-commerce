@@ -1,32 +1,83 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { Link } from "@/i18n/navigation";
-import { fetchBlogPost } from "@/lib/blog";
+import { fetchBlogPost, fetchRelatedPosts } from "@/lib/blog";
 import type { BlogLocale } from "@/lib/blog";
+import { BlogPostHero } from "@/components/blog/BlogPostHero";
+import { BlogPostBody } from "@/components/blog/BlogPostBody";
+import { BlogRelatedLinks, type RelatedLink } from "@/components/blog/BlogRelatedLinks";
+import { BlogRelatedArticles } from "@/components/blog/BlogRelatedArticles";
+import { BlogPostCta } from "@/components/blog/BlogPostCta";
+import { BlogProductCta, type BlogProductCtaPreset } from "@/components/blog/BlogProductCta";
 
 const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000";
 
 type Props = { params: { slug: string; locale: string } };
+
+// ─── Internal related links per locale ───────────────────────────────────────
+
+const RELATED_LINKS: Record<string, RelatedLink[]> = {
+  en: [
+    { href: "/skywind-ng",              label: "SkyWind NG",                description: "Product details, specs & pricing",      icon: "⚡" },
+    { href: "/micro-wind-turbine",      label: "Micro Wind Turbine Guide",  description: "Everything about micro wind turbines",   icon: "🌬️" },
+    { href: "/off-grid-wind-turbine",   label: "Off-Grid Wind Turbine",     description: "Standalone off-grid power systems",      icon: "🔋" },
+    { href: "/hybrid-solar-wind-system",label: "Hybrid Solar-Wind System",  description: "Combine solar & wind for max output",    icon: "☀️" },
+    { href: "/small-wind-turbine-for-home", label: "Wind Turbine for Home", description: "Residential wind energy solutions",     icon: "🏠" },
+    { href: "/rooftop-wind-turbine",    label: "Rooftop Wind Turbine",      description: "Rooftop installation guide",             icon: "🏗️" },
+  ],
+  de: [
+    { href: "/skywind-ng",              label: "SkyWind NG",                description: "Produktdetails, Technik & Preise",       icon: "⚡" },
+    { href: "/micro-wind-turbine",      label: "Micro Wind Turbine",        description: "Kleinwindanlagen im Überblick",          icon: "🌬️" },
+    { href: "/off-grid-wind-turbine",   label: "Off-Grid Windkraft",        description: "Autarke Energieversorgung",              icon: "🔋" },
+    { href: "/hybrid-solar-wind-system",label: "Solar-Wind-Hybridsystem",   description: "Solar und Wind kombinieren",             icon: "☀️" },
+    { href: "/small-wind-turbine-for-home", label: "Windanlage für Zuhause",description: "Lösungen für private Haushalte",        icon: "🏠" },
+    { href: "/rooftop-wind-turbine",    label: "Windkraftanlage Dach",      description: "Dachmontage – Ratgeber & Tipps",         icon: "🏗️" },
+  ],
+  es: [
+    { href: "/skywind-ng",              label: "SkyWind NG",                description: "Detalles, especificaciones y precios",   icon: "⚡" },
+    { href: "/micro-wind-turbine",      label: "Mini Aerogenerador",        description: "Todo sobre los mini aerogeneradores",    icon: "🌬️" },
+    { href: "/off-grid-wind-turbine",   label: "Aerogenerador Off-Grid",    description: "Sistemas de energía autónomos",          icon: "🔋" },
+    { href: "/hybrid-solar-wind-system",label: "Sistema Híbrido Solar-Eólico", description: "Combina solar y eólico",             icon: "☀️" },
+    { href: "/small-wind-turbine-for-home", label: "Aerogenerador para Casa", description: "Soluciones eólicas residenciales",   icon: "🏠" },
+    { href: "/rooftop-wind-turbine",    label: "Aerogenerador en Tejado",   description: "Guía de instalación en tejado",          icon: "🏗️" },
+  ],
+};
+
+// ─── Category → CTA preset mapping ───────────────────────────────────────────
+
+const CATEGORY_PRESET: Record<string, BlogProductCtaPreset> = {
+  "micro-wind-energy":         "renewable",
+  "off-grid-power":            "off-grid",
+  "hybrid-solar-wind-systems": "hybrid",
+  "rooftop-wind-turbines":     "renewable",
+  "energy-independence":       "independence",
+  "battery-storage":           "off-grid",
+  "skywind-ng":                "renewable",
+};
+
+function resolveCtaPreset(categorySlug?: string | null): BlogProductCtaPreset {
+  return (categorySlug && CATEGORY_PRESET[categorySlug]) ?? "renewable";
+}
+
+// ─── Locale labels for the language switcher ─────────────────────────────────
+
+const LOCALE_LABELS: Record<string, string> = { de: "Deutsch", en: "English", es: "Español" };
+
+// ─── Strip duplicate H1 from Markdown content ────────────────────────────────
 
 function stripLeadingMarkdownH1(content: string, title: string): string {
   const normalizedTitle = title.trim().toLowerCase();
   const lines = content.split(/\r?\n/);
   const firstLine = lines[0]?.trim();
   const headingMatch = firstLine?.match(/^#\s+(.+)$/);
-
   if (!headingMatch) return content;
-
   const headingTitle = headingMatch[1].trim().toLowerCase();
-  if (!headingTitle.includes(normalizedTitle) && !normalizedTitle.includes(headingTitle)) {
-    return content;
-  }
-
+  if (!headingTitle.includes(normalizedTitle) && !normalizedTitle.includes(headingTitle)) return content;
   return lines.slice(1).join("\n").replace(/^\s+/, "");
 }
+
+// ─── Metadata ────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = params.locale as BlogLocale;
@@ -64,222 +115,171 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function formatDate(iso: string | null, locale: string): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString(locale, {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
+// ─── Page ────────────────────────────────────────────────────────────────────
 
 export default async function BlogPostPage({ params }: Props) {
   const t = await getTranslations({ locale: params.locale, namespace: "blog" });
   const locale = params.locale as BlogLocale;
   const post = await fetchBlogPost(params.slug, locale);
   if (!post) notFound();
-  const content = stripLeadingMarkdownH1(post.content, post.title);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.title,
-    description: post.excerpt,
-    author: { "@type": "Person", name: post.authorName ?? t("author_default") },
-    publisher: {
-      "@type": "Organization",
-      name: "WSP Solarenergie",
-      logo: { "@type": "ImageObject", url: `${STOREFRONT_URL}/favicon.svg` },
-    },
-    datePublished: post.publishedAt,
-    dateModified: post.publishedAt,
-    url: `${STOREFRONT_URL}/${locale === "de" ? "" : `${locale}/`}blog/${post.slug}`,
-    ...(post.coverImageUrl && { image: post.coverImageUrl }),
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": `${STOREFRONT_URL}/${locale === "de" ? "" : `${locale}/`}blog/${post.slug}`,
-    },
-  };
+  const [relatedPosts, content] = await Promise.all([
+    fetchRelatedPosts(post.slug, locale, post.category?.slug),
+    Promise.resolve(stripLeadingMarkdownH1(post.content, post.title)),
+  ]);
+  const postUrl = `${STOREFRONT_URL}/${locale === "de" ? "" : `${locale}/`}blog/${post.slug}`;
+
+  const breadcrumb = [
+    { label: t("breadcrumb_home"), href: "/" },
+    { label: t("breadcrumb_blog"), href: "/blog" },
+    ...(post.category
+      ? [{ label: post.category.name, href: `/blog?category=${post.category.slug}` }]
+      : []),
+    { label: post.title },
+  ];
+
+  // Product/landing links + dynamic category page link (money pages first)
+  const categoryLink: typeof RELATED_LINKS.en = post.category
+    ? [{
+        href: `/blog/category/${post.category.slug}`,
+        label: locale === "de"
+          ? `Mehr Artikel: ${post.category.name}`
+          : locale === "es"
+            ? `Más artículos: ${post.category.name}`
+            : `More ${post.category.name} articles`,
+        description: locale === "de"
+          ? "Alle Guides und Ratgeber in dieser Kategorie"
+          : locale === "es"
+            ? "Todos los artículos en esta categoría"
+            : "Browse all guides in this topic",
+        icon: "📚",
+      }]
+    : [];
+  const relatedLinks = [...(RELATED_LINKS[locale] ?? RELATED_LINKS.en), ...categoryLink];
 
   return (
     <div className="bg-white min-h-screen">
+
+      {/* ── JSON-LD: Article schema ── */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: post.title,
+            description: post.excerpt,
+            author: { "@type": "Person", name: post.authorName ?? t("author_default") },
+            publisher: {
+              "@type": "Organization",
+              name: "WSP Solarenergie",
+              logo: { "@type": "ImageObject", url: `${STOREFRONT_URL}/favicon.svg` },
+            },
+            datePublished: post.publishedAt,
+            dateModified: post.publishedAt,
+            url: postUrl,
+            ...(post.coverImageUrl && { image: post.coverImageUrl }),
+            mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
+          }),
+        }}
       />
+
+      {/* ── JSON-LD: BreadcrumbList ── */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: t("breadcrumb_home"), item: STOREFRONT_URL },
-              { "@type": "ListItem", position: 2, name: t("breadcrumb_blog"), item: `${STOREFRONT_URL}/blog` },
-              ...(post.category
-                ? [{ "@type": "ListItem", position: 3, name: post.category.name, item: `${STOREFRONT_URL}/blog?category=${post.category.slug}` },
-                   { "@type": "ListItem", position: 4, name: post.title, item: `${STOREFRONT_URL}/${locale === "de" ? "" : `${locale}/`}blog/${post.slug}` }]
-                : [{ "@type": "ListItem", position: 3, name: post.title, item: `${STOREFRONT_URL}/${locale === "de" ? "" : `${locale}/`}blog/${post.slug}` }]),
-            ],
+            itemListElement: breadcrumb.map((item, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: item.label,
+              ...(item.href && { item: `${STOREFRONT_URL}${item.href}` }),
+            })),
           }),
         }}
       />
 
-      {/* ── Breadcrumb ── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <nav className="flex items-center gap-2 text-sm text-brand-muted flex-wrap">
-          <Link href="/" className="hover:text-brand-text transition-colors duration-150">
-            {t("breadcrumb_home")}
-          </Link>
-          <span>/</span>
-          <Link href="/blog" className="hover:text-brand-text transition-colors duration-150">
-            {t("breadcrumb_blog")}
-          </Link>
-          {post.category && (
-            <>
-              <span>/</span>
-              <Link
-                href={`/blog?category=${post.category.slug}`}
-                className="hover:text-brand-text transition-colors duration-150"
-              >
-                {post.category.name}
-              </Link>
-            </>
-          )}
-          <span>/</span>
-          <span className="text-brand-text font-medium truncate max-w-[200px]">{post.title}</span>
-        </nav>
+      {/* ── Hero: cover image, breadcrumb, title, meta ── */}
+      <BlogPostHero
+        title={post.title}
+        excerpt={post.excerpt}
+        category={post.category}
+        tags={post.tags}
+        authorName={post.authorName ?? t("author_default")}
+        publishedAt={post.publishedAt}
+        readingTimeMinutes={post.readingTimeMinutes}
+        coverImageUrl={post.coverImageUrl}
+        coverImageAlt={post.coverImageAlt ?? post.title}
+        breadcrumb={breadcrumb}
+        locale={params.locale}
+        readingTimeLabel={
+          post.readingTimeMinutes != null
+            ? t("reading_time", { count: post.readingTimeMinutes })
+            : undefined
+        }
+        fallbackNotice={post.fallbackUsed ? t("fallback_notice") : undefined}
+      />
+
+      {/* ── Article body: Markdown content ── */}
+      <BlogPostBody content={content} />
+
+      {/* ── In-article product CTA (section variant, below article body) ── */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <BlogProductCta
+          preset={resolveCtaPreset(post.category?.slug)}
+          variant="section"
+          imageUrl={post.coverImageUrl ?? undefined}
+          imageAlt={post.coverImageAlt ?? post.title}
+          secondaryLabel={t("cta_btn")}
+          secondaryHref="/kontakt"
+        />
       </div>
 
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* ── Tags + Category ── */}
-        {(post.tags.length > 0 || post.category) && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {post.category && (
+      {/* ── Language switcher ── */}
+      {post.availableLocales.length > 1 && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 flex flex-wrap gap-3 border-b border-gray-100">
+          {post.availableLocales
+            .filter((loc) => loc !== locale)
+            .map((loc) => (
               <Link
-                href={`/blog?category=${post.category.slug}`}
-                className="text-xs font-semibold text-brand-accent bg-green-50 px-2.5 py-1 rounded-full hover:bg-green-100 transition-colors duration-150"
+                key={loc}
+                href={`/blog/${post.slug}`}
+                locale={loc}
+                className="text-xs font-medium text-brand-muted border border-gray-200 px-3 py-1.5 rounded-full hover:border-brand-accent hover:text-brand-accent transition-colors duration-150"
               >
-                {post.category.name}
+                {LOCALE_LABELS[loc] ?? loc.toUpperCase()}
               </Link>
-            )}
-            {post.tags.map((tag) => (
-              <span
-                key={tag.slug}
-                className="text-xs font-medium text-brand-muted bg-gray-100 px-2.5 py-1 rounded-full"
-              >
-                {tag.name}
-              </span>
             ))}
-          </div>
-        )}
-
-        {/* ── Title ── */}
-        <h1 className="font-display text-3xl sm:text-4xl font-bold text-brand-text leading-tight mb-4">
-          {post.title}
-        </h1>
-
-        {/* ── Byline ── */}
-        <div className="flex items-center gap-3 text-sm text-brand-muted mb-8 pb-6 border-b border-gray-100">
-          <span>{post.authorName ?? t("author_default")}</span>
-          {post.publishedAt && (
-            <>
-              <span aria-hidden>·</span>
-              <time dateTime={post.publishedAt}>{formatDate(post.publishedAt, params.locale)}</time>
-            </>
-          )}
-          {post.readingTimeMinutes != null && (
-            <>
-              <span aria-hidden>·</span>
-              <span>{t("reading_time", { count: post.readingTimeMinutes })}</span>
-            </>
-          )}
         </div>
+      )}
 
-        {/* ── Fallback notice ── */}
-        {post.fallbackUsed && (
-          <div className="mb-6 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-700">
-            {t("fallback_notice")}
-          </div>
-        )}
+      {/* ── Related product & guide links ── */}
+      <BlogRelatedLinks
+        title={t("related_guides")}
+        eyebrow={t("related_guides_eyebrow")}
+        links={relatedLinks}
+      />
 
-        {/* ── Cover image ── */}
-        {post.coverImageUrl && (
-          <div className="relative mb-10 rounded-2xl overflow-hidden aspect-[16/7]">
-            <Image
-              src={post.coverImageUrl}
-              alt={post.coverImageAlt ?? post.title}
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 768px) 100vw, 896px"
-            />
-          </div>
-        )}
+      {/* ── Related articles (placeholder until seed data exists) ── */}
+      <BlogRelatedArticles
+        title={t("related_articles")}
+        viewAllLabel={t("view_all_posts")}
+        articles={relatedPosts}
+        locale={params.locale}
+      />
 
-        {/* ── Excerpt (lead) ── */}
-        {post.excerpt && (
-          <p className="text-xl text-brand-muted leading-relaxed mb-8 font-light">{post.excerpt}</p>
-        )}
-
-        {/* ── Body ── */}
-        <div className="prose prose-lg max-w-none text-brand-text prose-headings:font-display prose-headings:text-brand-text prose-a:text-brand-accent prose-strong:text-brand-text prose-img:rounded-xl">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              h1: ({ children }) => <h2>{children}</h2>,
-            }}
-          >
-            {content}
-          </ReactMarkdown>
-        </div>
-
-        {/* ── Available in other locales ── */}
-        {post.availableLocales.length > 1 && (
-          <div className="mt-12 pt-8 border-t border-gray-100 flex flex-wrap gap-3">
-            {post.availableLocales
-              .filter((loc) => loc !== locale)
-              .map((loc) => (
-                <Link
-                  key={loc}
-                  href={`/blog/${post.slug}`}
-                  locale={loc}
-                  className="text-xs font-medium text-brand-muted border border-gray-200 px-3 py-1.5 rounded-full hover:border-brand-accent hover:text-brand-accent transition-colors duration-150"
-                >
-                  {LOCALE_LABELS[loc] ?? loc.toUpperCase()}
-                </Link>
-              ))}
-          </div>
-        )}
-      </article>
-
-      {/* ── CTA ── */}
-      <div className="border-t border-gray-100 bg-gray-50 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-display text-2xl font-bold text-brand-text mb-3">{t("interest_h2")}</h2>
-          <p className="text-brand-muted mb-6">{t("interest_sub")}</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/kontakt"
-              className="inline-block bg-brand-accent text-white font-semibold px-8 py-3 rounded-xl hover:bg-green-600 transition-colors duration-150"
-            >
-              {t("cta_btn")}
-            </Link>
-            <Link
-              href="/blog"
-              className="inline-block border border-gray-200 text-brand-muted font-semibold px-8 py-3 rounded-xl hover:border-gray-400 hover:text-brand-text transition-colors duration-150"
-            >
-              {t("back")}
-            </Link>
-          </div>
-        </div>
-      </div>
+      {/* ── Bottom CTA ── */}
+      <BlogPostCta
+        heading={t("interest_h2")}
+        subtext={t("interest_sub")}
+        primaryLabel={t("cta_btn")}
+        primaryHref="/kontakt"
+        secondaryLabel={t("back")}
+        secondaryHref="/blog"
+        variant="light"
+      />
     </div>
   );
 }
-
-const LOCALE_LABELS: Record<string, string> = {
-  de: "Deutsch",
-  en: "English",
-  es: "Español",
-};

@@ -372,6 +372,8 @@ export default async function MicroWindTurbinePage({ params }: Props) {
               { href: "/rooftop-wind-turbine", label: "Rooftop Wind Turbine", desc: "Roof-mounted wind power installation" },
               { href: "/off-grid-wind-turbine", label: "Off Grid Wind Turbine", desc: "Energy independence with wind + battery" },
               { href: "/hybrid-solar-wind-system", label: "Hybrid Solar Wind System", desc: "Combine solar and wind for maximum output" },
+              { href: "/blog/how-much-energy-does-a-micro-wind-turbine-produce", label: "How Much Energy Does a Micro Wind Turbine Produce?", desc: "Annual kWh by wind speed — real-world data from European installations." },
+              { href: "/blog/category/micro-wind-energy", label: "Micro Wind Energy Guides", desc: "Practical articles, comparisons and installation advice." },
             ].map((l) => (
               <Link
                 key={l.href}

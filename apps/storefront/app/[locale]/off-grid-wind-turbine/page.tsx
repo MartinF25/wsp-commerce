@@ -297,6 +297,7 @@ export default async function OffGridWindTurbinePage({ params }: Props) {
               { href: "/small-wind-turbine-for-home", label: "Small Wind Turbine for Home", desc: "Residential wind energy guide" },
               { href: "/rooftop-wind-turbine", label: "Rooftop Wind Turbine", desc: "Compact roof-mounted wind power" },
               { href: "/kombiloesungen", label: "Combined Energy Solutions", desc: "Solar, wind and storage systems" },
+              { href: "/blog/category/off-grid-power", label: "Off-Grid Power Guides", desc: "Practical articles on off-grid wind, battery storage and energy independence." },
             ].map((l) => (
               <Link key={l.href} href={l.href} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-brand-accent hover:shadow-sm transition-all duration-150">
                 <div className="font-semibold text-gray-900 text-sm mb-1">{l.label}</div>

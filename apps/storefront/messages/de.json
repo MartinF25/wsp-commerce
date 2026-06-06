@@ -290,7 +290,12 @@
     "all_categories": "Alle Themen",
     "category_label": "Kategorie",
     "featured_label": "Empfohlen",
-    "fallback_notice": "Dieser Beitrag ist noch nicht auf Deutsch verfügbar."
+    "fallback_notice": "Dieser Beitrag ist noch nicht auf Deutsch verfügbar.",
+    "category_eyebrow": "Kategorie",
+    "related_guides": "Verwandte Ratgeber & Produkte",
+    "related_guides_eyebrow": "Entdecken",
+    "related_articles": "Ähnliche Beiträge",
+    "view_all_posts": "Alle Beiträge ansehen →"
   },
   "kontakt": {
     "breadcrumb_home": "Start",

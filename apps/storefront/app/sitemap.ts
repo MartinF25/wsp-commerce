@@ -1,10 +1,14 @@
 import type { MetadataRoute } from "next";
 import { fetchProducts, fetchCategories } from "@/lib/catalog";
 import { fetchBlogPosts } from "@/lib/blog";
+import { CATEGORY_SLUGS } from "@/lib/blogCategories";
 
 export const revalidate = 3600; // stündlich neu generieren
 
 const BASE = (process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000").trim().replace(/\/$/, "");
+
+// All locales the shop supports — used to build hreflang sets
+const LOCALES = ["de", "en", "es"] as const;
 
 function localeUrl(locale: string, path: string): string {
   const prefix = locale === "de" ? "" : `/${locale}`;
@@ -12,11 +16,25 @@ function localeUrl(locale: string, path: string): string {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [productsResult, categoriesResult, blogResult] = await Promise.allSettled([
+  // Fetch blog posts from all locales so every published post is covered,
+  // even if it was seeded without a DE translation (though DE is mandatory by convention).
+  const [productsResult, categoriesResult, blogResultDe, blogResultEn] = await Promise.allSettled([
     fetchProducts({ locale: "de", limit: 100 }),
     fetchCategories("de"),
     fetchBlogPosts({ locale: "de", limit: 500 }),
+    fetchBlogPosts({ locale: "en", limit: 500 }),
   ]);
+
+  // Merge DE + EN blog results, deduplicate by slug (DE takes precedence)
+  const seenBlogSlugs = new Set<string>();
+  const allBlogPosts = [
+    ...(blogResultDe.status === "fulfilled" ? blogResultDe.value.items : []),
+    ...(blogResultEn.status === "fulfilled" ? blogResultEn.value.items : []),
+  ].filter((p) => {
+    if (seenBlogSlugs.has(p.slug)) return false;
+    seenBlogSlugs.add(p.slug);
+    return true;
+  });
 
   const productUrls: MetadataRoute.Sitemap =
     productsResult.status === "fulfilled"
@@ -54,22 +72,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }))
       : [];
 
-  const blogUrls: MetadataRoute.Sitemap =
-    blogResult.status === "fulfilled"
-      ? blogResult.value.items.map((p) => {
-          const languages: Record<string, string> = {};
-          for (const loc of p.availableLocales) {
-            languages[loc] = localeUrl(loc, `/blog/${p.slug}`);
-          }
-          return {
-            url: localeUrl("de", `/blog/${p.slug}`),
-            lastModified: p.publishedAt ? new Date(p.publishedAt) : new Date(),
-            changeFrequency: "monthly" as const,
-            priority: 0.7,
-            alternates: { languages },
-          };
-        })
-      : [];
+  const blogUrls: MetadataRoute.Sitemap = allBlogPosts.map((p) => {
+    // Build hreflang set for all locales that have a native translation.
+    // x-default points to the DE URL (mandatory base locale).
+    const deUrl = localeUrl("de", `/blog/${p.slug}`);
+    const languages: Record<string, string> = { "x-default": deUrl };
+    for (const loc of (p.availableLocales.length > 0 ? p.availableLocales : LOCALES)) {
+      languages[loc] = localeUrl(loc, `/blog/${p.slug}`);
+    }
+    return {
+      url: deUrl,
+      lastModified: p.publishedAt ? new Date(p.publishedAt) : new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+      alternates: { languages },
+    };
+  });
 
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -176,8 +194,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  // Blog category SEO landing pages (6 slugs × 3 locales, indexed)
+  const blogCategoryUrls: MetadataRoute.Sitemap = CATEGORY_SLUGS.map((slug) => ({
+    url: `${BASE}/blog/category/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+    alternates: {
+      languages: {
+        "x-default": `${BASE}/blog/category/${slug}`,
+        de: `${BASE}/blog/category/${slug}`,
+        en: `${BASE}/en/blog/category/${slug}`,
+        es: `${BASE}/es/blog/category/${slug}`,
+      },
+    },
+  }));
+
   return [
     ...staticPages,
+    ...blogCategoryUrls,
     ...productUrls,
     ...blogUrls,
     ...categoryUrls,
