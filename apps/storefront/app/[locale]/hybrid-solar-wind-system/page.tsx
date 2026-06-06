@@ -343,6 +343,9 @@ export default async function HybridSolarWindSystemPage({ params }: Props) {
               { href: "/skywind-ng", label: "SkyWind NG Wind Turbine", desc: "Specs, pricing and ordering" },
               { href: "/solarzaun", label: "Solar Fence", desc: "Integrated fencing and PV generation" },
               { href: "/off-grid-wind-turbine", label: "Off-Grid Wind Systems", desc: "Battery-based energy independence" },
+              { href: "/micro-wind-turbine", label: "Micro Wind Turbine", desc: "Compact wind turbine for homes and sites" },
+              { href: "/small-wind-turbine-for-home", label: "Small Wind Turbine for Home", desc: "Residential wind energy guide" },
+              { href: "/rooftop-wind-turbine", label: "Rooftop Wind Turbine", desc: "Roof-mounted installation guide" },
               { href: "/kombiloesungen", label: "Kombilösungen", desc: "German-language combined systems page" },
             ].map((l) => (
               <Link key={l.href} href={l.href} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-brand-accent hover:shadow-sm transition-all duration-150">

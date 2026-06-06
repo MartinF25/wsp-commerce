@@ -369,6 +369,7 @@ export default async function MicroWindTurbinePage({ params }: Props) {
             {[
               { href: "/skywind-ng", label: "SkyWind NG – Product Page", desc: "Technical data, pricing and ordering" },
               { href: "/small-wind-turbine-for-home", label: "Small Wind Turbine for Home", desc: "Residential wind energy guide" },
+              { href: "/rooftop-wind-turbine", label: "Rooftop Wind Turbine", desc: "Roof-mounted wind power installation" },
               { href: "/off-grid-wind-turbine", label: "Off Grid Wind Turbine", desc: "Energy independence with wind + battery" },
               { href: "/hybrid-solar-wind-system", label: "Hybrid Solar Wind System", desc: "Combine solar and wind for maximum output" },
             ].map((l) => (

@@ -240,6 +240,53 @@ export default async function SkyWindPage({ params }: { params: { locale: string
         </div>
       </section>
 
+      {/* ── Wind Energy Applications & Guides ── */}
+      <section className="py-16 sm:py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-xl mb-10">
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">
+              {params.locale === "de" ? "Anwendungsgebiete" : params.locale === "es" ? "Aplicaciones" : "Applications & Guides"}
+            </p>
+            <h2 className="font-display text-3xl font-bold text-brand-text">
+              {params.locale === "de" ? "SkyWind NG in der Praxis – Für jede Situation die passende Lösung" : params.locale === "es" ? "SkyWind NG en la práctica – Una guía para cada aplicación" : "SkyWind NG in Practice – A Guide for Every Use Case"}
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {(params.locale === "de" ? [
+              { href: "/skywind-ng", label: "SkyWind NG im Detail", desc: "Technische Daten, Modelle und Preise – alles auf einen Blick." },
+              { href: "/small-wind-turbine-for-home", label: "Kleinwindanlage für Zuhause", desc: "Eigenstrom aus Wind für Eigenheim und Garten." },
+              { href: "/rooftop-wind-turbine", label: "Dach-Windkraftanlage", desc: "Montage auf Dach oder Fassade: Planung und Genehmigung." },
+              { href: "/off-grid-wind-turbine", label: "Off-Grid Windkraft", desc: "Autark leben mit Windkraft und Batteriespeicher." },
+              { href: "/micro-wind-turbine", label: "Micro Wind Turbine Guide", desc: "Technik, Ertrag und Standortanforderungen." },
+              { href: "/hybrid-solar-wind-system", label: "Solar-Wind-Hybridsystem", desc: "Solar und Wind kombiniert für maximale Eigenversorgung." },
+            ] : params.locale === "es" ? [
+              { href: "/skywind-ng", label: "SkyWind NG en detalle", desc: "Datos técnicos, modelos y precios de un vistazo." },
+              { href: "/small-wind-turbine-for-home", label: "Pequeña turbina para el hogar", desc: "Electricidad propia del viento para casa y jardín." },
+              { href: "/rooftop-wind-turbine", label: "Aerogenerador en tejado", desc: "Instalación en tejado o fachada: planificación y permisos." },
+              { href: "/off-grid-wind-turbine", label: "Turbina eólica autónoma", desc: "Vida autónoma con energía eólica y almacenamiento en batería." },
+              { href: "/micro-wind-turbine", label: "Micro aerogenerador", desc: "Tecnología, rendimiento y requisitos de ubicación." },
+              { href: "/hybrid-solar-wind-system", label: "Sistema solar-eólico híbrido", desc: "Solar y eólico combinados para máxima autosuficiencia." },
+            ] : [
+              { href: "/skywind-ng", label: "SkyWind NG in Detail", desc: "Technical specs, models and pricing — all at a glance." },
+              { href: "/small-wind-turbine-for-home", label: "Small Wind Turbine for Home", desc: "Own electricity from wind for residential use." },
+              { href: "/rooftop-wind-turbine", label: "Rooftop Wind Turbine", desc: "Roof and facade mounting: planning and permits." },
+              { href: "/off-grid-wind-turbine", label: "Off-Grid Wind Turbine", desc: "Off-grid living with wind power and battery storage." },
+              { href: "/micro-wind-turbine", label: "Micro Wind Turbine Guide", desc: "Technology, output and site requirements." },
+              { href: "/hybrid-solar-wind-system", label: "Hybrid Solar Wind System", desc: "Solar and wind combined for maximum self-sufficiency." },
+            ]).map((g) => (
+              <Link
+                key={g.href}
+                href={g.href}
+                className="group bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:border-brand-accent hover:shadow-md transition-all duration-150"
+              >
+                <p className="font-display font-semibold text-brand-text text-sm mb-1.5 group-hover:text-brand-accent transition-colors">{g.label}</p>
+                <p className="text-xs text-brand-muted leading-relaxed">{g.desc}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="bg-brand-text py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-5">{t("cta_eyebrow")}</p>

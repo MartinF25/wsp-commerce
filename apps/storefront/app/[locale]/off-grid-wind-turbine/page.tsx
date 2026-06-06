@@ -294,6 +294,8 @@ export default async function OffGridWindTurbinePage({ params }: Props) {
               { href: "/skywind-ng", label: "SkyWind NG Products", desc: "Technical specs and pricing" },
               { href: "/hybrid-solar-wind-system", label: "Hybrid Solar Wind System", desc: "Combine solar and wind for maximum output" },
               { href: "/micro-wind-turbine", label: "Micro Wind Turbine Guide", desc: "Small turbine technology overview" },
+              { href: "/small-wind-turbine-for-home", label: "Small Wind Turbine for Home", desc: "Residential wind energy guide" },
+              { href: "/rooftop-wind-turbine", label: "Rooftop Wind Turbine", desc: "Compact roof-mounted wind power" },
               { href: "/kombiloesungen", label: "Combined Energy Solutions", desc: "Solar, wind and storage systems" },
             ].map((l) => (
               <Link key={l.href} href={l.href} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-brand-accent hover:shadow-sm transition-all duration-150">

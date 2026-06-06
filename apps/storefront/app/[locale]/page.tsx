@@ -12,6 +12,33 @@ import { OfferCountdown } from "@/components/storefront/offer-countdown";
 const STOREFRONT_URL = "https://webshop.wsp-solarenergie.de";
 const LOGO_URL = `${STOREFRONT_URL}/favicon.svg`;
 
+const WIND_GUIDES = {
+  de: [
+    { href: "/skywind-ng", label: "SkyWind NG im Detail", desc: "Technische Daten, Modellvergleich und Ertragsprognosen." },
+    { href: "/micro-wind-turbine", label: "Micro Wind Turbine Guide", desc: "Kompakte Windkraft für Eigenheim und Grundstück." },
+    { href: "/small-wind-turbine-for-home", label: "Kleinwindanlage für Zuhause", desc: "Eigenstrom aus Wind – ganzjährig, Tag und Nacht." },
+    { href: "/rooftop-wind-turbine", label: "Dach-Windkraftanlage", desc: "SkyWind NG auf dem Dach: Installation und Planung." },
+    { href: "/off-grid-wind-turbine", label: "Off-Grid Windkraft", desc: "Autarke Energieversorgung mit Batteriespeicher." },
+    { href: "/hybrid-solar-wind-system", label: "Solar-Wind-Hybridsystem", desc: "Solar und Wind kombiniert für maximale Autarkie." },
+  ],
+  en: [
+    { href: "/skywind-ng", label: "SkyWind NG in Detail", desc: "Technical specs, model comparison and yield forecasts." },
+    { href: "/micro-wind-turbine", label: "Micro Wind Turbine", desc: "Compact wind power for homes and properties." },
+    { href: "/small-wind-turbine-for-home", label: "Small Wind Turbine for Home", desc: "Generate your own electricity — day and night, all year." },
+    { href: "/rooftop-wind-turbine", label: "Rooftop Wind Turbine", desc: "SkyWind NG on the roof: installation and planning guide." },
+    { href: "/off-grid-wind-turbine", label: "Off-Grid Wind Turbine", desc: "Independent energy supply with battery storage." },
+    { href: "/hybrid-solar-wind-system", label: "Hybrid Solar Wind System", desc: "Solar and wind combined for maximum self-sufficiency." },
+  ],
+  es: [
+    { href: "/skywind-ng", label: "SkyWind NG en detalle", desc: "Especificaciones técnicas, comparación de modelos y previsiones." },
+    { href: "/micro-wind-turbine", label: "Micro aerogenerador", desc: "Energía eólica compacta para hogares y propiedades." },
+    { href: "/small-wind-turbine-for-home", label: "Pequeña turbina para el hogar", desc: "Genera tu propia electricidad día y noche, todo el año." },
+    { href: "/rooftop-wind-turbine", label: "Aerogenerador en tejado", desc: "SkyWind NG en tejado: instalación y planificación." },
+    { href: "/off-grid-wind-turbine", label: "Turbina eólica autónoma", desc: "Suministro de energía independiente con almacenamiento." },
+    { href: "/hybrid-solar-wind-system", label: "Sistema solar-eólico híbrido", desc: "Solar y eólico combinados para máxima autosuficiencia." },
+  ],
+};
+
 export default async function HomePage({
   params,
 }: {
@@ -231,6 +258,32 @@ export default async function HomePage({
         </div>
       </section>
 
+
+      {/* ── Wind Energy Guides ── */}
+      <section className="py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-xl mb-10">
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">
+              {params.locale === "de" ? "Ratgeber & Guides" : params.locale === "es" ? "Guías de Energía Eólica" : "Wind Energy Guides"}
+            </p>
+            <h2 className="font-display text-3xl font-bold text-brand-text">
+              {params.locale === "de" ? "Alles zur SkyWind NG Windkraftanlage" : params.locale === "es" ? "Todo sobre la turbina eólica SkyWind NG" : "All About the SkyWind NG Wind Turbine"}
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {(WIND_GUIDES[params.locale as keyof typeof WIND_GUIDES] ?? WIND_GUIDES.en).map((guide) => (
+              <Link
+                key={guide.href}
+                href={guide.href as any}
+                className="group bg-gray-50 rounded-2xl border border-gray-100 p-5 hover:border-brand-accent hover:bg-white hover:shadow-sm transition-all duration-150"
+              >
+                <p className="font-display font-semibold text-brand-text text-sm mb-1.5 group-hover:text-brand-accent transition-colors">{guide.label}</p>
+                <p className="text-xs text-brand-muted leading-relaxed">{guide.desc}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── FAQ ── */}
       <section className="py-16">
