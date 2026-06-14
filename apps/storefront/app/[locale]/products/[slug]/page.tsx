@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { ProductDetail, ProductType } from "@wsp/types";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { fetchProduct, fetchProducts } from "@/lib/catalog";

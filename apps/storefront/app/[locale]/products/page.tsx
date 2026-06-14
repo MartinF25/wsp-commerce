@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+
+export const dynamic = "force-dynamic";
 import { Link } from "@/i18n/navigation";
 import { fetchProducts, fetchCategories } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
+
+export const dynamic = "force-dynamic";
 import { fetchCategory } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
 import type { ResolvedFeatureVisual } from "@wsp/contracts";

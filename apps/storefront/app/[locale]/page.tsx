@@ -3,6 +3,8 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { fetchProducts, fetchCategories } from "@/lib/catalog";
+
+export const dynamic = "force-dynamic";
 import { fetchBlogPosts } from "@/lib/blog";
 import type { BlogPostSummary } from "@/lib/blog";
 import type { Locale } from "@/i18n/routing";
