@@ -57,7 +57,7 @@ const CATEGORY_PRESET: Record<string, BlogProductCtaPreset> = {
 };
 
 function resolveCtaPreset(categorySlug?: string | null): BlogProductCtaPreset {
-  return (categorySlug && CATEGORY_PRESET[categorySlug]) ?? "renewable";
+  return (categorySlug ? CATEGORY_PRESET[categorySlug] : null) ?? "renewable";
 }
 
 // ─── Locale labels for the language switcher ─────────────────────────────────
