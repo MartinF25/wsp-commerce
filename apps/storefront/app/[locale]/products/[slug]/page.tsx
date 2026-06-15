@@ -118,29 +118,67 @@ export default async function ProductDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            name: p.name,
-            description: p.short_description ?? p.description ?? undefined,
-            url: `${STOREFRONT_URL}/products/${p.slug}`,
-            ...(p.images[0] && { image: p.images[0].url }),
-            ...(p.category && { category: p.category.name }),
-            brand: { "@type": "Brand", name: "WSP Solarenergie" },
-            // Affiliate-Produkte: kein eigenes Preisangebot in JSON-LD –
-            // Preis und Verfügbarkeit liegen bei Amazon, nicht bei uns.
-            offers: p.priceDisplay.minCents && p.product_type !== "affiliate_external"
-              ? {
+          __html: JSON.stringify((() => {
+            const activeVariants = p.variants.filter((v) => v.price_cents != null);
+            const isAffiliate = p.product_type === "affiliate_external";
+            const availability = p.availabilityStatus === "in_stock"
+              ? "https://schema.org/InStock"
+              : p.availabilityStatus === "out_of_stock"
+              ? "https://schema.org/OutOfStock"
+              : p.availabilityStatus === "preorder"
+              ? "https://schema.org/PreOrder"
+              : "https://schema.org/OnlineOnly";
+
+            let offers: Record<string, unknown> | undefined;
+
+            if (!isAffiliate && activeVariants.length > 0) {
+              const prices = activeVariants.map((v) => v.price_cents as number);
+              const minPrice = Math.min(...prices);
+              const maxPrice = Math.max(...prices);
+              const currency = p.priceDisplay.currencyCode;
+              const productUrl = `${STOREFRONT_URL}/products/${p.slug}`;
+              const seller = { "@type": "Organization", name: "WSP Solarenergie", url: STOREFRONT_URL };
+
+              if (activeVariants.length === 1 || minPrice === maxPrice) {
+                // Einzelpreis → Offer
+                offers = {
                   "@type": "Offer",
-                  priceCurrency: p.priceDisplay.currencyCode,
-                  price: (p.priceDisplay.minCents / 100).toFixed(2),
-                  availability: p.purchasable
-                    ? "https://schema.org/InStock"
-                    : "https://schema.org/PreOrder",
-                  url: `${STOREFRONT_URL}/products/${p.slug}`,
-                }
-              : undefined,
-          }),
+                  url: productUrl,
+                  price: (minPrice / 100).toFixed(2),
+                  priceCurrency: currency,
+                  availability,
+                  seller,
+                  ...(p.priceDisplay.isOnSale && p.priceDisplay.saleEndsAt && {
+                    priceValidUntil: p.priceDisplay.saleEndsAt.split("T")[0],
+                  }),
+                };
+              } else {
+                // Mehrere Preise → AggregateOffer mit lowPrice + highPrice + offerCount
+                offers = {
+                  "@type": "AggregateOffer",
+                  url: productUrl,
+                  lowPrice: (minPrice / 100).toFixed(2),
+                  highPrice: (maxPrice / 100).toFixed(2),
+                  offerCount: activeVariants.length,
+                  priceCurrency: currency,
+                  availability,
+                  seller,
+                };
+              }
+            }
+
+            return {
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: p.name,
+              description: p.short_description ?? p.description ?? undefined,
+              url: `${STOREFRONT_URL}/products/${p.slug}`,
+              ...(p.images.length > 0 && { image: p.images.map((img) => img.url) }),
+              ...(p.category && { category: p.category.name }),
+              brand: { "@type": "Brand", name: "WSP Solarenergie" },
+              ...(offers && { offers }),
+            };
+          })()),
         }}
       />
       <script
