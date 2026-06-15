@@ -5,8 +5,8 @@
 
 import { NextRequest } from "next/server";
 
-const BASE_URL = (process.env.COMMERCE_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
-const ADMIN_KEY = process.env.ADMIN_API_KEY ?? "";
+const BASE_URL = (process.env.COMMERCE_API_URL ?? "http://localhost:3000").trim().replace(/\/$/, "");
+const ADMIN_KEY = (process.env.ADMIN_API_KEY ?? "").trim();
 
 async function proxy(req: NextRequest, { params }: { params: { path: string[] } }) {
   const path = params.path.join("/");

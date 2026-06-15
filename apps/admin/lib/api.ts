@@ -3,8 +3,8 @@
  * Läuft ausschließlich server-side (Server Components / Route Handlers).
  */
 
-const BASE_URL = (process.env.COMMERCE_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
-const ADMIN_KEY = process.env.ADMIN_API_KEY ?? "";
+const BASE_URL = (process.env.COMMERCE_API_URL ?? "http://localhost:3000").trim().replace(/\/$/, "");
+const ADMIN_KEY = (process.env.ADMIN_API_KEY ?? "").trim();
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
