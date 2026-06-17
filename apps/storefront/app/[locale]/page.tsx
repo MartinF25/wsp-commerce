@@ -402,10 +402,11 @@ function BlogTeaserCard({ post, readMoreLabel }: { post: BlogPostSummary; readMo
 // ─── Category Card ────────────────────────────────────────────────────────────
 
 const CATEGORY_FALLBACK_IMAGES: Record<string, { src: string; alt: string }> = {
-  solarzaun:     { src: "/images/solarzaun-house.png", alt: "Solarzaun" },
-  skywind:       { src: "/images/skywind-hero.png",    alt: "SkyWind Kleinwindanlage" },
-  kombiloesung:  { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
-  "kombilösung": { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
+  solarzaun:                   { src: "/images/solarzaun-house.png", alt: "Solarzaun" },
+  "skywind-ng-kleinwindanlage": { src: "/images/skywind-hero.png",   alt: "SkyWind NG Kleinwindanlage" },
+  skywind:                     { src: "/images/skywind-hero.png",    alt: "SkyWind Kleinwindanlage" },
+  kombiloesung:                { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
+  "kombilösung":               { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
 };
 
 const CATEGORY_ENRICHMENT: Record<string, {
@@ -413,17 +414,17 @@ const CATEGORY_ENRICHMENT: Record<string, {
   subcategories: Array<{ name: Record<string, string>; href: string }>;
   ctaLabel: Record<string, string>;
 }> = {
-  skywind: {
+  "skywind-ng-kleinwindanlage": {
     description: {
       de: "Entdecken Sie moderne SkyWind NG Kleinwindanlagen für Haus, Gewerbe und Hybridlösungen mit Photovoltaik.",
       en: "Discover modern SkyWind NG small wind turbines for homes, business and hybrid solar-wind solutions.",
       es: "Descubra las modernas aeroturbinas SkyWind NG para hogar, empresa y soluciones híbridas con fotovoltaica.",
     },
     subcategories: [
-      { name: { de: "SkyWind NG Komplettsets", en: "Complete Sets", es: "Kits Completos" }, href: "/categories/skywind" },
-      { name: { de: "Masten & Halterungen", en: "Masts & Mounts", es: "Mástiles y Soportes" }, href: "/categories/skywind" },
-      { name: { de: "Zubehör", en: "Accessories", es: "Accesorios" }, href: "/categories/skywind" },
-      { name: { de: "Hybridlösungen mit PV", en: "Hybrid Solutions", es: "Soluciones Híbridas" }, href: "/categories/skywind" },
+      { name: { de: "SkyWind NG Komplettsets", en: "Complete Sets", es: "Kits Completos" }, href: "/categories/skywind-ng-kleinwindanlage" },
+      { name: { de: "Masten & Halterungen", en: "Masts & Mounts", es: "Mástiles y Soportes" }, href: "/categories/skywind-ng-kleinwindanlage" },
+      { name: { de: "Hybridlösungen mit PV", en: "Hybrid Solutions", es: "Soluciones Híbridas" }, href: "/categories/skywind-ng-kleinwindanlage" },
+      { name: { de: "Zubehör SkyWind NG", en: "Accessories", es: "Accesorios" }, href: "/categories/zubehoer-skywind-ng" },
     ],
     ctaLabel: { de: "SkyWind NG entdecken", en: "Explore SkyWind NG", es: "Explorar SkyWind NG" },
   },
@@ -441,33 +442,75 @@ const CATEGORY_ENRICHMENT: Record<string, {
     ],
     ctaLabel: { de: "Solarzaun entdecken", en: "Explore Solar Fence", es: "Explorar Valla Solar" },
   },
-  kombiloesung: {
+  solaranlagen: {
     description: {
-      de: "Die optimale Kombilösung aus SkyWind Windkraft und Solarzaun – für maximale Energieautarkie das ganze Jahr.",
-      en: "The optimal combination of SkyWind wind power and solar fence – maximum energy independence all year.",
-      es: "La combinación óptima de energía eólica SkyWind y valla solar – máxima autosuficiencia energética.",
+      de: "Photovoltaikanlagen für Eigenheim und Gewerbe – nachhaltige Stromerzeugung mit moderner Solartechnik.",
+      en: "Photovoltaic systems for homes and businesses – sustainable power generation with modern solar technology.",
+      es: "Sistemas fotovoltaicos para hogares y empresas – generación de energía sostenible con tecnología solar.",
     },
     subcategories: [
-      { name: { de: "Solar & Wind Kombi", en: "Solar & Wind Combo", es: "Combinación Solar & Viento" }, href: "/categories/kombiloesung" },
-      { name: { de: "Hybrid-Wechselrichter", en: "Hybrid Inverters", es: "Inversores Híbridos" }, href: "/categories/kombiloesung" },
-      { name: { de: "Batteriespeicher", en: "Battery Storage", es: "Almacenamiento" }, href: "/categories/kombiloesung" },
-      { name: { de: "Off-Grid Systeme", en: "Off-Grid Systems", es: "Sistemas Off-Grid" }, href: "/categories/kombiloesung" },
+      { name: { de: "PV-Komplettsysteme", en: "Complete PV Systems", es: "Sistemas PV Completos" }, href: "/categories/solaranlagen" },
+      { name: { de: "Solarmodule", en: "Solar Modules", es: "Módulos Solares" }, href: "/categories/solaranlagen" },
+      { name: { de: "Wechselrichter", en: "Inverters", es: "Inversores" }, href: "/categories/wechselrichter" },
+      { name: { de: "Batteriespeicher", en: "Battery Storage", es: "Almacenamiento" }, href: "/categories/solaranlagen" },
     ],
-    ctaLabel: { de: "Kombilösungen entdecken", en: "Explore Combo Solutions", es: "Explorar Combinaciones" },
+    ctaLabel: { de: "Solaranlagen entdecken", en: "Explore Solar Systems", es: "Explorar Sistemas Solares" },
   },
-  "kombilösung": {
+  wechselrichter: {
     description: {
-      de: "Die optimale Kombilösung aus SkyWind Windkraft und Solarzaun – für maximale Energieautarkie das ganze Jahr.",
-      en: "The optimal combination of SkyWind wind power and solar fence – maximum energy independence all year.",
-      es: "La combinación óptima de energía eólica SkyWind y valla solar – máxima autosuficiencia energética.",
+      de: "Leistungsstarke Wechselrichter für PV-Anlagen: String-, Hybrid- und einphasige Modelle für jeden Bedarf.",
+      en: "Powerful inverters for PV systems: string, hybrid and single-phase models for every requirement.",
+      es: "Potentes inversores para sistemas PV: modelos string, híbridos y monofásicos para cada necesidad.",
     },
     subcategories: [
-      { name: { de: "Solar & Wind Kombi", en: "Solar & Wind Combo", es: "Combinación Solar & Viento" }, href: "/categories/kombiloesung" },
-      { name: { de: "Hybrid-Wechselrichter", en: "Hybrid Inverters", es: "Inversores Híbridos" }, href: "/categories/kombiloesung" },
-      { name: { de: "Batteriespeicher", en: "Battery Storage", es: "Almacenamiento" }, href: "/categories/kombiloesung" },
-      { name: { de: "Off-Grid Systeme", en: "Off-Grid Systems", es: "Sistemas Off-Grid" }, href: "/categories/kombiloesung" },
+      { name: { de: "Hybrid-Wechselrichter", en: "Hybrid Inverters", es: "Inversores Híbridos" }, href: "/categories/wechselrichter" },
+      { name: { de: "String-Wechselrichter", en: "String Inverters", es: "Inversores String" }, href: "/categories/wechselrichter" },
+      { name: { de: "Einphasige Modelle", en: "Single-Phase", es: "Monofásicos" }, href: "/categories/wechselrichter" },
+      { name: { de: "Dreiphasige Modelle", en: "Three-Phase", es: "Trifásicos" }, href: "/categories/wechselrichter" },
     ],
-    ctaLabel: { de: "Kombilösungen entdecken", en: "Explore Combo Solutions", es: "Explorar Combinaciones" },
+    ctaLabel: { de: "Wechselrichter entdecken", en: "Explore Inverters", es: "Explorar Inversores" },
+  },
+  carport: {
+    description: {
+      de: "Solarcarport – Stellplatz und Solarstrom clever kombiniert. Wetterschutz, Design und erneuerbare Energie in einem.",
+      en: "Solar carport – parking and solar power cleverly combined. Weather protection, design and renewable energy in one.",
+      es: "Carport solar – estacionamiento y energía solar combinados inteligentemente.",
+    },
+    subcategories: [
+      { name: { de: "Solarcarport Komplett", en: "Complete Solar Carport", es: "Carport Solar Completo" }, href: "/categories/carport" },
+      { name: { de: "PV-Module für Carport", en: "PV Modules", es: "Módulos PV" }, href: "/categories/carport" },
+      { name: { de: "Wechselrichter & Speicher", en: "Inverter & Storage", es: "Inversor y Almacenamiento" }, href: "/categories/wechselrichter" },
+      { name: { de: "Montagezubehör", en: "Mounting Accessories", es: "Accesorios de Montaje" }, href: "/categories/carport" },
+    ],
+    ctaLabel: { de: "Solarcarports entdecken", en: "Explore Solar Carports", es: "Explorar Carports Solares" },
+  },
+  outdoor: {
+    description: {
+      de: "Solar Outdoor Produkte für Garten, Terrasse und Einfahrt – autarke Beleuchtung ohne Stromanschluss.",
+      en: "Solar outdoor products for garden, terrace and driveway – autonomous lighting without power connection.",
+      es: "Productos solares outdoor para jardín, terraza y entrada – iluminación autónoma sin conexión eléctrica.",
+    },
+    subcategories: [
+      { name: { de: "Solar Wandleuchten", en: "Solar Wall Lights", es: "Luces de Pared Solar" }, href: "/categories/outdoor" },
+      { name: { de: "Gartenbeleuchtung", en: "Garden Lighting", es: "Iluminación de Jardín" }, href: "/categories/outdoor" },
+      { name: { de: "Leuchten für Zäune", en: "Fence Lights", es: "Luces para Vallas" }, href: "/categories/outdoor" },
+      { name: { de: "Smarte Outdoor-Technik", en: "Smart Outdoor Tech", es: "Tecnología Outdoor" }, href: "/categories/outdoor" },
+    ],
+    ctaLabel: { de: "Outdoor-Produkte entdecken", en: "Explore Outdoor Products", es: "Explorar Productos Outdoor" },
+  },
+  "zubehoer-skywind-ng": {
+    description: {
+      de: "Zubehör für die SkyWind NG Kleinwindanlage – Komponenten für Montage, Anschluss und Systembetrieb.",
+      en: "Accessories for the SkyWind NG small wind turbine – components for installation, connection and operation.",
+      es: "Accesorios para la aeroturbina SkyWind NG – componentes para montaje, conexión y operación.",
+    },
+    subcategories: [
+      { name: { de: "Mastmontage", en: "Mast Mounting", es: "Montaje de Mástil" }, href: "/categories/zubehoer-skywind-ng" },
+      { name: { de: "Anschlussmaterial", en: "Connection Material", es: "Material de Conexión" }, href: "/categories/zubehoer-skywind-ng" },
+      { name: { de: "Monitoring", en: "Monitoring", es: "Monitoreo" }, href: "/categories/zubehoer-skywind-ng" },
+      { name: { de: "Systemkomponenten", en: "System Components", es: "Componentes del Sistema" }, href: "/categories/zubehoer-skywind-ng" },
+    ],
+    ctaLabel: { de: "Zubehör entdecken", en: "Explore Accessories", es: "Explorar Accesorios" },
   },
 };
 
