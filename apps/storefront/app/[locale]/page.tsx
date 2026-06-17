@@ -533,7 +533,7 @@ function CategoryCard({
   return (
     <div className="group flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-brand-accent hover:shadow-lg transition-all duration-200 overflow-hidden">
       {/* Image */}
-      <Link href={`/categories/${category.slug}`} className="block relative h-44 overflow-hidden bg-gray-100 shrink-0">
+      <Link href={`/categories/${category.slug}`} className="block relative h-36 overflow-hidden bg-gray-100 shrink-0">
         {imageSrc ? (
           <Image
             src={imageSrc}
@@ -549,39 +549,43 @@ function CategoryCard({
 
       {/* Content */}
       <div className="p-5 flex flex-col flex-1">
-        <h3 className="font-display font-bold text-xl text-brand-text mb-2 leading-tight">
+        <h3 className="font-display font-bold text-lg text-brand-text mb-1 leading-tight">
           {category.name}
         </h3>
 
         {description && (
-          <p className="text-sm text-brand-muted leading-relaxed mb-4 flex-1">
+          <p className="text-xs text-brand-muted leading-relaxed mb-3">
             {description}
           </p>
         )}
 
         {subcategories.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
+          <ul className="mb-4 flex-1 space-y-1">
             {subcategories.map((sub) => (
-              <Link
-                key={sub.name.de}
-                href={sub.href as any}
-                className="text-xs text-brand-muted bg-gray-100 hover:bg-green-50 hover:text-brand-accent px-2.5 py-1 rounded-full transition-colors duration-150"
-              >
-                {sub.name[lang] ?? sub.name.de}
-              </Link>
+              <li key={sub.name.de}>
+                <Link
+                  href={sub.href as any}
+                  className="flex items-center gap-2 text-sm text-brand-text font-medium hover:text-brand-accent transition-colors duration-150 py-0.5"
+                >
+                  <span className="text-brand-accent text-xs flex-shrink-0">›</span>
+                  {sub.name[lang] ?? sub.name.de}
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
 
-        <Link
-          href={`/categories/${category.slug}`}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-accent hover:text-green-700 transition-colors duration-150 mt-auto"
-        >
-          {ctaLabel}
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
+        <div className="pt-3 border-t border-gray-100 mt-auto">
+          <Link
+            href={`/categories/${category.slug}`}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-accent hover:text-green-700 transition-colors duration-150"
+          >
+            {ctaLabel}
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </div>
   );
