@@ -71,7 +71,8 @@ export default async function HomePage({
 
   let categories: CategorySummary[] = [];
   try {
-    categories = await fetchCategories(params.locale);
+    const allCategories = await fetchCategories(params.locale);
+    categories = allCategories.filter((cat) => cat.parent_id === null);
   } catch {
     // show page without categories section
   }
@@ -525,8 +526,7 @@ function CategoryCard({
   const imageSrc = category.coverImageUrl ?? fallback?.src ?? null;
   const imageAlt = fallback?.alt ?? category.name;
   const enrichment = CATEGORY_ENRICHMENT[category.slug];
-  const lang = (enrichment?.description[locale] ? locale : "de") as string;
-  const description = enrichment?.description[lang] ?? null;
+  const lang = (enrichment?.subcategories ? locale : "de") as string;
   const subcategories = enrichment?.subcategories ?? [];
 
   return (
