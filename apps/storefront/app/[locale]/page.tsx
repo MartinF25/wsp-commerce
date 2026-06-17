@@ -233,7 +233,7 @@ export default async function HomePage({
                 <CategoryCard
                   key={cat.id}
                   category={cat}
-                  productsLabel={t("categories_products")}
+                  locale={params.locale}
                 />
               ))}
             </div>
@@ -402,60 +402,145 @@ function BlogTeaserCard({ post, readMoreLabel }: { post: BlogPostSummary; readMo
 // ─── Category Card ────────────────────────────────────────────────────────────
 
 const CATEGORY_FALLBACK_IMAGES: Record<string, { src: string; alt: string }> = {
-  solarzaun:    { src: "/images/solarzaun-house.png", alt: "Solarzaun" },
-  skywind:      { src: "/images/skywind-hero.png",    alt: "SkyWind Kleinwindanlage" },
-  kombiloesung: { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
+  solarzaun:     { src: "/images/solarzaun-house.png", alt: "Solarzaun" },
+  skywind:       { src: "/images/skywind-hero.png",    alt: "SkyWind Kleinwindanlage" },
+  kombiloesung:  { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
   "kombilösung": { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
+};
+
+const CATEGORY_ENRICHMENT: Record<string, {
+  description: Record<string, string>;
+  subcategories: Array<{ name: Record<string, string>; href: string }>;
+  ctaLabel: Record<string, string>;
+}> = {
+  skywind: {
+    description: {
+      de: "Entdecken Sie moderne SkyWind NG Kleinwindanlagen für Haus, Gewerbe und Hybridlösungen mit Photovoltaik.",
+      en: "Discover modern SkyWind NG small wind turbines for homes, business and hybrid solar-wind solutions.",
+      es: "Descubra las modernas aeroturbinas SkyWind NG para hogar, empresa y soluciones híbridas con fotovoltaica.",
+    },
+    subcategories: [
+      { name: { de: "SkyWind NG Komplettsets", en: "Complete Sets", es: "Kits Completos" }, href: "/categories/skywind" },
+      { name: { de: "Masten & Halterungen", en: "Masts & Mounts", es: "Mástiles y Soportes" }, href: "/categories/skywind" },
+      { name: { de: "Zubehör", en: "Accessories", es: "Accesorios" }, href: "/categories/skywind" },
+      { name: { de: "Hybridlösungen mit PV", en: "Hybrid Solutions", es: "Soluciones Híbridas" }, href: "/categories/skywind" },
+    ],
+    ctaLabel: { de: "SkyWind NG entdecken", en: "Explore SkyWind NG", es: "Explorar SkyWind NG" },
+  },
+  solarzaun: {
+    description: {
+      de: "Solarzaun Komplettsets mit bifazialen Solarmodulen, stabilen Profilen und passender Wechselrichtertechnik.",
+      en: "Solar fence complete sets with bifacial modules, sturdy profiles and matching inverter technology.",
+      es: "Kits completos de valla solar con módulos bifaciales, perfiles sólidos y tecnología de inversor.",
+    },
+    subcategories: [
+      { name: { de: "Solarzaun Komplettsets", en: "Complete Sets", es: "Kits Completos" }, href: "/categories/solarzaun" },
+      { name: { de: "Pfosten & Profile", en: "Posts & Profiles", es: "Postes y Perfiles" }, href: "/categories/solarzaun" },
+      { name: { de: "Bifaziale Zaunmodule", en: "Bifacial Modules", es: "Módulos Bifaciales" }, href: "/categories/solarzaun" },
+      { name: { de: "Wechselrichter für Solarzaun", en: "Inverters", es: "Inversores" }, href: "/categories/solarzaun" },
+    ],
+    ctaLabel: { de: "Solarzaun entdecken", en: "Explore Solar Fence", es: "Explorar Valla Solar" },
+  },
+  kombiloesung: {
+    description: {
+      de: "Die optimale Kombilösung aus SkyWind Windkraft und Solarzaun – für maximale Energieautarkie das ganze Jahr.",
+      en: "The optimal combination of SkyWind wind power and solar fence – maximum energy independence all year.",
+      es: "La combinación óptima de energía eólica SkyWind y valla solar – máxima autosuficiencia energética.",
+    },
+    subcategories: [
+      { name: { de: "Solar & Wind Kombi", en: "Solar & Wind Combo", es: "Combinación Solar & Viento" }, href: "/categories/kombiloesung" },
+      { name: { de: "Hybrid-Wechselrichter", en: "Hybrid Inverters", es: "Inversores Híbridos" }, href: "/categories/kombiloesung" },
+      { name: { de: "Batteriespeicher", en: "Battery Storage", es: "Almacenamiento" }, href: "/categories/kombiloesung" },
+      { name: { de: "Off-Grid Systeme", en: "Off-Grid Systems", es: "Sistemas Off-Grid" }, href: "/categories/kombiloesung" },
+    ],
+    ctaLabel: { de: "Kombilösungen entdecken", en: "Explore Combo Solutions", es: "Explorar Combinaciones" },
+  },
+  "kombilösung": {
+    description: {
+      de: "Die optimale Kombilösung aus SkyWind Windkraft und Solarzaun – für maximale Energieautarkie das ganze Jahr.",
+      en: "The optimal combination of SkyWind wind power and solar fence – maximum energy independence all year.",
+      es: "La combinación óptima de energía eólica SkyWind y valla solar – máxima autosuficiencia energética.",
+    },
+    subcategories: [
+      { name: { de: "Solar & Wind Kombi", en: "Solar & Wind Combo", es: "Combinación Solar & Viento" }, href: "/categories/kombiloesung" },
+      { name: { de: "Hybrid-Wechselrichter", en: "Hybrid Inverters", es: "Inversores Híbridos" }, href: "/categories/kombiloesung" },
+      { name: { de: "Batteriespeicher", en: "Battery Storage", es: "Almacenamiento" }, href: "/categories/kombiloesung" },
+      { name: { de: "Off-Grid Systeme", en: "Off-Grid Systems", es: "Sistemas Off-Grid" }, href: "/categories/kombiloesung" },
+    ],
+    ctaLabel: { de: "Kombilösungen entdecken", en: "Explore Combo Solutions", es: "Explorar Combinaciones" },
+  },
 };
 
 function CategoryCard({
   category,
-  productsLabel,
+  locale,
 }: {
   category: CategorySummary;
-  productsLabel: string;
+  locale: string;
 }) {
   const fallback = CATEGORY_FALLBACK_IMAGES[category.slug];
   const imageSrc = category.coverImageUrl ?? fallback?.src ?? null;
   const imageAlt = fallback?.alt ?? category.name;
+  const enrichment = CATEGORY_ENRICHMENT[category.slug];
+  const lang = (enrichment?.description[locale] ? locale : "de") as string;
+  const description = enrichment?.description[lang] ?? null;
+  const subcategories = enrichment?.subcategories ?? [];
+  const ctaLabel = enrichment?.ctaLabel[lang] ?? (locale === "en" ? "View category" : locale === "es" ? "Ver categoría" : "Kategorie ansehen");
 
   return (
-    <Link
-      href={`/categories/${category.slug}`}
-      className="group relative block aspect-[4/3] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300"
-    >
-      {imageSrc ? (
-        <Image
-          src={imageSrc}
-          alt={imageAlt}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900" />
-      )}
-
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+    <div className="group flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-brand-accent hover:shadow-lg transition-all duration-200 overflow-hidden">
+      {/* Image */}
+      <Link href={`/categories/${category.slug}`} className="block relative h-44 overflow-hidden bg-gray-100 shrink-0">
+        {imageSrc ? (
+          <Image
+            src={imageSrc}
+            alt={imageAlt}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900" />
+        )}
+      </Link>
 
       {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-5">
-        <p className="font-display font-bold text-white text-xl leading-tight">
+      <div className="p-5 flex flex-col flex-1">
+        <h3 className="font-display font-bold text-xl text-brand-text mb-2 leading-tight">
           {category.name}
-        </p>
-        <p className="text-white/65 text-sm mt-1">
-          {category.productCount} {productsLabel}
-        </p>
-      </div>
+        </h3>
 
-      {/* Arrow badge on hover */}
-      <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
+        {description && (
+          <p className="text-sm text-brand-muted leading-relaxed mb-4 flex-1">
+            {description}
+          </p>
+        )}
+
+        {subcategories.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {subcategories.map((sub) => (
+              <Link
+                key={sub.name.de}
+                href={sub.href as any}
+                className="text-xs text-brand-muted bg-gray-100 hover:bg-green-50 hover:text-brand-accent px-2.5 py-1 rounded-full transition-colors duration-150"
+              >
+                {sub.name[lang] ?? sub.name.de}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <Link
+          href={`/categories/${category.slug}`}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-accent hover:text-green-700 transition-colors duration-150 mt-auto"
+        >
+          {ctaLabel}
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 
