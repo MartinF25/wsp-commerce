@@ -528,62 +528,54 @@ function CategoryCard({
   const lang = (enrichment?.description[locale] ? locale : "de") as string;
   const description = enrichment?.description[lang] ?? null;
   const subcategories = enrichment?.subcategories ?? [];
-  const ctaLabel = enrichment?.ctaLabel[lang] ?? (locale === "en" ? "View category" : locale === "es" ? "Ver categoría" : "Kategorie ansehen");
 
   return (
     <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 group">
 
-      {/* ── Hauptkategorie-Header ── */}
+      {/* ── Hauptkategorie-Header – feste Höhe für gleichmäßige Optik ── */}
       <Link
         href={`/categories/${category.slug}`}
-        className="relative flex items-center gap-4 px-5 py-4 bg-gray-900 hover:bg-gray-800 transition-colors duration-150"
+        className="flex items-center gap-3 px-4 h-[72px] bg-gray-900 hover:bg-gray-800 transition-colors duration-150"
       >
-        {/* Kleines Kategoriebild */}
-        <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-700">
+        {/* Bild-Thumbnail */}
+        <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-700">
           {imageSrc && (
             <Image
               src={imageSrc}
               alt={imageAlt}
               fill
               className="object-cover opacity-90"
-              sizes="56px"
+              sizes="40px"
             />
           )}
         </div>
 
-        {/* Name + Beschreibung */}
-        <div className="flex-1 min-w-0">
-          <p className="font-display font-bold text-white text-base sm:text-lg leading-tight">
-            {category.name}
-          </p>
-          {description && (
-            <p className="text-white/50 text-xs mt-1 line-clamp-2 leading-relaxed">
-              {description}
-            </p>
-          )}
-        </div>
+        {/* Kategoriename – auf 2 Zeilen begrenzt */}
+        <p className="font-display font-bold text-white text-sm leading-snug flex-1 min-w-0 line-clamp-2">
+          {category.name}
+        </p>
 
         {/* Pfeil */}
-        <svg className="w-5 h-5 text-white/30 group-hover:text-white/70 shrink-0 transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-4 h-4 text-white/30 group-hover:text-white/60 shrink-0 transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </Link>
 
-      {/* ── Unterkategorien als 2×2-Grid ── */}
+      {/* ── Unterkategorien 2×2-Grid – feste Zellenhöhe ── */}
       {subcategories.length > 0 && (
-        <div className="grid grid-cols-2 bg-white">
+        <div className="grid grid-cols-2 bg-white border-t border-gray-100">
           {subcategories.map((sub, i) => (
             <Link
               key={sub.name.de}
               href={sub.href as any}
               className={[
-                "flex items-center gap-2 px-4 py-3 text-sm font-medium text-brand-text hover:text-brand-accent hover:bg-green-50 transition-colors duration-150",
+                "flex items-center gap-2 px-4 h-11 text-sm font-medium text-brand-text hover:text-brand-accent hover:bg-green-50 transition-colors duration-150 truncate",
                 i % 2 === 0 ? "border-r border-gray-100" : "",
-                i < subcategories.length - 2 ? "border-b border-gray-100" : "",
+                i < 2 ? "border-b border-gray-100" : "",
               ].join(" ")}
             >
-              <span className="text-brand-accent font-bold leading-none flex-shrink-0">›</span>
-              {sub.name[lang] ?? sub.name.de}
+              <span className="text-brand-accent text-base leading-none flex-shrink-0">›</span>
+              <span className="truncate">{sub.name[lang] ?? sub.name.de}</span>
             </Link>
           ))}
         </div>
