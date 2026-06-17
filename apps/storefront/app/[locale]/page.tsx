@@ -228,7 +228,7 @@ export default async function HomePage({
                 {t("categories_h2")}
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {categories.map((cat) => (
                 <CategoryCard
                   key={cat.id}
@@ -531,62 +531,63 @@ function CategoryCard({
   const ctaLabel = enrichment?.ctaLabel[lang] ?? (locale === "en" ? "View category" : locale === "es" ? "Ver categoría" : "Kategorie ansehen");
 
   return (
-    <div className="group flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-brand-accent hover:shadow-lg transition-all duration-200 overflow-hidden">
-      {/* Image */}
-      <Link href={`/categories/${category.slug}`} className="block relative h-36 overflow-hidden bg-gray-100 shrink-0">
-        {imageSrc ? (
-          <Image
-            src={imageSrc}
-            alt={imageAlt}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900" />
-        )}
+    <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 group">
+
+      {/* ── Hauptkategorie-Header ── */}
+      <Link
+        href={`/categories/${category.slug}`}
+        className="relative flex items-center gap-4 px-5 py-4 bg-gray-900 hover:bg-gray-800 transition-colors duration-150"
+      >
+        {/* Kleines Kategoriebild */}
+        <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-700">
+          {imageSrc && (
+            <Image
+              src={imageSrc}
+              alt={imageAlt}
+              fill
+              className="object-cover opacity-90"
+              sizes="56px"
+            />
+          )}
+        </div>
+
+        {/* Name + Beschreibung */}
+        <div className="flex-1 min-w-0">
+          <p className="font-display font-bold text-white text-base sm:text-lg leading-tight">
+            {category.name}
+          </p>
+          {description && (
+            <p className="text-white/50 text-xs mt-1 line-clamp-2 leading-relaxed">
+              {description}
+            </p>
+          )}
+        </div>
+
+        {/* Pfeil */}
+        <svg className="w-5 h-5 text-white/30 group-hover:text-white/70 shrink-0 transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
       </Link>
 
-      {/* Content */}
-      <div className="p-5 flex flex-col flex-1">
-        <h3 className="font-display font-bold text-lg text-brand-text mb-1 leading-tight">
-          {category.name}
-        </h3>
-
-        {description && (
-          <p className="text-xs text-brand-muted leading-relaxed mb-3">
-            {description}
-          </p>
-        )}
-
-        {subcategories.length > 0 && (
-          <ul className="mb-4 flex-1 space-y-1">
-            {subcategories.map((sub) => (
-              <li key={sub.name.de}>
-                <Link
-                  href={sub.href as any}
-                  className="flex items-center gap-2 text-sm text-brand-text font-medium hover:text-brand-accent transition-colors duration-150 py-0.5"
-                >
-                  <span className="text-brand-accent text-xs flex-shrink-0">›</span>
-                  {sub.name[lang] ?? sub.name.de}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div className="pt-3 border-t border-gray-100 mt-auto">
-          <Link
-            href={`/categories/${category.slug}`}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-accent hover:text-green-700 transition-colors duration-150"
-          >
-            {ctaLabel}
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
+      {/* ── Unterkategorien als 2×2-Grid ── */}
+      {subcategories.length > 0 && (
+        <div className="grid grid-cols-2 bg-white">
+          {subcategories.map((sub, i) => (
+            <Link
+              key={sub.name.de}
+              href={sub.href as any}
+              className={[
+                "flex items-center gap-2 px-4 py-3 text-sm font-medium text-brand-text hover:text-brand-accent hover:bg-green-50 transition-colors duration-150",
+                i % 2 === 0 ? "border-r border-gray-100" : "",
+                i < subcategories.length - 2 ? "border-b border-gray-100" : "",
+              ].join(" ")}
+            >
+              <span className="text-brand-accent font-bold leading-none flex-shrink-0">›</span>
+              {sub.name[lang] ?? sub.name.de}
+            </Link>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
