@@ -194,29 +194,6 @@ export default async function HomePage({
         </div>
       </div>
 
-      {/* ── Products ── */}
-      <section className="py-10 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-6 sm:mb-10">
-            <div>
-              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("products_eyebrow")}</p>
-              <h2 className="font-display text-3xl font-bold text-brand-text">{t("products_h2")}</h2>
-            </div>
-            <Link href="/products" className="text-sm font-semibold text-brand-muted hover:text-brand-accent transition-colors duration-150 hidden sm:block">
-              {t("products_all")}
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.slice(0, 8).map((product) => (
-              <ProductCard key={product.id} product={product} buyLabel={t("products_buy")} learnLabel={t("products_learn")} />
-            ))}
-          </div>
-          <div className="mt-6 sm:hidden">
-            <Link href="/products" className="text-sm font-semibold text-brand-muted hover:text-brand-accent">{t("products_all_mobile")}</Link>
-          </div>
-        </div>
-      </section>
-
       {/* ── Categories ── */}
       {categories.length > 0 && (
         <section className="bg-gray-50 py-16 sm:py-20">
@@ -241,6 +218,29 @@ export default async function HomePage({
           </div>
         </section>
       )}
+
+      {/* ── Products ── */}
+      <section className="py-10 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-6 sm:mb-10">
+            <div>
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("products_eyebrow")}</p>
+              <h2 className="font-display text-3xl font-bold text-brand-text">{t("products_h2")}</h2>
+            </div>
+            <Link href="/products" className="text-sm font-semibold text-brand-muted hover:text-brand-accent transition-colors duration-150 hidden sm:block">
+              {t("products_all")}
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.slice(0, 8).map((product) => (
+              <ProductCard key={product.id} product={product} buyLabel={t("products_buy")} learnLabel={t("products_learn")} />
+            ))}
+          </div>
+          <div className="mt-6 sm:hidden">
+            <Link href="/products" className="text-sm font-semibold text-brand-muted hover:text-brand-accent">{t("products_all_mobile")}</Link>
+          </div>
+        </div>
+      </section>
 
       {/* ── Benefits ── */}
       <section className="bg-gray-50 py-16">
