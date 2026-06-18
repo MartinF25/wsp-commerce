@@ -30,7 +30,8 @@
     "col_info": "Informationen",
     "col_legal": "Rechtliches",
     "made_in": "Gefertigt mit Überzeugung in Deutschland.",
-    "affiliate_notice": "Als Amazon-Partner verdienen wir an qualifizierten Käufen, wenn Sie über einen Partnerlink einkaufen. Amazon und das Amazon-Logo sind Warenzeichen von Amazon.com, Inc. oder ihrer verbundenen Unternehmen."
+    "affiliate_notice": "Als Amazon-Partner verdienen wir an qualifizierten Käufen, wenn Sie über einen Partnerlink einkaufen. Amazon und das Amazon-Logo sind Warenzeichen von Amazon.com, Inc. oder ihrer verbundenen Unternehmen.",
+    "widerruf": "Widerruf"
   },
   "newsletter": {
     "title": "Energiezukunft mitgestalten",
@@ -694,5 +695,34 @@
     "subcategories": "Unterkategorien",
     "no_products_in_category": "In dieser Kategorie sind aktuell keine Produkte verfügbar.",
     "category_not_found": "Kategorie nicht gefunden"
+  },
+  "widerruf": {
+    "meta_title": "Widerruf online einreichen | WSP-Solarenergie",
+    "meta_description": "Reichen Sie Ihren Widerruf bequem online ein. EU-konformes Widerrufsformular für alle Bestellungen im WSP-Solarenergie Shop.",
+    "page_title": "Widerruf einreichen",
+    "page_subtitle": "Füllen Sie das Formular aus, um Ihre Widerrufsanfrage zu übermitteln. Wir prüfen Ihre Anfrage und melden uns zeitnah bei Ihnen.",
+    "legal_notice": "Gemäß § 355 BGB haben Verbraucher das Recht, einen Vertrag innerhalb von 14 Tagen ohne Angabe von Gründen zu widerrufen. Die Frist beginnt mit dem Tag des Erhalts der Ware.",
+    "form_title": "Widerrufsformular",
+    "order_reference": "Bestellnummer / Bestellreferenz",
+    "order_reference_placeholder": "z.B. ORD-2024-00123",
+    "first_name": "Vorname",
+    "last_name": "Nachname",
+    "email": "E-Mail-Adresse",
+    "message": "Nachricht (optional)",
+    "message_placeholder": "Bitte teilen Sie uns mit, welche Produkte Sie zurückgeben möchten oder falls nur ein Teil der Bestellung betroffen ist.",
+    "privacy_consent": "Ich habe die <link>Datenschutzerklärung</link> gelesen und stimme der Verarbeitung meiner Daten zur Bearbeitung dieser Widerrufsanfrage zu.",
+    "submit": "Widerruf einreichen",
+    "submitting": "Wird gesendet…",
+    "success_title": "Widerrufsanfrage eingegangen",
+    "success_message": "Wir haben Ihre Anfrage erhalten und eine Bestätigung an Ihre E-Mail-Adresse gesendet. Wir werden uns zeitnah bei Ihnen melden.",
+    "error_order_reference_required": "Bitte geben Sie Ihre Bestellnummer an.",
+    "error_first_name_required": "Bitte geben Sie Ihren Vornamen an.",
+    "error_last_name_required": "Bitte geben Sie Ihren Nachnamen an.",
+    "error_email_invalid": "Bitte geben Sie eine gültige E-Mail-Adresse an.",
+    "error_privacy_required": "Bitte stimmen Sie der Datenschutzerklärung zu.",
+    "error_submit": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
+    "error_rate_limited": "Zu viele Anfragen. Bitte versuchen Sie es in 15 Minuten erneut.",
+    "error_feature_disabled": "Das Widerrufsformular ist derzeit nicht verfügbar. Bitte kontaktieren Sie uns direkt.",
+    "guest_info": "Kein Konto? Kein Problem. Sie können Ihren Widerruf auch ohne Anmeldung einreichen."
   }
 }

@@ -966,6 +966,126 @@ model FeatureVisual {
   @@map("feature_visuals")
 }
 
+// ─── Widerruf / EU-Cancellation ──────────────────────────────────────────────
+
+/// Status einer Widerrufsanfrage.
+enum CancellationStatus {
+  widerruf_beantragt
+  widerruf_in_pruefung
+  widerruf_akzeptiert
+  widerruf_abgelehnt
+}
+
+/// Modus der Fristprüfung (konfigurierbar im Adminbereich).
+/// always_submit      → Anfrage immer annehmen, manuelle Prüfung durch Händler
+/// plausibility_check → Hinweis bei möglicher Fristüberschreitung, aber immer übermitteln
+/// auto_reject        → Automatische Ablehnung bei rechnerisch abgelaufener Frist
+enum CancellationMode {
+  always_submit
+  plausibility_check
+  auto_reject
+}
+
+/// Widerrufsanfrage eines Kunden.
+/// Soft-Modus: order_reference wird nicht gegen eine interne Orders-Tabelle geprüft.
+/// Händler prüft Bestellnummer und Berechtigung manuell.
+model CancellationRequest {
+  id                      String             @id @default(uuid())
+  order_reference         String
+  customer_email          String
+  customer_first_name     String
+  customer_last_name      String
+  message                 String?            @db.Text
+  status                  CancellationStatus @default(widerruf_beantragt)
+  /// Ergebnis der Fristprüfung: "unknown" | "within" | "possible_exceeded" | "exceeded"
+  deadline_check_result   String?
+  excluded_items_detected Boolean            @default(false)
+  /// SHA-256-Hash der Kunden-IP (DSGVO-konform, kein Klartext).
+  customer_ip_hash        String?
+  locale                  String             @default("de")
+  admin_notes             String?            @db.Text
+  customer_email_sent_at  DateTime?
+  admin_email_sent_at     DateTime?
+  rejection_email_sent_at DateTime?
+  created_at              DateTime           @default(now())
+  updated_at              DateTime           @updatedAt
+
+  logs CancellationLog[]
+
+  @@index([customer_email])
+  @@index([order_reference])
+  @@index([status])
+  @@index([created_at])
+  @@map("cancellation_requests")
+}
+
+/// Protokoll-Einträge zu einer Widerrufsanfrage (unveränderlich).
+model CancellationLog {
+  id           String              @id @default(uuid())
+  request_id   String
+  /// Maschinenlesbares Ereignis, z.B. "request_created", "status_changed", "email_sent".
+  event        String
+  details      String?
+  /// "system" | "admin" | E-Mail-Adresse des handelnden Admins
+  performed_by String?
+  created_at   DateTime            @default(now())
+
+  request CancellationRequest @relation(fields: [request_id], references: [id], onDelete: Cascade)
+
+  @@index([request_id])
+  @@map("cancellation_logs")
+}
+
+/// Singleton-Einstellungen für das Widerruf-Feature.
+/// ID ist immer "default" – nur ein Datensatz erlaubt.
+model CancellationSettings {
+  id                      String           @id @default("default")
+  is_active               Boolean          @default(true)
+  deadline_days           Int              @default(14)
+  delivery_buffer_days    Int              @default(2)
+  mode                    CancellationMode @default(always_submit)
+  admin_email             String           @default("")
+  show_footer_link        Boolean          @default(true)
+  show_account_link       Boolean          @default(true)
+  privacy_page_url        String?
+  cancellation_policy_url String?
+  noindex                 Boolean          @default(false)
+  meta_title_de           String?
+  meta_title_en           String?
+  meta_title_es           String?
+  meta_description_de     String?
+  meta_description_en     String?
+  meta_description_es     String?
+  updated_at              DateTime         @updatedAt
+
+  @@map("cancellation_settings")
+}
+
+/// Produkte, die vom Widerruf ausgeschlossen sind (z.B. Maßanfertigungen).
+/// Anfragen werden trotzdem übermittelt, aber mit Hinweis markiert.
+model CancellationExcludedProduct {
+  id           String   @id @default(uuid())
+  product_id   String   @unique
+  product_slug String
+  product_name String
+  reason       String?
+  created_at   DateTime @default(now())
+
+  @@map("cancellation_excluded_products")
+}
+
+/// Kategorien, deren Produkte vom Widerruf ausgeschlossen sind.
+model CancellationExcludedCategory {
+  id            String   @id @default(uuid())
+  category_id   String   @unique
+  category_slug String
+  category_name String
+  reason        String?
+  created_at    DateTime @default(now())
+
+  @@map("cancellation_excluded_categories")
+}
+
 /// Singleton-Datensatz für globale Display-Konfiguration des Feature Visual Engine.
 /// ID ist immer "singleton" – nur ein Datensatz erlaubt.
 model FeatureVisualSettings {

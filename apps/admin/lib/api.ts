@@ -10,6 +10,83 @@ const ADMIN_KEY = (process.env.ADMIN_API_KEY ?? "").trim();
 
 export type Locale = "de" | "en" | "es";
 
+// ─── Widerruf-Typen ────────────────────────────────────────────────────────
+
+export type CancellationStatus =
+  | "widerruf_beantragt"
+  | "widerruf_in_pruefung"
+  | "widerruf_akzeptiert"
+  | "widerruf_abgelehnt";
+
+export type CancellationMode = "always_submit" | "plausibility_check" | "auto_reject";
+
+export interface CancellationRequest {
+  id: string;
+  order_reference: string;
+  customer_email: string;
+  customer_first_name: string;
+  customer_last_name: string;
+  message: string | null;
+  status: CancellationStatus;
+  deadline_check_result: string | null;
+  excluded_items_detected: boolean;
+  locale: string;
+  admin_notes: string | null;
+  customer_email_sent_at: string | null;
+  admin_email_sent_at: string | null;
+  rejection_email_sent_at: string | null;
+  created_at: string;
+  updated_at: string;
+  logs?: CancellationLog[];
+}
+
+export interface CancellationLog {
+  id: string;
+  request_id: string;
+  event: string;
+  details: string | null;
+  performed_by: string | null;
+  created_at: string;
+}
+
+export interface CancellationSettings {
+  id: string;
+  is_active: boolean;
+  deadline_days: number;
+  delivery_buffer_days: number;
+  mode: CancellationMode;
+  admin_email: string;
+  show_footer_link: boolean;
+  show_account_link: boolean;
+  privacy_page_url: string | null;
+  cancellation_policy_url: string | null;
+  noindex: boolean;
+  meta_title_de: string | null;
+  meta_title_en: string | null;
+  meta_title_es: string | null;
+  meta_description_de: string | null;
+  meta_description_en: string | null;
+  meta_description_es: string | null;
+}
+
+export interface CancellationExcludedProduct {
+  id: string;
+  product_id: string;
+  product_slug: string;
+  product_name: string;
+  reason: string | null;
+  created_at: string;
+}
+
+export interface CancellationExcludedCategory {
+  id: string;
+  category_id: string;
+  category_slug: string;
+  category_name: string;
+  reason: string | null;
+  created_at: string;
+}
+
 export type ProductType = "direct_purchase" | "configurable" | "inquiry_only" | "affiliate_external";
 export type ProductStatus = "draft" | "active" | "archived";
 
@@ -973,5 +1050,59 @@ export const api = {
         method: "PUT",
         body: JSON.stringify(data),
       }),
+  },
+
+  // ─── Widerruf / Cancellations ─────────────────────────────────────────────
+
+  cancellations: {
+    list: (params?: { q?: string; status?: string; limit?: number; offset?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.q)      qs.set("q",      params.q);
+      if (params?.status) qs.set("status", params.status);
+      if (params?.limit)  qs.set("limit",  String(params.limit));
+      if (params?.offset) qs.set("offset", String(params.offset));
+      return request<{ data: CancellationRequest[]; meta: { total: number; limit: number; offset: number } }>(
+        `/cancellations${qs.toString() ? `?${qs}` : ""}`,
+        undefined, true,
+      );
+    },
+    get:         (id: string) => request<CancellationRequest>(`/cancellations/${id}`),
+    setStatus:   (id: string, status: string) =>
+      request<{ id: string; status: string; updated_at: string }>(`/cancellations/${id}/status`, {
+        method: "PATCH", body: JSON.stringify({ status }),
+      }),
+    setNotes:    (id: string, admin_notes: string | null) =>
+      request<{ id: string; admin_notes: string | null }>(`/cancellations/${id}/notes`, {
+        method: "PATCH", body: JSON.stringify({ admin_notes }),
+      }),
+    resendEmail: (id: string) =>
+      request<{ sent: boolean }>(`/cancellations/${id}/resend-email`, { method: "POST" }),
+    logs:        (id: string) => request<CancellationLog[]>(`/cancellations/${id}/logs`),
+  },
+
+  cancellationSettings: {
+    get: () => request<CancellationSettings>("/settings/cancellation"),
+    update: (data: Partial<CancellationSettings>) =>
+      request<CancellationSettings>("/settings/cancellation", {
+        method: "PUT", body: JSON.stringify(data),
+      }),
+    excludedProducts: {
+      list: () => request<CancellationExcludedProduct[]>("/settings/cancellation/excluded-products"),
+      add:  (data: { product_id: string; product_slug: string; product_name: string; reason?: string }) =>
+        request<CancellationExcludedProduct>("/settings/cancellation/excluded-products", {
+          method: "POST", body: JSON.stringify(data),
+        }),
+      remove: (id: string) =>
+        request<null>(`/settings/cancellation/excluded-products/${id}`, { method: "DELETE" }),
+    },
+    excludedCategories: {
+      list: () => request<CancellationExcludedCategory[]>("/settings/cancellation/excluded-categories"),
+      add:  (data: { category_id: string; category_slug: string; category_name: string; reason?: string }) =>
+        request<CancellationExcludedCategory>("/settings/cancellation/excluded-categories", {
+          method: "POST", body: JSON.stringify(data),
+        }),
+      remove: (id: string) =>
+        request<null>(`/settings/cancellation/excluded-categories/${id}`, { method: "DELETE" }),
+    },
   },
 };

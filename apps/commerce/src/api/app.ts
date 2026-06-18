@@ -16,6 +16,8 @@ import {
   adminFeatureVisualSettingsRoutes,
   publicFeatureVisualRoutes,
 } from "./routes/featureVisuals";
+import { cancellationRoutes } from "./routes/cancellations";
+import { adminCancellationRoutes, adminCancellationSettingsRoutes } from "./routes/adminCancellations";
 
 /**
  * Hono-App-Factory
@@ -68,6 +70,9 @@ export function createApp() {
   app.route("/api/admin/feature-visual-settings", adminFeatureVisualSettingsRoutes);
   app.route("/api/affiliate", affiliateRoutes);
   app.route("/api/ticker", tickerRoutes);
+  app.route("/api/cancellations", cancellationRoutes);
+  app.route("/api/admin/cancellations", adminCancellationRoutes);
+  app.route("/api/admin/settings/cancellation", adminCancellationSettingsRoutes);
 
   // ─── 404-Handler ────────────────────────────────────────────────────────────
 

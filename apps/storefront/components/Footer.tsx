@@ -116,6 +116,11 @@ export function Footer() {
                   {t("datenschutz")}
                 </Link>
               </li>
+              <li>
+                <Link href="/widerruf" className="text-sm text-gray-300 hover:text-white transition-colors duration-150">
+                  {t("widerruf")}
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

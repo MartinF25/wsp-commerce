@@ -31,7 +31,8 @@
     "col_info": "Information",
     "col_legal": "Legal",
     "made_in": "Made with conviction in Germany.",
-    "affiliate_notice": "As an Amazon Associate, we earn from qualifying purchases made via affiliate links. Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates."
+    "affiliate_notice": "As an Amazon Associate, we earn from qualifying purchases made via affiliate links. Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.",
+    "widerruf": "Cancellation"
   },
   "newsletter": {
     "title": "Shape the Energy Future",
@@ -1125,5 +1126,34 @@
     "subcategories": "Subcategories",
     "no_products_in_category": "No products are currently available in this category.",
     "category_not_found": "Category not found"
+  },
+  "widerruf": {
+    "meta_title": "Submit Cancellation | WSP Solar Energy",
+    "meta_description": "Submit your cancellation request online. EU-compliant cancellation form for all orders in the WSP Solar Energy Shop.",
+    "page_title": "Submit Cancellation",
+    "page_subtitle": "Fill in the form to submit your cancellation request. We will review your request and contact you promptly.",
+    "legal_notice": "Under EU consumer law, you have the right to withdraw from a contract within 14 days without giving any reason. The withdrawal period expires 14 days after the day you received the goods.",
+    "form_title": "Cancellation Form",
+    "order_reference": "Order Number / Reference",
+    "order_reference_placeholder": "e.g. ORD-2024-00123",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "email": "Email Address",
+    "message": "Message (optional)",
+    "message_placeholder": "Please let us know which items you wish to return, or if only part of your order is affected.",
+    "privacy_consent": "I have read the <link>Privacy Policy</link> and consent to the processing of my data to handle this cancellation request.",
+    "submit": "Submit Cancellation",
+    "submitting": "Sending…",
+    "success_title": "Cancellation Request Received",
+    "success_message": "We have received your request and sent a confirmation to your email address. We will contact you promptly.",
+    "error_order_reference_required": "Please provide your order number.",
+    "error_first_name_required": "Please provide your first name.",
+    "error_last_name_required": "Please provide your last name.",
+    "error_email_invalid": "Please provide a valid email address.",
+    "error_privacy_required": "Please accept the privacy policy.",
+    "error_submit": "An error occurred. Please try again later.",
+    "error_rate_limited": "Too many requests. Please try again in 15 minutes.",
+    "error_feature_disabled": "The cancellation form is currently unavailable. Please contact us directly.",
+    "guest_info": "No account? No problem. You can submit your cancellation without logging in."
   }
 }

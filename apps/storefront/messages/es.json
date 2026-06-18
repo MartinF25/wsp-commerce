@@ -31,7 +31,8 @@
     "col_info": "Información",
     "col_legal": "Legal",
     "made_in": "Fabricado con convicción en Alemania.",
-    "affiliate_notice": "Como asociado de Amazon, ganamos con las compras que cumplan los requisitos realizadas a través de nuestros enlaces de afiliado. Amazon y el logotipo de Amazon son marcas comerciales de Amazon.com, Inc. o sus filiales."
+    "affiliate_notice": "Como asociado de Amazon, ganamos con las compras que cumplan los requisitos realizadas a través de nuestros enlaces de afiliado. Amazon y el logotipo de Amazon son marcas comerciales de Amazon.com, Inc. o sus filiales.",
+    "widerruf": "Desistimiento"
   },
   "newsletter": {
     "title": "Forma parte del futuro energético",
@@ -1125,5 +1126,34 @@
     "subcategories": "Subcategorías",
     "no_products_in_category": "No hay productos disponibles actualmente en esta categoría.",
     "category_not_found": "Categoría no encontrada"
+  },
+  "widerruf": {
+    "meta_title": "Presentar desistimiento | WSP Solarenergie",
+    "meta_description": "Presente su solicitud de desistimiento en línea. Formulario de desistimiento conforme a la normativa UE para todos los pedidos de la tienda WSP Solarenergie.",
+    "page_title": "Presentar desistimiento",
+    "page_subtitle": "Complete el formulario para enviar su solicitud de desistimiento. Revisaremos su solicitud y nos pondremos en contacto con usted a la brevedad.",
+    "legal_notice": "Conforme a la normativa de consumidores de la UE, tiene derecho a desistir del contrato en un plazo de 14 días sin indicar el motivo. El plazo de desistimiento expira a los 14 días de la recepción del producto.",
+    "form_title": "Formulario de desistimiento",
+    "order_reference": "Número / Referencia de pedido",
+    "order_reference_placeholder": "p.ej. ORD-2024-00123",
+    "first_name": "Nombre",
+    "last_name": "Apellidos",
+    "email": "Dirección de correo electrónico",
+    "message": "Mensaje (opcional)",
+    "message_placeholder": "Indíquenos qué artículos desea devolver, o si solo una parte del pedido está afectada.",
+    "privacy_consent": "He leído la <link>Política de privacidad</link> y doy mi consentimiento para el tratamiento de mis datos para gestionar esta solicitud de desistimiento.",
+    "submit": "Enviar desistimiento",
+    "submitting": "Enviando…",
+    "success_title": "Solicitud de desistimiento recibida",
+    "success_message": "Hemos recibido su solicitud y le hemos enviado una confirmación a su correo electrónico. Nos pondremos en contacto con usted a la brevedad.",
+    "error_order_reference_required": "Por favor, indique el número de pedido.",
+    "error_first_name_required": "Por favor, indique su nombre.",
+    "error_last_name_required": "Por favor, indique sus apellidos.",
+    "error_email_invalid": "Por favor, indique una dirección de correo electrónico válida.",
+    "error_privacy_required": "Por favor, acepte la política de privacidad.",
+    "error_submit": "Ha ocurrido un error. Por favor, inténtelo de nuevo más tarde.",
+    "error_rate_limited": "Demasiadas solicitudes. Por favor, inténtelo de nuevo en 15 minutos.",
+    "error_feature_disabled": "El formulario de desistimiento no está disponible actualmente. Contáctenos directamente.",
+    "guest_info": "¿Sin cuenta? No hay problema. Puede enviar su desistimiento sin iniciar sesión."
   }
 }
