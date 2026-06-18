@@ -381,6 +381,23 @@ const FAQ_SECTIONS: FAQSectionData[] = [
           </>
         ),
       },
+      {
+        question: "Kann ich eine Bestellung widerrufen?",
+        answer: (
+          <>
+            Ja – als Verbraucher haben Sie gemäß § 355 BGB das Recht, einen
+            Vertrag innerhalb von 14 Tagen ohne Angabe von Gründen zu widerrufen.
+            Nutzen Sie dazu unser{" "}
+            <Link
+              href="/widerruf"
+              className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150"
+            >
+              Online-Widerrufsformular
+            </Link>
+            {" "}– ohne Anmeldung, auch für Gastbestellungen.
+          </>
+        ),
+      },
     ],
   },
 ];
@@ -528,6 +545,22 @@ const FAQ_SECTIONS_EN: FAQSectionData[] = [
           </>
         ),
       },
+      {
+        question: "Can I cancel an order?",
+        answer: (
+          <>
+            Yes – as a consumer you have the right to withdraw from a contract within 14 days without giving any reason under EU consumer law.
+            Please use our{" "}
+            <Link
+              href="/widerruf"
+              className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150"
+            >
+              online cancellation form
+            </Link>
+            {" "}– no login required, also available for guest orders.
+          </>
+        ),
+      },
     ],
   },
 ];
@@ -672,6 +705,22 @@ const FAQ_SECTIONS_ES: FAQSectionData[] = [
               formulario de contacto
             </Link>
             . Sin llamadas de seguimiento no solicitadas.
+          </>
+        ),
+      },
+      {
+        question: "¿Puedo desistir de un pedido?",
+        answer: (
+          <>
+            Sí – como consumidor tienes derecho a desistir de un contrato en un plazo de 14 días sin necesidad de indicar el motivo, conforme a la normativa de consumidores de la UE.
+            Utiliza nuestro{" "}
+            <Link
+              href="/widerruf"
+              className="text-brand-text underline underline-offset-2 hover:text-brand-accent transition-colors duration-150"
+            >
+              formulario de desistimiento en línea
+            </Link>
+            {" "}– sin necesidad de iniciar sesión, también disponible para pedidos de invitados.
           </>
         ),
       },

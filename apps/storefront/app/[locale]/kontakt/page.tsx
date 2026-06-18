@@ -253,6 +253,22 @@ export default async function KontaktPage({ params }: Props) {
                 </ul>
               </div>
 
+              {/* Widerruf-Hinweis */}
+              <div className="rounded-2xl border border-gray-200 p-5">
+                <p className="text-xs font-semibold text-brand-muted uppercase tracking-wider mb-2">
+                  {t("widerruf_hint_label")}
+                </p>
+                <p className="text-sm text-brand-muted leading-relaxed mb-3">
+                  {t("widerruf_hint_text")}
+                </p>
+                <Link
+                  href="/widerruf"
+                  className="text-sm font-semibold text-brand-accent hover:underline"
+                >
+                  {t("widerruf_hint_link")} →
+                </Link>
+              </div>
+
               {/* Social Media */}
               <div>
                 <h3 className="font-display font-semibold text-brand-text mb-4">{t("social_title")}</h3>
