@@ -786,9 +786,8 @@ adminMarketListingRoutes.post("/check-availability-batch", async (c) => {
       ],
     },
     orderBy: [
-      { productDraftId: { sort: "desc", nulls: "last" } },
-      { dealScore: { sort: "desc", nulls: "last" } },
-      { lastAvailabilityCheckAt: { sort: "asc", nulls: "first" } },
+      { dealScore: "desc" },
+      { lastAvailabilityCheckAt: "asc" },
     ],
     take: batchLimit,
   });
