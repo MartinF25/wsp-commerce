@@ -626,6 +626,14 @@ export interface MarketListing {
   productDraftId?: string | null;
   productCreatedAt?: string | null;
   productStatus?: "draft" | "active" | "archived" | null;
+  sourceStatus?: "online" | "offline" | "unknown" | null;
+  lastAvailabilityCheckAt?: string | null;
+  lastKnownPrice?: number | null;
+  currentPrice?: number | null;
+  priceChanged?: boolean;
+  priceChangeAmount?: number | null;
+  availabilityNote?: string | null;
+  syncStatus?: "ok" | "needs_review" | "offline" | "price_changed" | null;
   scraped_at: string;
   created_at: string;
 }

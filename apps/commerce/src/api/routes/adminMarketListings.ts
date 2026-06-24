@@ -576,3 +576,300 @@ adminMarketListingRoutes.delete("/", async (c) => {
 
   return c.json({ ok: true, deleted: count });
 });
+
+// ─── POST /check-availability ─────────────────────────────────────────────────
+
+const AVAILABILITY_REQUEST_TIMEOUT_MS = 8000;
+
+async function fetchListingAvailability(url: string): Promise<{
+  isOnline: boolean;
+  currentPriceCents: number | null;
+  blocked: boolean;
+}> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AVAILABILITY_REQUEST_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; availability-check/1.0)",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "de-DE,de;q=0.9",
+      },
+      redirect: "follow",
+    });
+
+    clearTimeout(timer);
+
+    // Captcha / bot-block detection
+    if (res.status === 403 || res.status === 429 || res.status === 503) {
+      return { isOnline: false, currentPriceCents: null, blocked: true };
+    }
+
+    // 404 or 410 → definitively offline
+    if (res.status === 404 || res.status === 410) {
+      return { isOnline: false, currentPriceCents: null, blocked: false };
+    }
+
+    if (!res.ok) {
+      return { isOnline: false, currentPriceCents: null, blocked: false };
+    }
+
+    const html = await res.text();
+
+    // Kleinanzeigen specific offline signals
+    const offlineSignals = [
+      "Diese Anzeige wurde bereits",
+      "Anzeige nicht mehr",
+      "leider nicht mehr",
+      "wurde gelöscht",
+      "nicht gefunden",
+      "404",
+    ];
+    const lowerHtml = html.toLowerCase();
+    const isOffline = offlineSignals.some((signal) => lowerHtml.includes(signal.toLowerCase()));
+
+    if (isOffline) {
+      return { isOnline: false, currentPriceCents: null, blocked: false };
+    }
+
+    // Captcha detection
+    const captchaSignals = ["captcha", "robot", "cloudflare", "challenge"];
+    const isBlocked = captchaSignals.some((s) => lowerHtml.includes(s));
+    if (isBlocked) {
+      return { isOnline: false, currentPriceCents: null, blocked: true };
+    }
+
+    // Price extraction: look for patterns like "1.500 €" or "1500 EUR"
+    const pricePatterns = [
+      /(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)\s*€/,
+      /(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)\s*EUR/i,
+      /"price"[^"]*"[^"]*(\d+(?:[.,]\d+)?)"/i,
+      /itemprop="price"[^>]*content="(\d+(?:\.\d+)?)"/i,
+    ];
+
+    let currentPriceCents: number | null = null;
+    for (const pattern of pricePatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        const raw = match[1].replace(/\./g, "").replace(",", ".");
+        const num = parseFloat(raw);
+        if (!isNaN(num) && num > 0) {
+          currentPriceCents = Math.round(num * 100);
+          break;
+        }
+      }
+    }
+
+    return { isOnline: true, currentPriceCents, blocked: false };
+  } catch (err: unknown) {
+    clearTimeout(timer);
+    const isAbort = err instanceof Error && err.name === "AbortError";
+    return { isOnline: false, currentPriceCents: null, blocked: isAbort };
+  }
+}
+
+adminMarketListingRoutes.post("/check-availability", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json().catch(() => null) as { marketListingId?: string } | null;
+  const marketListingId = body?.marketListingId?.trim();
+
+  if (!marketListingId) {
+    return c.json({
+      error: { code: "INVALID_BODY", message: "marketListingId ist erforderlich." },
+    }, 422);
+  }
+
+  const listing = await prisma.marketListing.findUnique({ where: { id: marketListingId } });
+
+  if (!listing) {
+    return c.json({ error: { code: "NOT_FOUND", message: "Market-Anzeige nicht gefunden." } }, 404);
+  }
+
+  if (!listing.listing_url) {
+    const updated = await prisma.marketListing.update({
+      where: { id: listing.id },
+      data: {
+        sourceStatus: "unknown",
+        syncStatus: "needs_review",
+        lastAvailabilityCheckAt: new Date(),
+        availabilityNote: "Kein listing_url vorhanden – manuelle Prüfung erforderlich.",
+      },
+    });
+    return c.json({ data: updated });
+  }
+
+  const { isOnline, currentPriceCents, blocked } = await fetchListingAvailability(listing.listing_url);
+
+  const now = new Date();
+
+  if (blocked) {
+    const updated = await prisma.marketListing.update({
+      where: { id: listing.id },
+      data: {
+        sourceStatus: "unknown",
+        syncStatus: "needs_review",
+        lastAvailabilityCheckAt: now,
+        availabilityNote: "Abruf blockiert (Captcha / Rate-Limit). Manuelle Prüfung erforderlich.",
+      },
+    });
+    return c.json({ data: updated });
+  }
+
+  if (!isOnline) {
+    const updated = await prisma.marketListing.update({
+      where: { id: listing.id },
+      data: {
+        sourceStatus: "offline",
+        syncStatus: listing.productDraftId ? "needs_review" : "offline",
+        lastAvailabilityCheckAt: now,
+        availabilityNote: "Anzeige ist nicht mehr erreichbar oder wurde gelöscht.",
+      },
+    });
+    return c.json({ data: updated });
+  }
+
+  // Online – check for price change
+  let priceChanged = false;
+  let priceChangeAmount: number | null = null;
+  let syncStatus: "ok" | "needs_review" | "price_changed" = "ok";
+
+  const referencePrice = listing.lastKnownPrice ?? listing.price_cents;
+  if (currentPriceCents !== null && referencePrice !== null && currentPriceCents !== referencePrice) {
+    priceChanged = true;
+    priceChangeAmount = currentPriceCents - referencePrice;
+    syncStatus = "price_changed";
+  }
+
+  const updated = await prisma.marketListing.update({
+    where: { id: listing.id },
+    data: {
+      sourceStatus: "online",
+      syncStatus,
+      lastAvailabilityCheckAt: now,
+      lastKnownPrice: referencePrice,
+      currentPrice: currentPriceCents,
+      priceChanged,
+      priceChangeAmount: priceChanged ? priceChangeAmount : null,
+      availabilityNote: priceChanged
+        ? `Preisänderung erkannt: ${referencePrice ? Math.round(referencePrice / 100) : "?"} → ${currentPriceCents ? Math.round(currentPriceCents / 100) : "?"} EUR`
+        : null,
+    },
+  });
+
+  return c.json({ data: updated });
+});
+
+// ─── POST /check-availability-batch ──────────────────────────────────────────
+
+adminMarketListingRoutes.post("/check-availability-batch", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json().catch(() => ({})) as {
+    limit?: number;
+    category?: string;
+  };
+
+  const batchLimit = Math.min(Math.max(parseInt(String(body?.limit ?? 25)), 1), 100);
+  const category = body?.category?.trim() ?? null;
+
+  const recentThreshold = new Date();
+  recentThreshold.setHours(recentThreshold.getHours() - 12);
+
+  const listings = await prisma.marketListing.findMany({
+    where: {
+      listing_url: { not: null },
+      ...(category ? { productCategory: category as never } : {}),
+      OR: [
+        { lastAvailabilityCheckAt: null },
+        { lastAvailabilityCheckAt: { lt: recentThreshold } },
+      ],
+    },
+    orderBy: [
+      { productDraftId: { sort: "desc", nulls: "last" } },
+      { dealScore: { sort: "desc", nulls: "last" } },
+      { lastAvailabilityCheckAt: { sort: "asc", nulls: "first" } },
+    ],
+    take: batchLimit,
+  });
+
+  const results: Array<{ id: string; status: string; error?: string }> = [];
+
+  for (const listing of listings) {
+    try {
+      if (!listing.listing_url) continue;
+
+      const { isOnline, currentPriceCents, blocked } = await fetchListingAvailability(listing.listing_url);
+      const now = new Date();
+
+      if (blocked) {
+        await prisma.marketListing.update({
+          where: { id: listing.id },
+          data: {
+            sourceStatus: "unknown",
+            syncStatus: "needs_review",
+            lastAvailabilityCheckAt: now,
+            availabilityNote: "Abruf blockiert.",
+          },
+        });
+        results.push({ id: listing.id, status: "blocked" });
+      } else if (!isOnline) {
+        await prisma.marketListing.update({
+          where: { id: listing.id },
+          data: {
+            sourceStatus: "offline",
+            syncStatus: listing.productDraftId ? "needs_review" : "offline",
+            lastAvailabilityCheckAt: now,
+            availabilityNote: "Anzeige nicht mehr verfügbar.",
+          },
+        });
+        results.push({ id: listing.id, status: "offline" });
+      } else {
+        let priceChanged = false;
+        let priceChangeAmount: number | null = null;
+        let syncStatus: "ok" | "needs_review" | "price_changed" = "ok";
+        const referencePrice = listing.lastKnownPrice ?? listing.price_cents;
+
+        if (currentPriceCents !== null && referencePrice !== null && currentPriceCents !== referencePrice) {
+          priceChanged = true;
+          priceChangeAmount = currentPriceCents - referencePrice;
+          syncStatus = "price_changed";
+        }
+
+        await prisma.marketListing.update({
+          where: { id: listing.id },
+          data: {
+            sourceStatus: "online",
+            syncStatus,
+            lastAvailabilityCheckAt: now,
+            lastKnownPrice: referencePrice,
+            currentPrice: currentPriceCents,
+            priceChanged,
+            priceChangeAmount: priceChanged ? priceChangeAmount : null,
+            availabilityNote: priceChanged
+              ? `Preisänderung: ${referencePrice ? Math.round(referencePrice / 100) : "?"} → ${currentPriceCents ? Math.round(currentPriceCents / 100) : "?"} EUR`
+              : null,
+          },
+        });
+        results.push({ id: listing.id, status: priceChanged ? "price_changed" : "ok" });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[check-availability-batch] Fehler bei ${listing.id}:`, message);
+      results.push({ id: listing.id, status: "error", error: message });
+    }
+
+    // Defensiv: kurze Pause zwischen Requests
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  }
+
+  const summary = results.reduce(
+    (acc, r) => {
+      acc[r.status] = (acc[r.status] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  return c.json({ ok: true, checked: results.length, summary, results });
+});

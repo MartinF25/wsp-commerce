@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import type { MarketListing, MarketListingStats } from "@/lib/api";
 import { ListingCard } from "./ListingCard";
 import { CleanupButton } from "./CleanupButton";
+import { BatchCheckButton } from "./BatchCheckButton";
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +96,10 @@ export default async function MarketPage({
           <h1>Marktbeobachtung</h1>
           <div className="page-subtitle">Kleinanzeigen via n8n mit Deal-Analyse fuer den Adminbereich</div>
         </div>
-        <CleanupButton />
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <BatchCheckButton keyword={activeKeyword} />
+          <CleanupButton />
+        </div>
       </div>
 
       <div className="tabs">

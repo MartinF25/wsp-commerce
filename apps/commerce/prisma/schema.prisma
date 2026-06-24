@@ -159,6 +159,19 @@ enum MarketProductCategory {
   unknown
 }
 
+enum MarketSourceStatus {
+  online
+  offline
+  unknown
+}
+
+enum MarketSyncStatus {
+  ok
+  needs_review
+  offline
+  price_changed
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Category {
@@ -829,6 +842,17 @@ model MarketListing {
   productDraftId   String?
   productCreatedAt DateTime?
   productStatus    ProductStatus?
+
+  /// Availability Agent Felder
+  sourceStatus              MarketSourceStatus?
+  lastAvailabilityCheckAt   DateTime?
+  lastKnownPrice            Int?
+  currentPrice              Int?
+  priceChanged              Boolean   @default(false)
+  priceChangeAmount         Int?
+  availabilityNote          String?   @db.Text
+  syncStatus                MarketSyncStatus?
+
   /// Zeitstempel wann n8n die Daten gesammelt hat (scraped_at = jetzt beim Import)
   scraped_at       DateTime  @default(now())
   created_at       DateTime  @default(now())
@@ -839,6 +863,8 @@ model MarketListing {
   @@index([dealScore])
   @@index([recommendation])
   @@index([analyzedAt])
+  @@index([syncStatus])
+  @@index([sourceStatus])
   @@map("market_listings")
 }
 

@@ -94,6 +94,7 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
   const [isCreatePending, startCreateTransition] = useTransition();
   const [isAnalyzePending, startAnalyzeTransition] = useTransition();
   const [isDraftPending, startDraftTransition] = useTransition();
+  const [isAvailabilityPending, startAvailabilityTransition] = useTransition();
 
   const priceDisplay = formatPrice(currentListing.price_cents, currentListing.price_negotiable);
   const color = priceColor(currentListing.price_cents, avgPriceCents);
@@ -167,6 +168,32 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
     });
   }
 
+  function handleCheckAvailability() {
+    setError(null);
+    startAvailabilityTransition(async () => {
+      try {
+        const res = await fetch("/api/admin/market/check-availability", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ marketListingId: currentListing.id }),
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(body?.error?.message ?? `Verfuegbarkeitspruefung fehlgeschlagen (HTTP )`);
+        }
+
+        if (body?.data) {
+          setCurrentListing(body.data as MarketListing);
+        }
+
+        router.refresh();
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    });
+  }
+
   return (
     <>
       <tr>
@@ -224,6 +251,18 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
             {currentListing.productDraftId && (
               <span style={badgeStyle("#cffafe", "#155e75")}>Entwurf vorhanden</span>
             )}
+            {currentListing.sourceStatus === "online" && (
+              <span style={badgeStyle("#dcfce7", "#166534")}>ONLINE</span>
+            )}
+            {currentListing.sourceStatus === "offline" && (
+              <span style={badgeStyle("#fee2e2", "#991b1b")}>OFFLINE</span>
+            )}
+            {currentListing.sourceStatus === "unknown" && (
+              <span style={badgeStyle("#fef3c7", "#92400e")}>UNBEKANNT</span>
+            )}
+            {currentListing.syncStatus === "price_changed" && (
+              <span style={badgeStyle("#fed7aa", "#9a3412")}>PREIS GEAENDERT</span>
+            )}
           </div>
           {currentListing.aiComment && (
             <div style={{ fontSize: 13, lineHeight: 1.5, color: "#4b5563" }}>{currentListing.aiComment}</div>
@@ -237,6 +276,16 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
               >
                 Produktentwurf oeffnen
               </a>
+            </div>
+          )}
+          {currentListing.sourceStatus === "offline" && currentListing.productDraftId && (
+            <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 6, background: "#fef2f2", border: "1px solid #fecaca", fontSize: 13, color: "#991b1b" }}>
+              Produktentwurf pruefen – Quelle offline
+            </div>
+          )}
+          {currentListing.priceChanged && currentListing.lastKnownPrice != null && currentListing.currentPrice != null && (
+            <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 6, background: "#fff7ed", border: "1px solid #fed7aa", fontSize: 13, color: "#9a3412" }}>
+              Preis geaendert: {Math.round(currentListing.lastKnownPrice / 100).toLocaleString("de-DE")} EUR → {Math.round(currentListing.currentPrice / 100).toLocaleString("de-DE")} EUR
             </div>
           )}
           {error && (
@@ -274,6 +323,13 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
                 : isDraftPending
                   ? "Entwurf erstellt..."
                   : "Produktentwurf"}
+            </button>
+            <button
+              onClick={handleCheckAvailability}
+              disabled={isAvailabilityPending}
+              className="btn btn-secondary btn-sm"
+            >
+              {isAvailabilityPending ? "Pruefe..." : "Verfuegbarkeit"}
             </button>
             {currentListing.listing_url && (
               <a
