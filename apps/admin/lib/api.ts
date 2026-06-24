@@ -615,6 +615,17 @@ export interface MarketListing {
   image_url: string | null;
   shipping: string | null;
   listed_at: string | null;
+  dealScore?: number | null;
+  recommendation?: "IMPORT" | "REVIEW" | "IGNORE" | null;
+  riskLevel?: "LOW" | "MEDIUM" | "HIGH" | null;
+  productCategory?: "solarzaun" | "solarspeicher" | "solaranlage" | "skywind" | "unknown" | null;
+  estimatedMargin?: number | null;
+  seoPotential?: number | null;
+  aiComment?: string | null;
+  analyzedAt?: string | null;
+  productDraftId?: string | null;
+  productCreatedAt?: string | null;
+  productStatus?: "draft" | "active" | "archived" | null;
   scraped_at: string;
   created_at: string;
 }

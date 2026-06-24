@@ -6,16 +6,26 @@ import { CleanupButton } from "./CleanupButton";
 
 export const dynamic = "force-dynamic";
 
-const KEYWORDS: { key: string; label: string }[] = [
-  { key: "skywind",     label: "SkyWind" },
-  { key: "solarzaun",   label: "Solarzaun" },
+const KEYWORDS: Array<{ key: string; label: string }> = [
+  { key: "skywind", label: "SkyWind" },
+  { key: "solarzaun", label: "Solarzaun" },
   { key: "solaranlage", label: "Solaranlage" },
   { key: "solarspeicher", label: "Solarspeicher" },
 ];
 
+const VIEW_FILTERS: Array<{ key: ViewFilter; label: string }> = [
+  { key: "all", label: "Alle" },
+  { key: "unanalyzed", label: "Ohne Analyse" },
+  { key: "top", label: "Top Deals" },
+  { key: "review", label: "Review" },
+  { key: "ignored", label: "Ignoriert" },
+];
+
+type ViewFilter = "all" | "unanalyzed" | "top" | "review" | "ignored";
+
 function fmt(cents: number | null) {
-  if (cents === null) return "–";
-  return `${Math.round(cents / 100).toLocaleString("de-DE")} €`;
+  if (cents === null) return "-";
+  return `${Math.round(cents / 100).toLocaleString("de-DE")} EUR`;
 }
 
 function KpiCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -28,13 +38,34 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
   );
 }
 
+function filterListings(listings: MarketListing[], view: ViewFilter): MarketListing[] {
+  switch (view) {
+    case "unanalyzed":
+      return listings.filter((listing) => !listing.analyzedAt);
+    case "top":
+      return listings.filter((listing) => (listing.dealScore ?? -1) >= 80);
+    case "review":
+      return listings.filter((listing) => listing.recommendation === "REVIEW");
+    case "ignored":
+      return listings.filter((listing) => listing.recommendation === "IGNORE");
+    case "all":
+    default:
+      return listings;
+  }
+}
+
+function buildMarketHref(keyword: string, view: ViewFilter): string {
+  return `/market?keyword=${encodeURIComponent(keyword)}&view=${encodeURIComponent(view)}`;
+}
+
 export default async function MarketPage({
   searchParams,
 }: {
-  searchParams: { keyword?: string };
+  searchParams: { keyword?: string; view?: string };
 }) {
   const activeKeyword = KEYWORDS.find((k) => k.key === searchParams.keyword)?.key ?? KEYWORDS[0].key;
-  const activeLabel = KEYWORDS.find((k) => k.key === activeKeyword)!.label;
+  const activeLabel = KEYWORDS.find((k) => k.key === activeKeyword)?.label ?? KEYWORDS[0].label;
+  const activeView = VIEW_FILTERS.find((filter) => filter.key === searchParams.view)?.key ?? "all";
 
   let listings: MarketListing[] = [];
   let stats: MarketListingStats | null = null;
@@ -48,41 +79,57 @@ export default async function MarketPage({
     error = (e as Error).message;
   }
 
+  const filteredListings = filterListings(listings, activeView);
+  const viewCounts: Record<ViewFilter, number> = {
+    all: listings.length,
+    unanalyzed: filterListings(listings, "unanalyzed").length,
+    top: filterListings(listings, "top").length,
+    review: filterListings(listings, "review").length,
+    ignored: filterListings(listings, "ignored").length,
+  };
+
   return (
     <div>
       <div className="page-header">
         <div>
           <h1>Marktbeobachtung</h1>
-          <div className="page-subtitle">Kleinanzeigen · täglich via n8n</div>
+          <div className="page-subtitle">Kleinanzeigen via n8n mit Deal-Analyse fuer den Adminbereich</div>
         </div>
         <CleanupButton />
       </div>
 
-      {/* Tabs */}
       <div className="tabs">
         {KEYWORDS.map(({ key, label }) => (
           <Link
             key={key}
-            href={`/market?keyword=${key}`}
+            href={buildMarketHref(key, activeView)}
             className={`tab-btn${activeKeyword === key ? " active" : ""}`}
           >
             {label}
-            {activeKeyword === key && stats && (
-              <span className="tab-badge">{stats.total}</span>
-            )}
+            {activeKeyword === key && stats && <span className="tab-badge">{stats.total}</span>}
           </Link>
         ))}
       </div>
 
-      {error && (
-        <div className="alert alert-error">{error}</div>
-      )}
+      <div className="tabs" style={{ marginTop: 12, marginBottom: 20 }}>
+        {VIEW_FILTERS.map(({ key, label }) => (
+          <Link
+            key={key}
+            href={buildMarketHref(activeKeyword, key)}
+            className={`tab-btn${activeView === key ? " active" : ""}`}
+          >
+            {label}
+            <span className="tab-badge">{viewCounts[key]}</span>
+          </Link>
+        ))}
+      </div>
 
-      {/* KPIs */}
+      {error && <div className="alert alert-error">{error}</div>}
+
       {stats && (
         <div className="kpi-grid">
           <KpiCard label="Gesamt" value={String(stats.total)} />
-          <KpiCard label="Ø Preis" value={fmt(stats.avg_price_cents)} sub="Mittelwert" />
+          <KpiCard label="Durchschnitt" value={fmt(stats.avg_price_cents)} sub="Mittelwert" />
           <KpiCard label="Minimum" value={fmt(stats.min_price_cents)} />
           <KpiCard label="Maximum" value={fmt(stats.max_price_cents)} />
           <KpiCard label="Neu heute" value={String(stats.new_today)} />
@@ -90,29 +137,26 @@ export default async function MarketPage({
         </div>
       )}
 
-      {/* Listings */}
-      {listings.length === 0 && !error ? (
+      {filteredListings.length === 0 && !error ? (
         <div className="empty empty-dashed">
-          <div>Noch keine Listings für „{activeLabel}" importiert.</div>
+          <div>Keine Angebote fuer "{activeLabel}" im Filter "{VIEW_FILTERS.find((item) => item.key === activeView)?.label}".</div>
           <div className="empty-sub">
-            n8n Workflow ausführen →{" "}
-            <code className="code-inline">POST /api/admin/market-listings/bulk</code>{" "}
-            mit <code className="code-inline">{`{ "keyword": "${activeKeyword}", "listings": [...] }`}</code>
+            Bestehende Listings bleiben erhalten. Du kannst einzelne Anzeigen direkt in der Liste analysieren.
           </div>
         </div>
       ) : (
         <div className="table-wrapper">
           <div className="table-toolbar">
-            <span className="table-toolbar-meta">{listings.length} Angebote · Quelle: Kleinanzeigen</span>
+            <span className="table-toolbar-meta">{filteredListings.length} Angebote · Quelle: Kleinanzeigen</span>
             {stats?.avg_price_cents && (
               <span className="table-toolbar-legend">
                 <span className="legend-item">
                   <span className="legend-dot" style={{ background: "#4ade80" }} />
-                  Günstig (&lt;80% Ø)
+                  Guenstig (&lt;80% Durchschnitt)
                 </span>
                 <span className="legend-item">
                   <span className="legend-dot" style={{ background: "#fb923c" }} />
-                  Teuer (&gt;120% Ø)
+                  Teuer (&gt;120% Durchschnitt)
                 </span>
               </span>
             )}
@@ -121,13 +165,13 @@ export default async function MarketPage({
             <thead>
               <tr>
                 <th style={{ width: 56 }}></th>
-                <th>Titel</th>
+                <th>Titel und Analyse</th>
                 <th style={{ textAlign: "right" }}>Preis</th>
                 <th style={{ textAlign: "right" }}>Aktion</th>
               </tr>
             </thead>
             <tbody>
-              {listings.map((listing) => (
+              {filteredListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   listing={listing}

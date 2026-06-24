@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { getPrismaClient } from "../../lib/prisma";
+import { analyzeMarketListingDeal } from "../../services/marketDealAnalyzer";
+import { generateMarketProductDraft } from "../../services/marketProductDraftGenerator";
 
 /**
  * Admin Market-Listing Routen – Kleinanzeigen Marktbeobachtung
@@ -63,6 +65,78 @@ function parseListedAt(dateStr: string | null | undefined, now: Date): Date | nu
   // ISO fallback
   const parsed = new Date(dateStr);
   return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+async function buildUniqueProductSlug(baseSlug: string) {
+  const prisma = getPrismaClient();
+  const normalized = slugify(baseSlug || "marktangebot");
+
+  const existing = await prisma.product.findUnique({
+    where: { slug: normalized },
+    select: { id: true },
+  });
+
+  if (!existing) return normalized;
+
+  for (let index = 2; index < 200; index += 1) {
+    const candidate = `${normalized}-${index}`;
+    const conflict = await prisma.product.findUnique({
+      where: { slug: candidate },
+      select: { id: true },
+    });
+
+    if (!conflict) return candidate;
+  }
+
+  return `${normalized}-${Date.now()}`;
+}
+
+function resolveDraftProductType(listing: {
+  productCategory: string | null;
+  keyword: string;
+  price_cents: number | null;
+  price_negotiable: boolean;
+}) {
+  const category = (listing.productCategory ?? listing.keyword).toLowerCase();
+
+  if (!listing.price_cents || listing.price_negotiable) {
+    return "inquiry_only" as const;
+  }
+
+  if (category === "solarspeicher") {
+    return "configurable" as const;
+  }
+
+  return "inquiry_only" as const;
+}
+
+function resolveProjectNote(category: string | null, tags: string[]) {
+  const tagLine = tags.length > 0 ? ` Interne Tags: ${tags.join(", ")}.` : "";
+
+  switch ((category ?? "").toLowerCase()) {
+    case "solarzaun":
+      return `Als Projekt- und Anfrageprodukt angelegt. Bauliche Voraussetzungen, Abmessungen und Zustand werden vor Angebotsbestaetigung individuell geprueft.${tagLine}`;
+    case "solaranlage":
+      return `Als Set- und Projektangebot angelegt. Auslegung, Komponentenstand und Einsatzort werden vor Angebotsbestaetigung geprueft.${tagLine}`;
+    case "solarspeicher":
+      return `Kompatibilitaet mit Wechselrichter, Batteriesystem und Schutzkonzept vor Angebotsbestaetigung pruefen.${tagLine}`;
+    case "skywind":
+      return `Niedrige Prioritaet im Draft-Agenten, da bereits bestehende SkyWind-Produkte vorhanden sind.${tagLine}`;
+    default:
+      return `Produktentwurf fuer interne Qualifizierung angelegt.${tagLine}`;
+  }
 }
 
 // ─── GET / ───────────────────────────────────────────────────────────────────
@@ -269,6 +343,225 @@ adminMarketListingRoutes.post("/cleanup", async (c) => {
 });
 
 // ─── DELETE / ────────────────────────────────────────────────────────────────
+
+adminMarketListingRoutes.post("/analyze-deal", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json().catch(() => null) as { marketItemId?: string } | null;
+  const marketItemId = body?.marketItemId?.trim();
+
+  if (!marketItemId) {
+    return c.json({
+      error: { code: "INVALID_BODY", message: "marketItemId ist erforderlich." },
+    }, 422);
+  }
+
+  const listing = await prisma.marketListing.findUnique({
+    where: { id: marketItemId },
+  });
+
+  if (!listing) {
+    return c.json({
+      error: { code: "NOT_FOUND", message: "Market-Anzeige nicht gefunden." },
+    }, 404);
+  }
+
+  const analysis = await analyzeMarketListingDeal(listing);
+
+  const updated = await prisma.marketListing.update({
+    where: { id: listing.id },
+    data: {
+      dealScore: analysis.dealScore,
+      recommendation: analysis.recommendation,
+      riskLevel: analysis.riskLevel,
+      productCategory: analysis.productCategory,
+      estimatedMargin: analysis.estimatedMargin,
+      seoPotential: analysis.seoPotential,
+      aiComment: analysis.aiComment,
+      analyzedAt: new Date(),
+    },
+  });
+
+  return c.json({ data: updated });
+});
+
+adminMarketListingRoutes.post("/create-product-draft", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json().catch(() => null) as { marketItemId?: string } | null;
+  const marketItemId = body?.marketItemId?.trim();
+
+  if (!marketItemId) {
+    return c.json({
+      error: { code: "INVALID_BODY", message: "marketItemId ist erforderlich." },
+    }, 422);
+  }
+
+  const listing = await prisma.marketListing.findUnique({
+    where: { id: marketItemId },
+  });
+
+  if (!listing) {
+    return c.json({
+      error: { code: "NOT_FOUND", message: "Market-Anzeige nicht gefunden." },
+    }, 404);
+  }
+
+  if (listing.productDraftId) {
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: listing.productDraftId },
+      include: {
+        category: true,
+        translations: { orderBy: { locale: "asc" } },
+        variants: { orderBy: { created_at: "asc" } },
+        images: { orderBy: { sort_order: "asc" } },
+      },
+    });
+
+    if (existingProduct) {
+      return c.json({
+        data: {
+          listing,
+          product: existingProduct,
+          reused: true,
+        },
+      });
+    }
+  }
+
+  const generatedDraft = await generateMarketProductDraft(listing);
+  const category = await prisma.category.findUnique({
+    where: { slug: generatedDraft.category },
+    select: { id: true, slug: true },
+  });
+
+  const finalSlug = await buildUniqueProductSlug(generatedDraft.slug);
+  const productType = resolveDraftProductType(listing);
+  const legalNote = "Verfuegbarkeit und Zustand werden vor Angebotsbestaetigung geprueft.";
+  const deliveryNote = generatedDraft.availabilityNote.includes(legalNote)
+    ? generatedDraft.availabilityNote
+    : `${generatedDraft.availabilityNote} ${legalNote}`.trim();
+
+  const createdProduct = await prisma.product.create({
+    data: {
+      slug: finalSlug,
+      product_type: productType,
+      status: "draft",
+      availability_status: "on_request",
+      category_id: category?.id ?? null,
+      translations: {
+        create: [
+          {
+            locale: "de",
+            name: generatedDraft.name,
+            short_description: generatedDraft.shortDescription,
+            description: generatedDraft.description,
+            delivery_note: deliveryNote,
+            features: generatedDraft.technicalData,
+            meta_title: generatedDraft.metaTitle,
+            meta_description: generatedDraft.metaDescription,
+            mounting_note: deliveryNote,
+            project_note: resolveProjectNote(listing.productCategory, generatedDraft.tags),
+          },
+        ],
+      },
+    },
+    include: {
+      category: true,
+      translations: { orderBy: { locale: "asc" } },
+      variants: { orderBy: { created_at: "asc" } },
+      images: { orderBy: { sort_order: "asc" } },
+    },
+  });
+
+  if (generatedDraft.priceSuggestion > 0) {
+    await prisma.productVariant.create({
+      data: {
+        product_id: createdProduct.id,
+        sku: `${finalSlug.slice(0, 32)}-${createdProduct.id.slice(0, 8)}`,
+        price_cents: generatedDraft.priceSuggestion,
+        currency: "EUR",
+        stock_quantity: 0,
+        is_active: true,
+      },
+    });
+  }
+
+  if (listing.image_url) {
+    await prisma.productImage.create({
+      data: {
+        product_id: createdProduct.id,
+        url: listing.image_url,
+        alt: generatedDraft.name,
+        sort_order: 0,
+      },
+    }).catch(() => null);
+  }
+
+  const updatedListing = await prisma.marketListing.update({
+    where: { id: listing.id },
+    data: {
+      productDraftId: createdProduct.id,
+      productCreatedAt: new Date(),
+      productStatus: "draft",
+    },
+  });
+
+  const product = await prisma.product.findUnique({
+    where: { id: createdProduct.id },
+    include: {
+      category: true,
+      translations: { orderBy: { locale: "asc" } },
+      variants: { orderBy: { created_at: "asc" } },
+      images: { orderBy: { sort_order: "asc" } },
+    },
+  });
+
+  return c.json({
+    data: {
+      listing: updatedListing,
+      product,
+      generatedDraft,
+      reused: false,
+    },
+  }, 201);
+});
+
+adminMarketListingRoutes.patch("/:id/product-draft", async (c) => {
+  const prisma = getPrismaClient();
+  const id = c.req.param("id");
+  const body = await c.req.json().catch(() => null) as { productDraftId?: string | null } | null;
+
+  if (!id) {
+    return c.json({
+      error: { code: "INVALID_ID", message: "Listing-ID ist erforderlich." },
+    }, 422);
+  }
+
+  const listing = await prisma.marketListing.findUnique({
+    where: { id },
+  });
+
+  if (!listing) {
+    return c.json({
+      error: { code: "NOT_FOUND", message: "Market-Anzeige nicht gefunden." },
+    }, 404);
+  }
+
+  const productDraftId =
+    typeof body?.productDraftId === "string" && body.productDraftId.trim().length > 0
+      ? body.productDraftId.trim()
+      : null;
+
+  const updated = await prisma.marketListing.update({
+    where: { id },
+    data: {
+      productDraftId,
+      productCreatedAt: productDraftId ? new Date() : null,
+      productStatus: productDraftId ? "draft" : null,
+    },
+  });
+
+  return c.json({ data: updated });
+});
 
 adminMarketListingRoutes.delete("/", async (c) => {
   const prisma = getPrismaClient();

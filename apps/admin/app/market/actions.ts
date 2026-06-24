@@ -66,5 +66,11 @@ export async function createProductFromListing(listing: MarketListing, productTy
     }).catch(() => {});
   }
 
+  await fetch(`${BASE_URL}/api/admin/market-listings/${listing.id}/product-draft`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_KEY },
+    body: JSON.stringify({ productDraftId: productId }),
+  }).catch(() => {});
+
   redirect(`/products/${productId}`);
 }

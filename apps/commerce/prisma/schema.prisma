@@ -139,6 +139,26 @@ enum StickerRuleType {
   new_arrival
 }
 
+enum DealRecommendation {
+  IMPORT
+  REVIEW
+  IGNORE
+}
+
+enum DealRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum MarketProductCategory {
+  solarzaun
+  solarspeicher
+  solaranlage
+  skywind
+  unknown
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Category {
@@ -798,6 +818,17 @@ model MarketListing {
 
   /// Inserate-Datum (geparst aus "Heute, 07:17" / "Gestern, HH:MM" / "DD.MM.YYYY")
   listed_at        DateTime?
+  dealScore        Int?
+  recommendation   DealRecommendation?
+  riskLevel        DealRiskLevel?
+  productCategory  MarketProductCategory?
+  estimatedMargin  Int?
+  seoPotential     Int?
+  aiComment        String?   @db.Text
+  analyzedAt       DateTime?
+  productDraftId   String?
+  productCreatedAt DateTime?
+  productStatus    ProductStatus?
   /// Zeitstempel wann n8n die Daten gesammelt hat (scraped_at = jetzt beim Import)
   scraped_at       DateTime  @default(now())
   created_at       DateTime  @default(now())
@@ -805,6 +836,9 @@ model MarketListing {
   @@index([scraped_at])
   @@index([source, keyword])
   @@index([price_cents])
+  @@index([dealScore])
+  @@index([recommendation])
+  @@index([analyzedAt])
   @@map("market_listings")
 }
 
