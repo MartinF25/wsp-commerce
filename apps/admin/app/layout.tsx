@@ -127,6 +127,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/feature-visuals/settings">Einstellungen</Link>
               <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Markt</div>
               <Link href="/market/dashboard">Dashboard</Link>
+              <Link href="/market/opportunities">Tageschancen</Link>
               <Link href="/market">Listings</Link>
               <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Widerruf</div>
               <Link href="/widerrufe">Anfragen</Link>

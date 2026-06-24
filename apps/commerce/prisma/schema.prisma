@@ -172,6 +172,12 @@ enum MarketSyncStatus {
   price_changed
 }
 
+enum MarketOpportunityStatus {
+  pending
+  prepared
+  rejected
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Category {
@@ -853,6 +859,17 @@ model MarketListing {
   availabilityNote          String?   @db.Text
   syncStatus                MarketSyncStatus?
 
+  /// Daily Opportunity Agent Felder
+  purchasePrice             Int?
+  markupPercent             Int?
+  suggestedSellingPrice     Int?
+  estimatedGrossProfit      Int?
+  pricingNote               String?   @db.Text
+  opportunityStatus         MarketOpportunityStatus?
+  dailyReportAt             DateTime?
+  rejectedAt                DateTime?
+  rejectedReason            String?   @db.Text
+
   /// Zeitstempel wann n8n die Daten gesammelt hat (scraped_at = jetzt beim Import)
   scraped_at       DateTime  @default(now())
   created_at       DateTime  @default(now())
@@ -865,6 +882,7 @@ model MarketListing {
   @@index([analyzedAt])
   @@index([syncStatus])
   @@index([sourceStatus])
+  @@index([opportunityStatus])
   @@map("market_listings")
 }
 

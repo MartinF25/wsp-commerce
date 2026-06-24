@@ -634,8 +634,52 @@ export interface MarketListing {
   priceChangeAmount?: number | null;
   availabilityNote?: string | null;
   syncStatus?: "ok" | "needs_review" | "offline" | "price_changed" | null;
+  purchasePrice?: number | null;
+  markupPercent?: number | null;
+  suggestedSellingPrice?: number | null;
+  estimatedGrossProfit?: number | null;
+  pricingNote?: string | null;
+  opportunityStatus?: "pending" | "prepared" | "rejected" | null;
+  dailyReportAt?: string | null;
+  rejectedAt?: string | null;
+  rejectedReason?: string | null;
   scraped_at: string;
   created_at: string;
+}
+
+export interface MarketOpportunity extends MarketListing {
+  purchasePrice: number;
+  suggestedSellingPrice: number;
+  estimatedGrossProfit: number;
+  pricingNote: string;
+  opportunityStatus: "prepared";
+  dailyReportAt: string;
+  productDraftId: string;
+}
+
+export interface DailyReportResult {
+  date: string;
+  totalAnalyzed: number;
+  totalSkipped: number;
+  draftsCreated: number;
+  topOpportunities: Array<{
+    listingId: string;
+    title: string;
+    category: string | null;
+    dealScore: number;
+    riskLevel: string | null;
+    purchasePrice: number;
+    suggestedSellingPrice: number;
+    estimatedGrossProfit: number;
+    pricingNote: string;
+    sourceUrl: string | null;
+    productDraftId: string | null;
+    aiComment: string | null;
+    location: string | null;
+    draftCreated: boolean;
+    draftError: string | null;
+  }>;
+  errors: string[];
 }
 
 export interface MarketListingStats {
@@ -998,6 +1042,18 @@ export const api = {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
       return json as { data: MarketListing[]; stats: MarketListingStats };
+    },
+  },
+
+  marketOpportunities: {
+    getPrepared: async () => {
+      const res = await fetch(`${BASE_URL}/api/admin/market-opportunities/prepared`, {
+        cache: "no-store",
+        headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_KEY },
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
+      return json as { data: MarketOpportunity[]; total: number };
     },
   },
 
