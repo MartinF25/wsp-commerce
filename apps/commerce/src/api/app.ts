@@ -6,7 +6,6 @@ import { catalogRoutes } from "./routes";
 import { adminRoutes } from "./routes/admin";
 import { adminBundleRoutes } from "./routes/adminBundles";
 import { adminStickerRoutes } from "./routes/adminStickers";
-import { adminMarketListingRoutes } from "./routes/adminMarketListings";
 import { blogRoutes } from "./routes/blog";
 import { affiliateRoutes } from "./routes/affiliate";
 import { tickerRoutes } from "./routes/ticker";
@@ -64,7 +63,6 @@ export function createApp() {
   app.route("/api/admin", adminRoutes);
   app.route("/api/admin/bundles", adminBundleRoutes);
   app.route("/api/admin/stickers", adminStickerRoutes);
-  app.route("/api/admin/market-listings", adminMarketListingRoutes);
   app.route("/api/admin/feature-definitions", adminFeatureDefinitionRoutes);
   app.route("/api/admin/feature-visuals", adminFeatureVisualRoutes);
   app.route("/api/admin/feature-visual-settings", adminFeatureVisualSettingsRoutes);
