@@ -51,7 +51,7 @@ export function createApp() {
   // ─── Health ─────────────────────────────────────────────────────────────────
 
   app.get("/health", (c) =>
-    c.json({ status: "ok", service: "commerce", ts: new Date().toISOString() })
+    c.json({ status: "ok", service: "commerce", version: "f26f174", ts: new Date().toISOString() })
   );
 
   // ─── Routen ─────────────────────────────────────────────────────────────────
