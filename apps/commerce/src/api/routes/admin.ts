@@ -46,8 +46,6 @@ import type { MiddlewareHandler } from "hono";
 import { Prisma } from "@prisma/client";
 import { getPrismaClient } from "../../lib/prisma";
 import { CatalogError } from "../../types";
-import { adminMarketListingRoutes } from "./adminMarketListings";
-import { adminMarketOpportunityRoutes } from "./adminMarketOpportunities";
 import { BlogService } from "../../services/blogService";
 import {
   BlogPostInputSchema,
@@ -127,8 +125,6 @@ export const adminRoutes = new Hono();
 
 adminRoutes.use("*", requireAdminKey);
 
-adminRoutes.route("/market-listings", adminMarketListingRoutes);
-adminRoutes.route("/market-opportunities", adminMarketOpportunityRoutes);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // KATEGORIEN

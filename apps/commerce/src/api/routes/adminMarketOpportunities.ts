@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import { getPrismaClient } from "../../lib/prisma";
 import { runDailyReport, sendDailyReportMail } from "../../services/marketOpportunityAgent";
+import { requireAdminKey } from "../middleware/requireAdminKey";
 
 /**
  * Admin Market Opportunity Routes
- * Geschützt durch X-Admin-Key Middleware in admin.ts.
+ * Direkt in app.ts gemountet mit eigenem requireAdminKey.
  *
  *   POST /daily-report               → Tagesbericht generieren (Opportunities auswählen, bewerten, Drafts erstellen)
  *   GET  /prepared                   → Alle prepared Listings abrufen
@@ -12,6 +13,8 @@ import { runDailyReport, sendDailyReportMail } from "../../services/marketOpport
  *   PATCH /:listingId/restore        → Abgelehntes Listing zurücksetzen
  */
 export const adminMarketOpportunityRoutes = new Hono();
+
+adminMarketOpportunityRoutes.use("*", requireAdminKey);
 
 // ─── POST /daily-report ───────────────────────────────────────────────────────
 

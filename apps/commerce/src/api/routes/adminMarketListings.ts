@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { getPrismaClient } from "../../lib/prisma";
 import { analyzeMarketListingDeal } from "../../services/marketDealAnalyzer";
 import { generateMarketProductDraft } from "../../services/marketProductDraftGenerator";
+import { requireAdminKey } from "../middleware/requireAdminKey";
 
 /**
  * Admin Market-Listing Routen – Kleinanzeigen Marktbeobachtung
@@ -14,6 +15,8 @@ import { generateMarketProductDraft } from "../../services/marketProductDraftGen
  *   DELETE /        → Alle Listings älter als N Tage löschen
  */
 export const adminMarketListingRoutes = new Hono();
+
+adminMarketListingRoutes.use("*", requireAdminKey);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
