@@ -1,0 +1,141 @@
+{
+  "name": "WSP Market – Referenzpreise Sync (Google Sheets)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-manual",
+      "name": "Manuell starten",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "HIER_DEINE_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Referenzpreise",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "google-sheets-read",
+      "name": "Google Sheets lesen",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(item => item.json);\n\nconst cleaned = items\n  .filter(row => row.keyword && row.productName && row.vk_eur)\n  .map(row => ({\n    keyword: String(row.keyword).toLowerCase().trim(),\n    productName: String(row.productName).trim(),\n    ek_eur: row.ek_eur ? parseInt(String(row.ek_eur).replace(/[^0-9]/g, ''), 10) || null : null,\n    vk_eur: parseInt(String(row.vk_eur).replace(/[^0-9]/g, ''), 10),\n    notes: row.notes ? String(row.notes).trim() : null,\n  }));\n\nreturn [{ json: { items: cleaned } }];"
+      },
+      "id": "transform-data",
+      "name": "Daten aufbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://commerce-api-production-614e.up.railway.app/api/admin/market-reference-prices/sync",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Admin-Key",
+              "value": "HIER_DEINEN_ADMIN_SECRET_EINTRAGEN"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "http-sync",
+      "name": "API Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-result",
+      "name": "Erfolgreich?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {},
+      "id": "success",
+      "name": "Sync OK",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {},
+      "id": "failed",
+      "name": "Sync Fehler",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1340, 400]
+    }
+  ],
+  "connections": {
+    "Manuell starten": {
+      "main": [[{ "node": "Google Sheets lesen", "type": "main", "index": 0 }]]
+    },
+    "Google Sheets lesen": {
+      "main": [[{ "node": "Daten aufbereiten", "type": "main", "index": 0 }]]
+    },
+    "Daten aufbereiten": {
+      "main": [[{ "node": "API Sync", "type": "main", "index": 0 }]]
+    },
+    "API Sync": {
+      "main": [[{ "node": "Erfolgreich?", "type": "main", "index": 0 }]]
+    },
+    "Erfolgreich?": {
+      "main": [
+        [{ "node": "Sync OK", "type": "main", "index": 0 }],
+        [{ "node": "Sync Fehler", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

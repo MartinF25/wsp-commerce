@@ -1,4 +1,5 @@
-import type { MarketListing } from "@prisma/client";
+import type { MarketListing, MarketReferencePrice } from "@prisma/client";
+import { getPrismaClient } from "../lib/prisma";
 
 type DealRecommendation = "IMPORT" | "REVIEW" | "IGNORE";
 type DealRiskLevel = "LOW" | "MEDIUM" | "HIGH";
@@ -100,7 +101,22 @@ function safeJsonParse(raw: string): Record<string, unknown> {
   }
 }
 
-function buildPrompt(listing: MarketListing): string {
+function buildReferenceContext(refs: MarketReferencePrice[]): string {
+  if (refs.length === 0) return "";
+  const lines = refs.map((r) => {
+    const ek = r.ek_eur != null ? ` | EK ca. ${r.ek_eur} EUR` : "";
+    const notes = r.notes ? ` (${r.notes})` : "";
+    return `  - ${r.productName}: VK neu ca. ${r.vk_eur} EUR${ek}${notes}`;
+  });
+  return [
+    "Marktpreise (Neupreis als Referenz fuer Preisbewertung):",
+    ...lines,
+    "Score-Hilfe basierend auf Rabatt zum VK-Neupreis:",
+    "  65%+ Rabatt → Preisattraktivitaet 28-30 | 40-65% → 18-27 | unter 40% → 0-17",
+  ].join("\n");
+}
+
+function buildPrompt(listing: MarketListing, refs: MarketReferencePrice[] = []): string {
   const payload = {
     id: listing.id,
     keyword: listing.keyword,
@@ -113,16 +129,19 @@ function buildPrompt(listing: MarketListing): string {
     imageUrl: listing.image_url ?? null,
   };
 
+  const referenceContext = buildReferenceContext(refs);
+
   return [
     "Du bewertest Kleinanzeigen-Angebote fuer einen WSP-Commerce Webshop.",
-    "Prioritaet: Solarspeicher, Solarzaun, Solaranlagen. SkyWind nur erkennen, aber nicht priorisieren.",
-    "Bewertungsschema:",
-    "- Preisattraktivitaet: 0-30",
-    "- Markenwert: 0-20",
-    "- Zustand/Vollstaendigkeit: 0-15",
+    "Alle Kategorien werden gleich behandelt – bewerте objektiv nach Preis, Zustand und Potenzial.",
+    referenceContext || "",
+    "Bewertungsschema (Punkte addieren):",
+    "- Preisattraktivitaet (Rabatt zum Marktpreis): 0-30",
+    "- Markenwert / Hersteller: 0-20",
+    "- Zustand / Vollstaendigkeit: 0-15",
     "- Wiederverkaufspotenzial: 0-15",
     "- SEO-Potenzial: 0-10",
-    "- Risiko: 0-10 Abzug",
+    "- Risiko Abzug (fehlende Infos, defekt, VB ohne Preis): 0-10",
     "Empfehlung:",
     "- 80-100 = IMPORT",
     "- 60-79 = REVIEW",
@@ -131,7 +150,7 @@ function buildPrompt(listing: MarketListing): string {
     "Gib ausschliesslich valides JSON mit genau diesen Feldern zurueck:",
     '{"dealScore":0,"recommendation":"IMPORT","riskLevel":"LOW","productCategory":"solarspeicher","estimatedMargin":0,"seoPotential":0,"aiComment":"Kurze Begruendung auf Deutsch"}',
     `Angebot: ${JSON.stringify(payload)}`,
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 export async function analyzeMarketListingDeal(listing: MarketListing): Promise<MarketDealAnalysisResult> {
@@ -139,6 +158,12 @@ export async function analyzeMarketListingDeal(listing: MarketListing): Promise<
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY ist nicht gesetzt.");
   }
+
+  const prisma = getPrismaClient();
+  const refs = await prisma.marketReferencePrice.findMany({
+    where: { keyword: listing.keyword.toLowerCase().trim() },
+    orderBy: { vk_eur: "asc" },
+  });
 
   const model = (process.env.OPENAI_MODEL ?? "gpt-4.1-mini").trim();
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -153,11 +178,11 @@ export async function analyzeMarketListingDeal(listing: MarketListing): Promise<
       messages: [
         {
           role: "system",
-          content: "Du bist ein Deal-Score-Agent fuer Solarangebote. Antworte nur mit validem JSON.",
+          content: "Du bist ein Deal-Score-Agent fuer Gebrauchtangebote. Antworte nur mit validem JSON.",
         },
         {
           role: "user",
-          content: buildPrompt(listing),
+          content: buildPrompt(listing, refs),
         },
       ],
       temperature: 0.2,

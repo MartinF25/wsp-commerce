@@ -180,6 +180,20 @@ enum MarketOpportunityStatus {
 
 // ─── Models ──────────────────────────────────────────────────────────────────
 
+model MarketReferencePrice {
+  id          String   @id @default(uuid())
+  keyword     String
+  productName String
+  ek_eur      Int?
+  vk_eur      Int
+  notes       String?  @db.Text
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@index([keyword])
+  @@map("market_reference_prices")
+}
+
 model Category {
   id               String  @id @default(uuid())
   slug             String  @unique
