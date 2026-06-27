@@ -1,5 +1,5 @@
 {
-  "name": "WSP Market – Scout Kleinanzeigen RSS (kostenlos)",
+  "name": "WSP Market – Scout Kleinanzeigen (HTML)",
   "nodes": [
     {
       "id": "c3d4e5f6-0001-4001-8001-111111111111",
@@ -33,35 +33,47 @@
       "typeVersion": 2,
       "position": [340, 300],
       "parameters": {
-        "jsCode": "// MAX_AGE_DAYS: Anzeigen älter als N Tage werden übersprungen\nconst MAX_AGE_DAYS = 3;\n\nconst keywords = [\n  // SOLARSPEICHER – HOCH\n  { keyword: 'Sungrow SBR', category: 'solarspeicher' },\n  { keyword: 'BYD HVS Speicher', category: 'solarspeicher' },\n  { keyword: 'BYD Battery Box', category: 'solarspeicher' },\n  { keyword: 'Anker Solix Speicher', category: 'solarspeicher' },\n  { keyword: 'Pylontech Speicher', category: 'solarspeicher' },\n  { keyword: 'SENEC Speicher', category: 'solarspeicher' },\n  { keyword: 'E3DC Hauskraftwerk', category: 'solarspeicher' },\n  { keyword: 'Victron Speicher', category: 'solarspeicher' },\n  // SOLARZAUN – HOCH\n  { keyword: 'Solarzaun', category: 'solarzaun' },\n  { keyword: 'PV Zaun bifazial', category: 'solarzaun' },\n  { keyword: 'bifaziale Solarmodule Zaun', category: 'solarzaun' },\n  // SOLARANLAGE + SPEICHER – MITTEL\n  { keyword: 'Photovoltaik Komplettanlage Speicher', category: 'solaranlage' },\n  { keyword: 'PV Anlage mit Speicher', category: 'solaranlage' },\n  // WECHSELRICHTER – MITTEL\n  { keyword: 'Sungrow Hybrid Wechselrichter', category: 'wechselrichter' },\n  { keyword: 'Fronius Hybrid Wechselrichter', category: 'wechselrichter' },\n  // BALKONKRAFTWERK + SPEICHER – MITTEL\n  { keyword: 'Balkonkraftwerk Speicher', category: 'balkonkraftwerk' },\n  { keyword: 'Anker Solix Balkonkraftwerk', category: 'balkonkraftwerk' },\n];\n\nreturn keywords.map(k => ({\n  json: {\n    keyword: k.keyword,\n    category: k.category,\n    maxAgeDays: MAX_AGE_DAYS,\n    rssUrl: (function() {\n      let slug = '';\n      const lower = k.keyword.toLowerCase();\n      for (let i = 0; i < lower.length; i++) {\n        const code = lower.charCodeAt(i);\n        if (lower[i] === ' ') { slug += '-'; }\n        else if ((code >= 97 && code <= 122) || (code >= 48 && code <= 57)) { slug += lower[i]; }\n      }\n      return 'https://www.kleinanzeigen.de/s-' + slug + '/rss.html';\n    })(),\n  }\n}));"
+        "jsCode": "const keywords = [\n  // SOLARSPEICHER\n  { keyword: 'Sungrow SBR', category: 'solarspeicher' },\n  { keyword: 'BYD HVS Speicher', category: 'solarspeicher' },\n  { keyword: 'BYD Battery Box', category: 'solarspeicher' },\n  { keyword: 'Anker Solix Speicher', category: 'solarspeicher' },\n  { keyword: 'Pylontech Speicher', category: 'solarspeicher' },\n  { keyword: 'SENEC Speicher', category: 'solarspeicher' },\n  { keyword: 'E3DC Hauskraftwerk', category: 'solarspeicher' },\n  { keyword: 'Victron Speicher', category: 'solarspeicher' },\n  // SOLARZAUN\n  { keyword: 'Solarzaun', category: 'solarzaun' },\n  { keyword: 'PV Zaun bifazial', category: 'solarzaun' },\n  { keyword: 'bifaziale Solarmodule Zaun', category: 'solarzaun' },\n  // SOLARANLAGE\n  { keyword: 'Photovoltaik Komplettanlage Speicher', category: 'solaranlage' },\n  { keyword: 'PV Anlage mit Speicher', category: 'solaranlage' },\n  // WECHSELRICHTER\n  { keyword: 'Sungrow Hybrid Wechselrichter', category: 'wechselrichter' },\n  { keyword: 'Fronius Hybrid Wechselrichter', category: 'wechselrichter' },\n  // BALKONKRAFTWERK\n  { keyword: 'Balkonkraftwerk Speicher', category: 'balkonkraftwerk' },\n  { keyword: 'Anker Solix Balkonkraftwerk', category: 'balkonkraftwerk' },\n];\n\nreturn keywords.map(k => ({\n  json: {\n    keyword: k.keyword,\n    category: k.category,\n    searchUrl: 'https://www.kleinanzeigen.de/s-anzeigen/k0.html?keywords=' + encodeURIComponent(k.keyword) + '&sortingField=SORTING_DATE',\n  }\n}));"
       }
     },
     {
       "id": "c3d4e5f6-0004-4004-8004-444444444444",
-      "name": "RSS Feed laden",
+      "name": "Kleinanzeigen laden",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [580, 300],
       "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
-        "url": "={{ $json.rssUrl }}",
+        "url": "={{ $json.searchUrl }}",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "User-Agent",
-              "value": "Mozilla/5.0 (compatible; WSP-MarketScout/1.0)"
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
             },
             {
               "name": "Accept",
-              "value": "application/rss+xml, application/xml, text/xml"
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "de-DE,de;q=0.9,en;q=0.8"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.kleinanzeigen.de/"
+            },
+            {
+              "name": "Cache-Control",
+              "value": "no-cache"
             }
           ]
         },
         "options": {
-          "timeout": 15000,
+          "timeout": 30000,
           "response": {
             "response": {
               "responseFormat": "text",
@@ -73,13 +85,13 @@
     },
     {
       "id": "c3d4e5f6-0005-4005-8005-555555555555",
-      "name": "RSS parsen + Altersfilter",
+      "name": "HTML parsen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [820, 300],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const MAX_AGE_DAYS = 3;\nconst now = Date.now();\nconst maxAgeMs = MAX_AGE_DAYS * 24 * 60 * 60 * 1000;\n\nfunction getTagContent(text, tag) {\n  const open = '<' + tag + '>';\n  const s = text.indexOf(open);\n  if (s === -1) return '';\n  const e = text.indexOf('</' + tag + '>', s);\n  if (e === -1) return '';\n  let content = text.substring(s + open.length, e).trim();\n  if (content.indexOf('<![CDATA[') === 0) {\n    const cdEnd = content.lastIndexOf(']]>');\n    content = content.substring(9, cdEnd === -1 ? content.length : cdEnd).trim();\n  }\n  return content;\n}\n\nfunction stripHtml(html) {\n  let result = '';\n  let inTag = false;\n  for (let i = 0; i < html.length; i++) {\n    const ch = html[i];\n    if (ch === '<') { inTag = true; continue; }\n    if (ch === '>') { inTag = false; result += ' '; continue; }\n    if (!inTag) result += ch;\n  }\n  let clean = '';\n  let lastSpace = false;\n  for (let i = 0; i < result.length; i++) {\n    const code = result.charCodeAt(i);\n    if (code === 32 || code === 10 || code === 13 || code === 9) {\n      if (!lastSpace) { clean += ' '; lastSpace = true; }\n    } else {\n      clean += result[i]; lastSpace = false;\n    }\n  }\n  return clean.trim();\n}\n\nfunction extractPrice(cleanText) {\n  const euroIdx = cleanText.indexOf('\\u20ac');\n  if (euroIdx === -1) return null;\n  let start = euroIdx - 1;\n  while (start >= 0) {\n    const c = cleanText.charCodeAt(start);\n    if ((c >= 48 && c <= 57) || cleanText[start] === '.' || cleanText[start] === ',' || cleanText[start] === ' ') {\n      start--;\n    } else { break; }\n  }\n  let end = euroIdx + 2;\n  if (cleanText.substring(end, end + 3) === ' VB') end += 3;\n  const candidate = cleanText.substring(start + 1, end).trim();\n  let hasDigit = false;\n  for (let i = 0; i < candidate.length; i++) {\n    if (candidate.charCodeAt(i) >= 48 && candidate.charCodeAt(i) <= 57) { hasDigit = true; break; }\n  }\n  return (hasDigit && candidate.length < 30) ? candidate : null;\n}\n\nfunction parseRssItems(xml) {\n  const seen = new Set();\n  const listings = [];\n  let pos = 0;\n  while (pos < xml.length) {\n    const itemStart = xml.indexOf('<item>', pos);\n    if (itemStart === -1) break;\n    const itemEnd = xml.indexOf('</item>', itemStart);\n    if (itemEnd === -1) break;\n    const item = xml.substring(itemStart + 6, itemEnd);\n    pos = itemEnd + 7;\n    const pubDateStr = getTagContent(item, 'pubDate');\n    if (pubDateStr) {\n      const pubTs = new Date(pubDateStr).getTime();\n      if (!isNaN(pubTs) && now - pubTs > maxAgeMs) continue;\n    }\n    const link = getTagContent(item, 'link');\n    const title = getTagContent(item, 'title');\n    const descClean = stripHtml(getTagContent(item, 'description'));\n    let adId = null;\n    for (const seg of link.split('?')[0].split('#')[0].split('/')) {\n      const part = seg.split('-')[0];\n      if (part.length >= 7 && part.length <= 12) {\n        let isNum = true;\n        for (let i = 0; i < part.length; i++) {\n          const c = part.charCodeAt(i);\n          if (c < 48 || c > 57) { isNum = false; break; }\n        }\n        if (isNum) { adId = part; break; }\n      }\n    }\n    if (!adId || !title) continue;\n    if (seen.has(adId)) continue;\n    seen.add(adId);\n    listings.push({\n      adId, title,\n      price: extractPrice(descClean),\n      description: descClean || null,\n      location: null, plz: null,\n      date: pubDateStr || null,\n      url: link || null,\n      image: null, shipping: null,\n    });\n  }\n  return listings;\n}\n\n// Alle 17 Keywords + RSS-Responses paarweise verarbeiten\nconst keywordItems = $('Keywords laden').all();\nconst rssItems = $input.all();\nconst results = [];\n\nfor (let i = 0; i < rssItems.length; i++) {\n  const kwItem = keywordItems[i];\n  const keyword = kwItem ? kwItem.json.keyword : 'unknown';\n  const category = kwItem ? kwItem.json.category : '';\n  const rssJson = rssItems[i].json;\n  const xml = String(rssJson.data || rssJson || '');\n  const listings = parseRssItems(xml);\n  results.push({\n    json: {\n      source: 'kleinanzeigen',\n      keyword,\n      category,\n      listingCount: listings.length,\n      listings,\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "function parseKleinanzeigenHtml(html) {\n  const listings = [];\n  const seen = new Set();\n  const adIdSearch = 'data-adid=\"';\n  let pos = 0;\n\n  while (pos < html.length && listings.length < 25) {\n    const adIdIdx = html.indexOf(adIdSearch, pos);\n    if (adIdIdx === -1) break;\n\n    // Kontext: bis zum naechsten data-adid oder max 4000 Zeichen\n    const nextAdId = html.indexOf(adIdSearch, adIdIdx + adIdSearch.length);\n    const ctxEnd = nextAdId !== -1 ? nextAdId : Math.min(html.length, adIdIdx + 4000);\n    const ctx = html.substring(adIdIdx, ctxEnd);\n    pos = ctxEnd;\n\n    // adId extrahieren\n    const adIdStart = adIdSearch.length;\n    const adIdEnd = ctx.indexOf('\"', adIdStart);\n    if (adIdEnd === -1 || adIdEnd - adIdStart > 15) continue;\n    const adId = ctx.substring(adIdStart, adIdEnd);\n\n    // Nur Ziffern, 7-12 Stellen\n    if (adId.length < 7 || adId.length > 12) continue;\n    let isNum = true;\n    for (let i = 0; i < adId.length; i++) {\n      const c = adId.charCodeAt(i);\n      if (c < 48 || c > 57) { isNum = false; break; }\n    }\n    if (!isNum || seen.has(adId)) continue;\n    seen.add(adId);\n\n    // URL: data-href bevorzugt, dann href=/s-anzeige/\n    let url = null;\n    const dataHref = 'data-href=\"';\n    const dIdx = ctx.indexOf(dataHref);\n    if (dIdx !== -1) {\n      const s = dIdx + dataHref.length;\n      const e = ctx.indexOf('\"', s);\n      if (e !== -1) url = 'https://www.kleinanzeigen.de' + ctx.substring(s, e);\n    }\n    if (!url) {\n      const hSearch = 'href=\"/s-anzeige/';\n      const hIdx = ctx.indexOf(hSearch);\n      if (hIdx !== -1) {\n        const s = hIdx + 6;\n        const e = ctx.indexOf('\"', s);\n        if (e !== -1) url = 'https://www.kleinanzeigen.de' + ctx.substring(s, e);\n      }\n    }\n\n    // Titel aus <h2>...</h2>\n    let title = null;\n    const h2Idx = ctx.indexOf('<h2');\n    if (h2Idx !== -1) {\n      const gtIdx = ctx.indexOf('>', h2Idx);\n      if (gtIdx !== -1) {\n        const closeIdx = ctx.indexOf('</h2>', gtIdx);\n        if (closeIdx !== -1) {\n          const raw = ctx.substring(gtIdx + 1, closeIdx);\n          let t = '';\n          let inTag = false;\n          for (let i = 0; i < raw.length; i++) {\n            if (raw[i] === '<') { inTag = true; continue; }\n            if (raw[i] === '>') { inTag = false; continue; }\n            if (!inTag) t += raw[i];\n          }\n          title = t.trim();\n        }\n      }\n    }\n    if (!title || title.length < 3) title = 'Anzeige ' + adId;\n\n    // Preis aus Preis-Klasse\n    let price = null;\n    const priceClass = 'aditem-main--middle--price';\n    const pIdx = ctx.indexOf(priceClass);\n    if (pIdx !== -1) {\n      const gtIdx = ctx.indexOf('>', pIdx);\n      if (gtIdx !== -1) {\n        const ltIdx = ctx.indexOf('<', gtIdx + 1);\n        if (ltIdx !== -1) {\n          const candidate = ctx.substring(gtIdx + 1, ltIdx).trim();\n          if (candidate.length > 0 && candidate.length < 30) price = candidate;\n        }\n      }\n    }\n\n    listings.push({\n      adId, title,\n      price: price || null,\n      description: null, location: null, plz: null,\n      date: null,\n      url: url || null,\n      image: null, shipping: null,\n    });\n  }\n\n  return listings;\n}\n\nconst keywordItems = $('Keywords laden').all();\nconst htmlItems = $input.all();\nconst results = [];\n\nfor (let i = 0; i < htmlItems.length; i++) {\n  const kwItem = keywordItems[i];\n  const keyword = kwItem ? kwItem.json.keyword : 'unknown';\n  const category = kwItem ? kwItem.json.category : '';\n  const htmlJson = htmlItems[i].json;\n  const html = String(htmlJson.data || htmlJson || '');\n  const listings = parseKleinanzeigenHtml(html);\n  results.push({\n    json: {\n      source: 'kleinanzeigen',\n      keyword,\n      category,\n      listingCount: listings.length,\n      listings,\n    }\n  });\n}\n\nreturn results;"
       }
     },
     {
@@ -128,7 +140,7 @@
           },
           "conditions": [
             {
-              "id": "cond-scout-rss-001",
+              "id": "cond-scout-html-001",
               "leftValue": "={{ $json.ok }}",
               "rightValue": true,
               "operator": {
@@ -185,25 +197,25 @@
       "main": [
         [
           {
-            "node": "RSS Feed laden",
+            "node": "Kleinanzeigen laden",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "RSS Feed laden": {
+    "Kleinanzeigen laden": {
       "main": [
         [
           {
-            "node": "RSS parsen + Altersfilter",
+            "node": "HTML parsen",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "RSS parsen + Altersfilter": {
+    "HTML parsen": {
       "main": [
         [
           {
