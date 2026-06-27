@@ -44,7 +44,7 @@
       "position": [580, 300],
       "parameters": {
         "method": "POST",
-        "url": "=https://api.apify.com/v2/acts/epctex~kleinanzeigen-scraper/run-sync-get-dataset-items?token={{ $env.APIFY_API_TOKEN }}&timeout=120&format=json",
+        "url": "=https://api.apify.com/v2/acts/epctex~kleinanzeigen-scraper/run-sync-get-dataset-items?token={{ $vars.APIFY_API_TOKEN }}&timeout=120&format=json",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
@@ -81,14 +81,14 @@
       "position": [1060, 300],
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.COMMERCE_API_URL }}/api/admin/market-listings/bulk",
+        "url": "={{ $vars.COMMERCE_API_URL }}/api/admin/market-listings/bulk",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "X-Admin-Key",
-              "value": "={{ $env.ADMIN_SECRET }}"
+              "value": "={{ $vars.ADMIN_SECRET }}"
             },
             {
               "name": "Content-Type",

@@ -89,14 +89,14 @@
       "position": [1060, 300],
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.COMMERCE_API_URL }}/api/admin/market-listings/bulk",
+        "url": "={{ $vars.COMMERCE_API_URL }}/api/admin/market-listings/bulk",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "X-Admin-Key",
-              "value": "={{ $env.ADMIN_SECRET }}"
+              "value": "={{ $vars.ADMIN_SECRET }}"
             },
             {
               "name": "Content-Type",
