@@ -1,10 +1,23 @@
 # n8n Workflow: Kleinanzeigen Market Scout
 
+## Empfehlung: RSS-Workflow verwenden
+
+**`wsp-market-scout-rss.json`** ist der empfohlene Produktions-Workflow.
+Kostenlos, kein externer Dienst, kein API-Key nötig.
+
+Apify ist eine Alternative für höheres Volumen (>25 Anzeigen pro Keyword/Tag),
+kostet aber Geld. Für täglichen Scout-Betrieb reicht RSS vollständig aus.
+
+---
+
 ## Ziel
 
 Dieser Workflow scoutet täglich Kleinanzeigen.de nach gebrauchten Solarprodukten
 (Speicher, Wechselrichter, Solarzaun etc.) und importiert die Ergebnisse über
 die bestehende Bulk-Import-API in `market_listings`.
+
+**Altersfilter:** Nur Anzeigen der letzten 3 Tage werden importiert.
+Ältere Anzeigen sind häufig bereits verkauft – kein Import von "Leichen".
 
 Die importierten Listings stehen danach automatisch dem Daily Report Agent
 (`POST /api/admin/market-opportunities/daily-report`) und dem Availability
@@ -12,7 +25,27 @@ Batch Check zur Verfügung.
 
 ---
 
-## Warum Apify empfohlen wird
+## Warum RSS die bessere Wahl ist
+
+Kleinanzeigen.de betreibt offizielle RSS-Feeds für jede Suche:
+```
+https://www.kleinanzeigen.de/s-anzeigen/rss.html?keywords=Sungrow+SBR
+```
+
+Vorteile gegenüber Apify/Scraping:
+- **Kostenlos** – kein Account, kein API-Key, kein Credit
+- **Kein Bot-Block** – RSS ist für maschinellen Abruf gedacht
+- **Strukturiert** – XML mit Titel, Link, Datum, Beschreibung
+- **Chronologisch** – neueste Anzeigen zuerst, passt perfekt zum Altersfilter
+- **Stabil** – offizielles Format, ändert sich selten
+
+Einschränkung: RSS liefert ~20–25 neueste Anzeigen pro Suche.
+Mit 3-Tage-Filter typischerweise 2–10 relevante Anzeigen pro Keyword.
+Gesamtvolumen täglich: ~50–150 neue Listings über alle Keywords.
+
+---
+
+## Warum Apify eine Alternative bleibt
 
 Kleinanzeigen.de nutzt Cloudflare-Schutz und blockt einfache HTTP-Requests
 nach wenigen Aufrufen. Ein direkter `fetch()`-Aufruf scheitert in Produktion
@@ -50,10 +83,11 @@ Nur zum lokalen Test der Bulk-Import-Pipeline ohne Apify-Account.
 
 ## Dateien
 
-| Datei | Zweck |
-|---|---|
-| `docs/n8n/workflows/wsp-market-scout-apify.json` | Produktions-Workflow (Apify) |
-| `docs/n8n/workflows/wsp-market-scout-http-test.json` | Test-Workflow (direktes HTTP) |
+| Datei | Zweck | Empfehlung |
+|---|---|---|
+| `docs/n8n/workflows/wsp-market-scout-rss.json` | **Produktions-Workflow (RSS, kostenlos)** | **Empfohlen** |
+| `docs/n8n/workflows/wsp-market-scout-apify.json` | Produktions-Workflow (Apify, kostenpflichtig) | Alternative |
+| `docs/n8n/workflows/wsp-market-scout-http-test.json` | Test-Workflow (Pipeline-Test mit Mock-Daten) | Nur lokal |
 
 ---
 
@@ -86,16 +120,16 @@ Gleicher Ablauf über die n8n-Instanz des Servers.
 
 In n8n unter **Settings → Environment Variables** setzen:
 
-| Variable | Wert | Beschreibung |
+| Variable | Wert | Workflow |
 |---|---|---|
-| `COMMERCE_API_URL` | `https://commerce-api-production-614e.up.railway.app` | Railway-URL der Commerce API |
-| `ADMIN_SECRET` | `<aus apps/admin/.env.local>` | X-Admin-Key für alle Admin-Routen |
-| `APIFY_API_TOKEN` | `<aus Apify Dashboard>` | Nur für wsp-market-scout-apify.json |
+| `COMMERCE_API_URL` | `https://commerce-api-production-614e.up.railway.app` | Alle |
+| `ADMIN_SECRET` | `<aus apps/admin/.env.local>` | Alle |
+| `APIFY_API_TOKEN` | `<aus Apify Dashboard>` | Nur Apify-Workflow |
 
-**ADMIN_SECRET** ist bereits für die anderen drei Market-Workflows gesetzt.
-**APIFY_API_TOKEN** ist neu und muss einmalig eingetragen werden.
+**RSS-Workflow:** Nur `COMMERCE_API_URL` und `ADMIN_SECRET` nötig – beide bereits
+für die anderen Market-Workflows gesetzt. Kein neuer Token erforderlich.
 
-Apify-Token holen: https://console.apify.com → Account → API Tokens
+**Apify-Workflow:** Zusätzlich `APIFY_API_TOKEN` aus https://console.apify.com
 
 ---
 
@@ -147,7 +181,7 @@ Oder direkt aus dem Google Sheets Node (wie in `wsp-market-referenzpreise-sync.j
 
 ---
 
-## Datenfluss
+## Datenfluss RSS-Workflow (empfohlen)
 
 ```
 [06:00 Cron] / [Manuell]
@@ -155,9 +189,46 @@ Oder direkt aus dem Google Sheets Node (wie in `wsp-market-referenzpreise-sync.j
       ▼
 [Code: Keywords laden]
   → gibt 17 Items zurück, eines pro Keyword
-  → jedes Item: { keyword, category, apifyBody }
+  → jedes Item: { keyword, category, maxAgeDays: 3, rssUrl }
       │
-      ▼ (17× parallel/sequenziell)
+      ▼ (17× – einmal pro Keyword)
+[HTTP GET: RSS Feed laden]
+  → GET https://www.kleinanzeigen.de/s-anzeigen/rss.html?keywords=Sungrow+SBR
+  → gibt RSS-XML zurück (responseFormat: text)
+      │
+      ▼
+[Code: RSS parsen + Altersfilter]
+  → parst <item>-Elemente aus XML (kein externes Package)
+  → SKIP: Anzeigen älter als 3 Tage (pubDate-Prüfung)
+  → extrahiert adId aus Link-URL
+  → extrahiert Preis aus Beschreibungstext
+  → entfernt Duplikate (seen Set per adId)
+  → baut { source, keyword, listings: [...] } Payload
+      │
+      ▼
+[HTTP: Commerce Bulk Import]
+  → POST {{ COMMERCE_API_URL }}/api/admin/market-listings/bulk
+  → Header: X-Admin-Key
+      │
+      ▼
+[IF: Erfolg?]
+  → ok === true
+      │              │
+      ▼              ▼
+[noOp: OK]    [noOp: Fehler]
+```
+
+## Datenfluss Apify-Workflow (Alternative)
+
+```
+[06:00 Cron] / [Manuell]
+      │
+      ▼
+[Code: Keywords laden]
+  → gibt 17 Items zurück, eines pro Keyword
+  → jedes Item: { keyword, category }
+      │
+      ▼ (17× – einmal pro Keyword)
 [HTTP: Apify Actor starten]
   → POST https://api.apify.com/v2/acts/epctex~kleinanzeigen-scraper/run-sync-get-dataset-items
   → Timeout 120s
@@ -178,9 +249,9 @@ Oder direkt aus dem Google Sheets Node (wie in `wsp-market-referenzpreise-sync.j
       ▼
 [IF: Erfolg?]
   → ok === true
-      │                    │
-      ▼                    ▼
-[Code: Ergebnis loggen]  [noOp: Fehler]
+      │              │
+      ▼              ▼
+[noOp: OK]    [noOp: Fehler]
 ```
 
 ---
