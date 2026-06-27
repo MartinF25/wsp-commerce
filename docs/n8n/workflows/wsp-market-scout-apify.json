@@ -1,0 +1,247 @@
+{
+  "name": "WSP Market – Scout Kleinanzeigen Apify",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-4001-8001-111111111111",
+      "name": "Täglich 06:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 200],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0002-4002-8002-222222222222",
+      "name": "Manuell starten",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [100, 420],
+      "parameters": {}
+    },
+    {
+      "id": "a1b2c3d4-0003-4003-8003-333333333333",
+      "name": "Keywords laden",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 300],
+      "parameters": {
+        "jsCode": "const keywords = [\n  // SOLARSPEICHER – HOCH\n  { keyword: 'Sungrow SBR', category: 'solarspeicher' },\n  { keyword: 'BYD HVS Speicher', category: 'solarspeicher' },\n  { keyword: 'BYD Battery Box', category: 'solarspeicher' },\n  { keyword: 'Anker Solix Speicher', category: 'solarspeicher' },\n  { keyword: 'Pylontech Speicher', category: 'solarspeicher' },\n  { keyword: 'SENEC Speicher', category: 'solarspeicher' },\n  { keyword: 'E3DC Hauskraftwerk', category: 'solarspeicher' },\n  { keyword: 'Victron Speicher', category: 'solarspeicher' },\n  // SOLARZAUN – HOCH\n  { keyword: 'Solarzaun', category: 'solarzaun' },\n  { keyword: 'PV Zaun bifazial', category: 'solarzaun' },\n  { keyword: 'bifaziale Solarmodule Zaun', category: 'solarzaun' },\n  // SOLARANLAGE + SPEICHER – MITTEL\n  { keyword: 'Photovoltaik Komplettanlage Speicher', category: 'solaranlage' },\n  { keyword: 'PV Anlage mit Speicher', category: 'solaranlage' },\n  // WECHSELRICHTER – MITTEL\n  { keyword: 'Sungrow Hybrid Wechselrichter', category: 'wechselrichter' },\n  { keyword: 'Fronius Hybrid Wechselrichter', category: 'wechselrichter' },\n  // BALKONKRAFTWERK + SPEICHER – MITTEL\n  { keyword: 'Balkonkraftwerk Speicher', category: 'balkonkraftwerk' },\n  { keyword: 'Anker Solix Balkonkraftwerk', category: 'balkonkraftwerk' },\n];\n\nreturn keywords.map(k => ({ json: k }));"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0004-4004-8004-444444444444",
+      "name": "Apify – Kleinanzeigen scrapen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [580, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/epctex~kleinanzeigen-scraper/run-sync-get-dataset-items?token={{ $env.APIFY_API_TOKEN }}&timeout=120&format=json",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ search: $json.keyword, maxItems: 50, country: 'DE' }) }}",
+        "options": {
+          "timeout": 130000
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0005-4005-8005-555555555555",
+      "name": "Normalisieren + adId",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [820, 300],
+      "parameters": {
+        "jsCode": "const keyword = $('Keywords laden').item.json.keyword;\nconst category = $('Keywords laden').item.json.category;\n\nconst raw = $input.first().json;\nlet apifyItems = [];\n\nif (Array.isArray(raw)) {\n  apifyItems = raw;\n} else if (raw && typeof raw === 'object') {\n  const arrayVal = Object.values(raw).find(v => Array.isArray(v));\n  if (arrayVal) apifyItems = arrayVal;\n}\n\nconst seen = new Set();\nconst listings = [];\n\nfor (const r of apifyItems) {\n  if (!r || typeof r !== 'object') continue;\n\n  const url = String(r.url || r.link || r.href || r.listingUrl || '').trim();\n\n  // adId aus URL extrahieren (7-12 stellige Zahl im Pfad, vor Bindestrichen)\n  let adId = null;\n  const urlPath = url.split('?')[0].split('#')[0];\n  for (const seg of urlPath.split('/')) {\n    const part = seg.split('-')[0];\n    if (part.length >= 7 && part.length <= 12) {\n      let isNum = true;\n      for (let i = 0; i < part.length; i++) {\n        const c = part.charCodeAt(i);\n        if (c < 48 || c > 57) { isNum = false; break; }\n      }\n      if (isNum) { adId = part; break; }\n    }\n  }\n\n  const title = String(r.title || r.name || r.headline || '').trim();\n  if (!adId || !title) continue;\n  if (seen.has(adId)) continue;\n  seen.add(adId);\n\n  const price = r.price || r.priceText || r.priceRaw || r.priceFormatted || null;\n\n  let image = null;\n  if (Array.isArray(r.images) && r.images.length > 0) {\n    image = String(r.images[0]);\n  } else {\n    image = r.image || r.imageUrl || r.thumbnail || r.photo || null;\n  }\n\n  const plzRaw = r.zip || r.zipCode || r.postalCode || r.plz || null;\n\n  listings.push({\n    adId,\n    title,\n    price: price != null ? String(price).trim() : null,\n    description: r.description || r.text || r.body || null,\n    location: r.location || r.address || r.city || r.area || null,\n    plz: plzRaw != null ? String(plzRaw).trim() : null,\n    date: r.date || r.createdAt || r.listedAt || r.publishedAt || null,\n    url: url || null,\n    image: image ? String(image) : null,\n    shipping: r.shipping || r.shippingCost || null,\n  });\n}\n\nreturn [{\n  json: {\n    source: 'kleinanzeigen',\n    keyword,\n    category,\n    listingCount: listings.length,\n    listings,\n  }\n}];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0006-4006-8006-666666666666",
+      "name": "Commerce Bulk Import",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.COMMERCE_API_URL }}/api/admin/market-listings/bulk",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Admin-Key",
+              "value": "={{ $env.ADMIN_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: $json.source, keyword: $json.keyword, listings: $json.listings }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0007-4007-8007-777777777777",
+      "name": "Erfolgreich?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1300, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-scout-apify-001",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0008-4008-8008-888888888888",
+      "name": "Import OK",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1540, 180],
+      "parameters": {}
+    },
+    {
+      "id": "a1b2c3d4-0009-4009-8009-999999999999",
+      "name": "Fehler – prüfe Logs",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1540, 440],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Täglich 06:00": {
+      "main": [
+        [
+          {
+            "node": "Keywords laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manuell starten": {
+      "main": [
+        [
+          {
+            "node": "Keywords laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keywords laden": {
+      "main": [
+        [
+          {
+            "node": "Apify – Kleinanzeigen scrapen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify – Kleinanzeigen scrapen": {
+      "main": [
+        [
+          {
+            "node": "Normalisieren + adId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisieren + adId": {
+      "main": [
+        [
+          {
+            "node": "Commerce Bulk Import",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commerce Bulk Import": {
+      "main": [
+        [
+          {
+            "node": "Erfolgreich?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Erfolgreich?": {
+      "main": [
+        [
+          {
+            "node": "Import OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fehler – prüfe Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "wsp-market"
+    }
+  ]
+}

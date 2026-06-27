@@ -1,0 +1,213 @@
+{
+  "name": "WSP Market – Scout HTTP Test (KEIN PRODUKTION)",
+  "nodes": [
+    {
+      "id": "b2c3d4e5-0001-4001-8001-111111111111",
+      "name": "Manuell starten",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [100, 300],
+      "parameters": {}
+    },
+    {
+      "id": "b2c3d4e5-0002-4002-8002-222222222222",
+      "name": "Kleinanzeigen GET (kann 403 werfen)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [340, 300],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.kleinanzeigen.de/s-solarzaun/k0.html",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "de-DE,de;q=0.9"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "fullResponse": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "b2c3d4e5-0003-4003-8003-333333333333",
+      "name": "HTML parsen oder Mock-Daten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [580, 300],
+      "parameters": {
+        "jsCode": "// ============================================================\n// TESTWORKFLOW – KEIN PRODUKTIONSBETRIEB\n// Zweck: Bulk-Import-Pipeline lokal testen ohne Apify.\n// Hinweis: Kleinanzeigen blockt direkte HTTP-Requests\n// nach wenigen Aufrufen (Cloudflare). Dieser Workflow\n// fällt dann auf Mock-Daten zurück.\n// ============================================================\n\nconst testKeyword = 'Solarzaun';\nconst html = String($input.first().json.data || $input.first().json || '');\n\nconst listings = [];\nconst seen = new Set();\n\n// Versuche echte adIds aus HTML zu extrahieren (funktioniert nur ohne 403)\nif (html.length > 1000 && html.includes('data-adid')) {\n  let pos = 0;\n  while (pos < html.length && listings.length < 10) {\n    const idx = html.indexOf('data-adid=\"', pos);\n    if (idx === -1) break;\n\n    const start = idx + 11;\n    const end = html.indexOf('\"', start);\n    if (end === -1 || end - start > 15) { pos = idx + 1; continue; }\n\n    const adId = html.substring(start, end);\n    pos = end + 1;\n\n    if (!adId || seen.has(adId)) continue;\n    seen.add(adId);\n\n    // URL aus nahem HTML extrahieren\n    const near = html.substring(Math.max(0, idx - 600), Math.min(html.length, idx + 600));\n    let url = null;\n    const hrefIdx = near.indexOf('href=\"/s-anzeige/');\n    if (hrefIdx !== -1) {\n      const hrefStart = hrefIdx + 6;\n      const hrefEnd = near.indexOf('\"', hrefStart);\n      if (hrefEnd !== -1) {\n        url = 'https://www.kleinanzeigen.de' + near.substring(hrefStart, hrefEnd);\n      }\n    }\n\n    // Titel aus nahem HTML extrahieren\n    let title = 'Kleinanzeige ' + adId;\n    const h3Idx = near.indexOf('<h2 class=\"');\n    if (h3Idx !== -1) {\n      const closeIdx = near.indexOf('</h2>', h3Idx);\n      if (closeIdx !== -1) {\n        const raw = near.substring(h3Idx, closeIdx);\n        const gt = raw.lastIndexOf('>');\n        if (gt !== -1) {\n          const extracted = raw.substring(gt + 1).trim();\n          if (extracted.length > 3) title = extracted;\n        }\n      }\n    }\n\n    listings.push({\n      adId,\n      title,\n      price: null,\n      description: null,\n      location: null,\n      plz: null,\n      date: null,\n      url: url || ('https://www.kleinanzeigen.de/s-anzeige/anzeige/' + adId + '-168-1234'),\n      image: null,\n      shipping: null,\n    });\n  }\n}\n\n// Fallback: Mock-Daten wenn kein echtes Scraping möglich\nif (listings.length === 0) {\n  const now = new Date().toISOString();\n  listings.push(\n    {\n      adId: '9000000001',\n      title: '[TESTDATEN] Solarzaun 10m – nach Test löschen',\n      price: '1.200 EUR VB',\n      description: 'TESTDATEN – automatisch erzeugt. Bitte nach Pipeline-Test löschen.',\n      location: 'München',\n      plz: '80331',\n      date: now,\n      url: 'https://www.kleinanzeigen.de/s-anzeige/test-solarzaun/9000000001-168-1234',\n      image: null,\n      shipping: 'Abholung',\n    },\n    {\n      adId: '9000000002',\n      title: '[TESTDATEN] PV-Zaun bifazial 8m – nach Test löschen',\n      price: '950 EUR',\n      description: 'TESTDATEN – automatisch erzeugt. Bitte nach Pipeline-Test löschen.',\n      location: 'Hamburg',\n      plz: '20099',\n      date: now,\n      url: 'https://www.kleinanzeigen.de/s-anzeige/test-pv-zaun/9000000002-168-5678',\n      image: null,\n      shipping: null,\n    },\n    {\n      adId: '9000000003',\n      title: '[TESTDATEN] Solarzaun Komplettsystem – nach Test löschen',\n      price: '2.500 EUR VB',\n      description: 'TESTDATEN – automatisch erzeugt. Bitte nach Pipeline-Test löschen.',\n      location: 'Berlin',\n      plz: '10115',\n      date: now,\n      url: 'https://www.kleinanzeigen.de/s-anzeige/test-solarzaun-komplett/9000000003-168-9012',\n      image: null,\n      shipping: 'Versand möglich',\n    }\n  );\n}\n\nreturn [{\n  json: {\n    source: 'kleinanzeigen',\n    keyword: testKeyword,\n    usedMockData: listings[0] && listings[0].adId.startsWith('900'),\n    listingCount: listings.length,\n    listings,\n  }\n}];"
+      }
+    },
+    {
+      "id": "b2c3d4e5-0004-4004-8004-444444444444",
+      "name": "Commerce Bulk Import",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.COMMERCE_API_URL }}/api/admin/market-listings/bulk",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Admin-Key",
+              "value": "={{ $env.ADMIN_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: $json.source, keyword: $json.keyword, listings: $json.listings }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "b2c3d4e5-0005-4005-8005-555555555555",
+      "name": "Erfolgreich?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1060, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-scout-test-001",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "b2c3d4e5-0006-4006-8006-666666666666",
+      "name": "Import OK – Testdaten löschen!",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1300, 180],
+      "parameters": {}
+    },
+    {
+      "id": "b2c3d4e5-0007-4007-8007-777777777777",
+      "name": "Fehler – prüfe ENV-Variablen",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1300, 440],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Manuell starten": {
+      "main": [
+        [
+          {
+            "node": "Kleinanzeigen GET (kann 403 werfen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kleinanzeigen GET (kann 403 werfen)": {
+      "main": [
+        [
+          {
+            "node": "HTML parsen oder Mock-Daten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML parsen oder Mock-Daten": {
+      "main": [
+        [
+          {
+            "node": "Commerce Bulk Import",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Commerce Bulk Import": {
+      "main": [
+        [
+          {
+            "node": "Erfolgreich?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Erfolgreich?": {
+      "main": [
+        [
+          {
+            "node": "Import OK – Testdaten löschen!",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fehler – prüfe ENV-Variablen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "wsp-market"
+    },
+    {
+      "name": "test"
+    }
+  ]
+}
