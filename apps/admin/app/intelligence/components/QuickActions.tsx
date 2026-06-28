@@ -66,19 +66,23 @@ function ApiButton({ label, apiPath, body, variant = "secondary" }: ApiButtonPro
 export function QuickActions({
   rawListings,
   enriched,
+  analyzed,
   opportunities,
   drafts,
 }: {
   rawListings: number;
   enriched: number;
+  analyzed: number;
   opportunities: number;
   drafts: number;
 }) {
-  const notEnriched = rawListings - enriched;
-  const needsEnrich = notEnriched > 0;
-  const needsReport = enriched > 0;
+  const notEnriched  = rawListings - enriched;
+  const notAnalyzed  = enriched - analyzed;
+  const needsEnrich  = notEnriched > 0;
+  const needsAnalyze = notAnalyzed > 0 && enriched > 0;
+  const needsReport  = analyzed > 0;
 
-  if (!needsEnrich && !needsReport && opportunities === 0 && drafts === 0) return null;
+  if (!needsEnrich && !needsAnalyze && !needsReport && opportunities === 0 && drafts === 0) return null;
 
   return (
     <div
@@ -109,6 +113,14 @@ export function QuickActions({
           label={`${notEnriched} anreichern`}
           apiPath="/api/admin/market/enrich-batch"
           body={{ limit: 200, onlyMissing: true }}
+          variant="primary"
+        />
+      )}
+      {needsAnalyze && (
+        <ApiButton
+          label={`${notAnalyzed} Deal Score berechnen`}
+          apiPath="/api/admin/market/analyze-batch"
+          body={{ limit: 50 }}
           variant="primary"
         />
       )}

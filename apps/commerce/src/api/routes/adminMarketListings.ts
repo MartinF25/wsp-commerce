@@ -1,7 +1,9 @@
 import { Hono } from "hono";
+import { Prisma } from "@prisma/client";
 import { getPrismaClient } from "../../lib/prisma";
 import { analyzeMarketListingDeal } from "../../services/marketDealAnalyzer";
 import { generateMarketProductDraft } from "../../services/marketProductDraftGenerator";
+import { extractListingKnowledge, extractCoreFields } from "../../services/marketKnowledgeExtractor";
 import { requireAdminKey } from "../middleware/requireAdminKey";
 
 /**
@@ -874,4 +876,206 @@ adminMarketListingRoutes.post("/check-availability-batch", async (c) => {
   );
 
   return c.json({ ok: true, checked: results.length, summary, results });
+});
+
+// ─── POST /enrich ─────────────────────────────────────────────────────────────
+
+adminMarketListingRoutes.post("/enrich", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json().catch(() => null) as { listingId?: string } | null;
+  const listingId = body?.listingId?.trim();
+
+  if (!listingId) {
+    return c.json({ error: { code: "INVALID_BODY", message: "listingId ist erforderlich." } }, 422);
+  }
+
+  const listing = await prisma.marketListing.findUnique({ where: { id: listingId } });
+
+  if (!listing) {
+    return c.json({ error: { code: "NOT_FOUND", message: "Market-Anzeige nicht gefunden." } }, 404);
+  }
+
+  const extraction = await extractListingKnowledge(listing);
+  const core = extractCoreFields(extraction);
+
+  const updated = await prisma.marketListing.update({
+    where: { id: listing.id },
+    data: {
+      brand:                core.brand,
+      model:                core.model,
+      productSeries:        core.productSeries,
+      productType:          core.productType,
+      subcategory:          core.subcategory,
+      dataCompletenessScore: core.dataCompletenessScore,
+      enrichmentConfidence: core.enrichmentConfidence,
+      enrichedAt:           new Date(),
+      enrichmentMetadata:   extraction as unknown as Prisma.InputJsonValue,
+    },
+  });
+
+  return c.json({
+    data: {
+      listing: updated,
+      extraction,
+      dataCompletenessScore: extraction.dataCompletenessScore,
+      dataCompletenessClass: extraction.dataCompletenessClass,
+    },
+  });
+});
+
+// ─── POST /analyze-batch ──────────────────────────────────────────────────────
+
+const ANALYZE_BATCH_DELAY_MS = 300;
+
+adminMarketListingRoutes.post("/analyze-batch", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json().catch(() => ({})) as {
+    limit?: number;
+    keyword?: string | null;
+  };
+
+  const batchLimit = Math.min(Math.max(parseInt(String(body?.limit ?? 20)), 1), 50);
+  const keyword    = body?.keyword?.trim() ?? null;
+
+  const where: Record<string, unknown> = {
+    enrichedAt: { not: null },
+    analyzedAt: null,
+  };
+  if (keyword) where.keyword = keyword;
+
+  const listings = await prisma.marketListing.findMany({
+    where,
+    orderBy: [{ dataCompletenessScore: "desc" }, { scraped_at: "desc" }],
+    take: batchLimit,
+  });
+
+  let succeeded = 0;
+  let failed    = 0;
+  const errors: Array<{ listingId: string; error: string }> = [];
+
+  for (const listing of listings) {
+    try {
+      const analysis = await analyzeMarketListingDeal(listing);
+
+      await prisma.marketListing.update({
+        where: { id: listing.id },
+        data: {
+          dealScore:       analysis.dealScore,
+          recommendation:  analysis.recommendation,
+          riskLevel:       analysis.riskLevel,
+          productCategory: analysis.productCategory,
+          estimatedMargin: analysis.estimatedMargin,
+          seoPotential:    analysis.seoPotential,
+          aiComment:       analysis.aiComment,
+          analyzedAt:      new Date(),
+        },
+      });
+
+      succeeded++;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[analyze-batch] Fehler bei ${listing.id}:`, message);
+      errors.push({ listingId: listing.id, error: message });
+      failed++;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, ANALYZE_BATCH_DELAY_MS));
+  }
+
+  return c.json({
+    data: {
+      processed: listings.length,
+      succeeded,
+      failed,
+      errors,
+    },
+  });
+});
+
+// ─── POST /enrich-batch ───────────────────────────────────────────────────────
+
+const ENRICH_BATCH_DELAY_MS = 200;
+
+adminMarketListingRoutes.post("/enrich-batch", async (c) => {
+  const prisma = getPrismaClient();
+  const body = await c.req.json().catch(() => ({})) as {
+    limit?: number;
+    onlyMissing?: boolean;
+    minDataCompleteness?: number | null;
+    keyword?: string | null;
+  };
+
+  const batchLimit     = Math.min(Math.max(parseInt(String(body?.limit ?? 50)), 1), 200);
+  const onlyMissing    = body?.onlyMissing !== false;
+  const keyword        = body?.keyword?.trim() ?? null;
+  const minScore       = typeof body?.minDataCompleteness === "number" ? body.minDataCompleteness : null;
+
+  // Kandidaten auswählen
+  const where: Record<string, unknown> = {};
+  if (keyword) where.keyword = keyword;
+
+  if (onlyMissing) {
+    where.enrichedAt = null;
+  } else if (minScore !== null) {
+    where.OR = [
+      { enrichedAt: null },
+      { dataCompletenessScore: { lt: minScore } },
+    ];
+  }
+
+  const listings = await prisma.marketListing.findMany({
+    where,
+    orderBy: [{ dealScore: "desc" }, { scraped_at: "desc" }],
+    take: batchLimit,
+  });
+
+  let succeeded = 0;
+  let failed = 0;
+  const errors: Array<{ listingId: string; error: string }> = [];
+  const distribution = { complete: 0, good: 0, partial: 0, incomplete: 0 };
+  let totalScore = 0;
+
+  for (const listing of listings) {
+    try {
+      const extraction = await extractListingKnowledge(listing);
+      const core = extractCoreFields(extraction);
+
+      await prisma.marketListing.update({
+        where: { id: listing.id },
+        data: {
+          brand:                core.brand,
+          model:                core.model,
+          productSeries:        core.productSeries,
+          productType:          core.productType,
+          subcategory:          core.subcategory,
+          dataCompletenessScore: core.dataCompletenessScore,
+          enrichmentConfidence: core.enrichmentConfidence,
+          enrichedAt:           new Date(),
+          enrichmentMetadata:   extraction as unknown as Prisma.InputJsonValue,
+        },
+      });
+
+      succeeded++;
+      totalScore += extraction.dataCompletenessScore;
+      distribution[extraction.dataCompletenessClass]++;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[enrich-batch] Fehler bei ${listing.id}:`, message);
+      errors.push({ listingId: listing.id, error: message });
+      failed++;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, ENRICH_BATCH_DELAY_MS));
+  }
+
+  return c.json({
+    data: {
+      processed:               listings.length,
+      succeeded,
+      failed,
+      errors,
+      avgDataCompletenessScore: succeeded > 0 ? Math.round(totalScore / succeeded) : 0,
+      distribution,
+    },
+  });
 });

@@ -103,6 +103,7 @@ export function ProductFactory({ data }: { data: IntelligenceOverview["factory"]
       <QuickActions
         rawListings={data.rawListings}
         enriched={data.enriched}
+        analyzed={data.analyzed}
         opportunities={data.opportunities}
         drafts={data.drafts}
       />

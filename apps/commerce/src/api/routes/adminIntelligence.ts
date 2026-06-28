@@ -142,12 +142,12 @@ adminIntelligenceRoutes.get("/overview", async (c) => {
     recommendations.push({
       level: "medium",
       title: `${notAnalyzed} Listings ohne Deal-Score`,
-      message: "Daily Report starten – analysiert Listings und erstellt neue Opportunities.",
+      message: "Deal Score berechnen – bewertet angereicherte Listings und findet Kaufgelegenheiten.",
       actionLabel: "Zu Listings",
       href: "/market",
-      apiPath: "/api/admin/market/opportunities/daily-report",
-      apiBody: { limit: 25, createDrafts: true },
-      apiLabel: "Daily Report starten",
+      apiPath: "/api/admin/market/analyze-batch",
+      apiBody: { limit: 50 },
+      apiLabel: "Deal Score berechnen",
     });
   }
 
