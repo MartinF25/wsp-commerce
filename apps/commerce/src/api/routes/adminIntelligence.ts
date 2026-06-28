@@ -95,13 +95,18 @@ adminIntelligenceRoutes.get("/overview", async (c) => {
 
   // ─── Regelbasierte Empfehlungen ───────────────────────────────────────────
 
-  const recommendations: Array<{
+  type Recommendation = {
     level: "high" | "medium" | "low";
     title: string;
     message: string;
     actionLabel: string;
     href: string;
-  }> = [];
+    apiPath?: string;
+    apiBody?: Record<string, unknown>;
+    apiLabel?: string;
+  };
+
+  const recommendations: Recommendation[] = [];
 
   if (topOpportunities > 0) {
     recommendations.push({
@@ -137,9 +142,12 @@ adminIntelligenceRoutes.get("/overview", async (c) => {
     recommendations.push({
       level: "medium",
       title: `${notAnalyzed} Listings ohne Deal-Score`,
-      message: "Deal-Score-Batch ausführen, um neue Opportunities zu finden.",
+      message: "Daily Report starten – analysiert Listings und erstellt neue Opportunities.",
       actionLabel: "Zu Listings",
       href: "/market",
+      apiPath: "/api/admin/market/opportunities/daily-report",
+      apiBody: { limit: 25, createDrafts: true },
+      apiLabel: "Daily Report starten",
     });
   }
 
@@ -147,9 +155,12 @@ adminIntelligenceRoutes.get("/overview", async (c) => {
     recommendations.push({
       level: "low",
       title: `${notEnriched} Listings nicht angereichert`,
-      message: "Knowledge Extractor ausführen für bessere Produktdaten.",
+      message: "Knowledge Extractor ausführen – ergänzt Marke, Modell und Produktdaten.",
       actionLabel: "Zu Listings",
       href: "/market",
+      apiPath: "/api/admin/market/enrich-batch",
+      apiBody: { limit: 200, onlyMissing: true },
+      apiLabel: "Jetzt anreichern",
     });
   }
 

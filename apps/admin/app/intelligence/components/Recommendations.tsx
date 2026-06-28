@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { IntelligenceRecommendation } from "@/lib/api";
 
 const LEVEL_COLORS = {
@@ -6,12 +9,74 @@ const LEVEL_COLORS = {
   low: { bg: "#f0fdf4", border: "#bbf7d0", text: "#166534", dot: "#22c55e", label: "Offen" },
 };
 
+function InlineActionButton({
+  apiPath,
+  apiBody,
+  label,
+}: {
+  apiPath: string;
+  apiBody?: Record<string, unknown>;
+  label: string;
+}) {
+  const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  async function handleClick() {
+    if (!confirm(`${label} jetzt starten?`)) return;
+    setState("loading");
+    setMessage("");
+    try {
+      const res = await fetch(apiPath, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: apiBody ? JSON.stringify(apiBody) : undefined,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          (json as { error?: { message?: string } })?.error?.message ??
+            `Fehler (HTTP ${res.status})`
+        );
+      }
+      const data = (json as { data?: Record<string, unknown> })?.data ?? json as Record<string, unknown>;
+      let msg = "Fertig";
+      if (typeof data.succeeded === "number") msg = `${data.succeeded} angereichert`;
+      else if (Array.isArray(data.topOpportunities)) msg = `${(data.topOpportunities as unknown[]).length} Opportunities`;
+      else if (typeof data.created === "number") msg = `${data.created} erstellt`;
+      setMessage(msg);
+      setState("success");
+    } catch (e) {
+      setMessage((e as Error).message);
+      setState("error");
+    }
+  }
+
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, marginRight: 8 }}>
+      <button
+        onClick={handleClick}
+        disabled={state === "loading"}
+        className="btn btn-primary btn-sm"
+        style={state === "loading" ? { opacity: 0.7 } : undefined}
+      >
+        {state === "loading" ? "Läuft..." : label}
+      </button>
+      {state === "success" && (
+        <span style={{ fontSize: 12, color: "#166534", fontWeight: 600 }}>✓ {message}</span>
+      )}
+      {state === "error" && (
+        <span style={{ fontSize: 12, color: "#991b1b" }}>{message}</span>
+      )}
+    </span>
+  );
+}
+
 export function Recommendations({ items }: { items: IntelligenceRecommendation[] }) {
   if (items.length === 0) {
     return (
       <div className="intel-card">
         <div className="intel-card-header">
-          <span className="intel-card-icon">🤖</span>
+          <span className="intel-card-icon">✅</span>
           <span className="intel-card-title">Empfehlungen</span>
         </div>
         <div
@@ -82,20 +147,29 @@ export function Recommendations({ items }: { items: IntelligenceRecommendation[]
                 <div style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
                   {item.message}
                 </div>
-                <a
-                  href={item.href}
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "#2563eb",
-                    textDecoration: "none",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                >
-                  {item.actionLabel} →
-                </a>
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+                  {item.apiPath && item.apiLabel && (
+                    <InlineActionButton
+                      apiPath={item.apiPath}
+                      apiBody={item.apiBody}
+                      label={item.apiLabel}
+                    />
+                  )}
+                  <a
+                    href={item.href}
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "#2563eb",
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    {item.actionLabel} →
+                  </a>
+                </div>
               </div>
               <span
                 style={{

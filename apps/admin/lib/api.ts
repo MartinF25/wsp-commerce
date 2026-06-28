@@ -794,6 +794,9 @@ export interface IntelligenceRecommendation {
   message: string;
   actionLabel: string;
   href: string;
+  apiPath?: string;
+  apiBody?: Record<string, unknown>;
+  apiLabel?: string;
 }
 
 export interface IntelligenceOverview {
