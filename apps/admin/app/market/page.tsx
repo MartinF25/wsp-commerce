@@ -4,25 +4,28 @@ import type { MarketListing, MarketListingStats } from "@/lib/api";
 import { ListingCard } from "./ListingCard";
 import { CleanupButton } from "./CleanupButton";
 import { BatchCheckButton } from "./BatchCheckButton";
+import { BatchEnrichButton } from "./BatchEnrichButton";
 
 export const dynamic = "force-dynamic";
 
 const KEYWORDS: Array<{ key: string; label: string }> = [
-  { key: "skywind", label: "SkyWind" },
+  { key: "solarspeicher", label: "Solarspeicher" },
   { key: "solarzaun", label: "Solarzaun" },
   { key: "solaranlage", label: "Solaranlage" },
-  { key: "solarspeicher", label: "Solarspeicher" },
+  { key: "skywind", label: "SkyWind" },
 ];
 
 const VIEW_FILTERS: Array<{ key: ViewFilter; label: string }> = [
-  { key: "all", label: "Alle" },
-  { key: "unanalyzed", label: "Ohne Analyse" },
-  { key: "top", label: "Top Deals" },
-  { key: "review", label: "Review" },
-  { key: "ignored", label: "Ignoriert" },
+  { key: "all",          label: "Alle" },
+  { key: "unanalyzed",   label: "Ohne Analyse" },
+  { key: "not_enriched", label: "Nicht angereichert" },
+  { key: "incomplete",   label: "Unvollständig" },
+  { key: "top",          label: "Top Deals" },
+  { key: "review",       label: "Review" },
+  { key: "ignored",      label: "Ignoriert" },
 ];
 
-type ViewFilter = "all" | "unanalyzed" | "top" | "review" | "ignored";
+type ViewFilter = "all" | "unanalyzed" | "not_enriched" | "incomplete" | "top" | "review" | "ignored";
 
 function fmt(cents: number | null) {
   if (cents === null) return "-";
@@ -43,6 +46,13 @@ function filterListings(listings: MarketListing[], view: ViewFilter): MarketList
   switch (view) {
     case "unanalyzed":
       return listings.filter((listing) => !listing.analyzedAt);
+    case "not_enriched":
+      return listings.filter((listing) => !listing.enrichedAt);
+    case "incomplete":
+      return listings.filter((listing) => {
+        const score = listing.dataCompletenessScore as number | null | undefined;
+        return score == null || score < 50;
+      });
     case "top":
       return listings.filter((listing) => (listing.dealScore ?? -1) >= 80);
     case "review":
@@ -82,11 +92,13 @@ export default async function MarketPage({
 
   const filteredListings = filterListings(listings, activeView);
   const viewCounts: Record<ViewFilter, number> = {
-    all: listings.length,
-    unanalyzed: filterListings(listings, "unanalyzed").length,
-    top: filterListings(listings, "top").length,
-    review: filterListings(listings, "review").length,
-    ignored: filterListings(listings, "ignored").length,
+    all:          listings.length,
+    unanalyzed:   filterListings(listings, "unanalyzed").length,
+    not_enriched: filterListings(listings, "not_enriched").length,
+    incomplete:   filterListings(listings, "incomplete").length,
+    top:          filterListings(listings, "top").length,
+    review:       filterListings(listings, "review").length,
+    ignored:      filterListings(listings, "ignored").length,
   };
 
   return (
@@ -97,6 +109,7 @@ export default async function MarketPage({
           <div className="page-subtitle">Kleinanzeigen via n8n mit Deal-Analyse fuer den Adminbereich</div>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <BatchEnrichButton keyword={activeKeyword} />
           <BatchCheckButton keyword={activeKeyword} />
           <CleanupButton />
         </div>

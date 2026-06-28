@@ -2,13 +2,13 @@ import type { IntelligenceOverview } from "@/lib/api";
 import { QuickActions } from "./QuickActions";
 
 const STEPS = [
-  { key: "rawListings", label: "Importiert", href: "/market?keyword=solarspeicher&view=all" },
-  { key: "enriched", label: "Angereichert", href: "/market?keyword=solarspeicher&view=not_enriched" },
-  { key: "analyzed", label: "Bewertet", href: "/market?keyword=solarspeicher&view=top" },
+  { key: "rawListings", label: "Importiert", href: "/market/dashboard" },
+  { key: "enriched", label: "Angereichert", href: "/market/dashboard" },
+  { key: "analyzed", label: "Bewertet", href: "/market/dashboard" },
   { key: "opportunities", label: "Opportunities", href: "/market/opportunities" },
-  { key: "drafts", label: "Entwürfe", href: "/products?status=draft" },
+  { key: "drafts", label: "Entwürfe", href: "/products" },
   { key: "readyForReview", label: "Review", href: "/market/opportunities" },
-  { key: "online", label: "Online", href: "/products?status=active" },
+  { key: "online", label: "Online", href: "/products" },
 ] as const;
 
 function stepColor(index: number, total: number, value: number) {
