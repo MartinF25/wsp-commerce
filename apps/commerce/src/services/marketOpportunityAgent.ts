@@ -44,7 +44,7 @@ export interface DailyReportResult {
 
 const ELIGIBLE_CATEGORIES: MarketProductCategory[] = ["solarspeicher", "solarzaun", "solaranlage", "skywind"];
 const MARKUP_PERCENT = 40;
-const MIN_DEAL_SCORE = 55;
+const MIN_DEAL_SCORE = 40;
 
 function calculateProfit(priceCents: number): OpportunityProfit {
   const suggestedSellingPrice = Math.round(priceCents * 1.4);
@@ -121,7 +121,6 @@ async function selectCandidates(limit: number): Promise<MarketListing[]> {
   return prisma.marketListing.findMany({
     where: {
       dealScore: { gte: MIN_DEAL_SCORE },
-      recommendation: { in: ["IMPORT", "REVIEW"] },
       productCategory: { in: ELIGIBLE_CATEGORIES },
       productDraftId: null,
       opportunityStatus: { not: "rejected" },
@@ -264,7 +263,7 @@ export async function runDailyReport(options: {
       }
 
       const score = listing.dealScore ?? 0;
-      if (score < MIN_DEAL_SCORE || !listing.recommendation || !["IMPORT", "REVIEW"].includes(listing.recommendation)) {
+      if (score < MIN_DEAL_SCORE) {
         totalSkipped++;
         continue;
       }
