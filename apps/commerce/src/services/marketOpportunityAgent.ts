@@ -42,7 +42,7 @@ export interface DailyReportResult {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const ELIGIBLE_CATEGORIES: MarketProductCategory[] = ["solarspeicher", "solarzaun", "solaranlage"];
+const ELIGIBLE_CATEGORIES: MarketProductCategory[] = ["solarspeicher", "solarzaun", "solaranlage", "skywind"];
 const MARKUP_PERCENT = 40;
 
 function calculateProfit(priceCents: number): OpportunityProfit {

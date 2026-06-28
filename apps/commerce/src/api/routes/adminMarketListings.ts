@@ -934,7 +934,7 @@ adminMarketListingRoutes.post("/analyze-batch", async (c) => {
     keyword?: string | null;
   };
 
-  const batchLimit = Math.min(Math.max(parseInt(String(body?.limit ?? 20)), 1), 50);
+  const batchLimit = Math.min(Math.max(parseInt(String(body?.limit ?? 50)), 1), 100);
   const keyword    = body?.keyword?.trim() ?? null;
 
   const where: Record<string, unknown> = {

@@ -120,7 +120,7 @@ export function QuickActions({
         <ApiButton
           label={`${notAnalyzed} Deal Score berechnen`}
           apiPath="/api/admin/market/analyze-batch"
-          body={{ limit: 50 }}
+          body={{ limit: 100 }}
           variant="primary"
         />
       )}
