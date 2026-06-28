@@ -22,7 +22,6 @@ function InlineActionButton({
   const [message, setMessage] = useState("");
 
   async function handleClick() {
-    if (!confirm(`${label} jetzt starten?`)) return;
     setState("loading");
     setMessage("");
     try {

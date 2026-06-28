@@ -14,7 +14,6 @@ function ApiButton({ label, apiPath, body, variant = "secondary" }: ApiButtonPro
   const [message, setMessage] = useState("");
 
   async function handleClick() {
-    if (!confirm(`${label} jetzt starten?`)) return;
     setState("loading");
     setMessage("");
     try {
