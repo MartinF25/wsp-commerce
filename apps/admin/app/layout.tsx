@@ -107,6 +107,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <aside className="sidebar">
             <div className="sidebar-title">WSP Admin</div>
             <nav>
+              <div style={{ padding: "4px 16px 8px", fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Intelligence</div>
+              <Link href="/intelligence">Revenue Engine</Link>
+              <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Katalog</div>
               <Link href="/categories">Kategorien</Link>
               <Link href="/products">Produkte</Link>
               <Link href="/media">Medien</Link>

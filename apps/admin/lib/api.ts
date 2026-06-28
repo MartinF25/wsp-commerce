@@ -645,6 +645,16 @@ export interface MarketListing {
   rejectedReason?: string | null;
   scraped_at: string;
   created_at: string;
+  // Knowledge Extraction Felder (Phase 4A)
+  brand?: string | null;
+  model?: string | null;
+  productSeries?: string | null;
+  productType?: string | null;
+  subcategory?: string | null;
+  dataCompletenessScore?: number | null;
+  enrichmentConfidence?: number | null;
+  enrichedAt?: string | null;
+  enrichmentMetadata?: Record<string, unknown> | null;
 }
 
 export interface MarketOpportunity extends MarketListing {
@@ -774,6 +784,64 @@ export interface FeatureVisualSettings {
   track_interactions: boolean;
   enable_ab_testing: boolean;
   updated_at: string;
+}
+
+// ─── Intelligence Types ───────────────────────────────────────────────────────
+
+export interface IntelligenceRecommendation {
+  level: "high" | "medium" | "low";
+  title: string;
+  message: string;
+  actionLabel: string;
+  href: string;
+}
+
+export interface IntelligenceOverview {
+  business: {
+    totalListings: number;
+    newListingsToday: number;
+    notEnriched: number;
+    notAnalyzed: number;
+    topOpportunities: number;
+    preparedOpportunities: number;
+    productDrafts: number;
+    activeProducts: number;
+    priceChanges: number;
+    offlineListings: number;
+    estimatedGrossProfit: number;
+  };
+  factory: {
+    rawListings: number;
+    enriched: number;
+    analyzed: number;
+    opportunities: number;
+    drafts: number;
+    readyForReview: number;
+    online: number;
+  };
+  knowledge: {
+    avgDataCompletenessScore: number;
+    avgEnrichmentConfidence: number;
+    knownBrands: number;
+    unknownBrands: number;
+    topBrands: Array<{ brand: string | null; count: number }>;
+  };
+  pricing: {
+    avgMarginPercent: number;
+    highMarginListings: number;
+    estimatedGrossProfit: number;
+    withPricing: number;
+    withoutPricing: number;
+    priceChanges: number;
+  };
+  lifecycle: {
+    online: number;
+    offline: number;
+    unknown: number;
+    priceChanged: number;
+    lastCheckAt: string | null;
+  };
+  recommendations: IntelligenceRecommendation[];
 }
 
 // ─── HTTP-Helfer ──────────────────────────────────────────────────────────────
@@ -1153,6 +1221,18 @@ export const api = {
     resendEmail: (id: string) =>
       request<{ sent: boolean }>(`/cancellations/${id}/resend-email`, { method: "POST" }),
     logs:        (id: string) => request<CancellationLog[]>(`/cancellations/${id}/logs`),
+  },
+
+  intelligence: {
+    getOverview: async (): Promise<IntelligenceOverview> => {
+      const res = await fetch(`${BASE_URL}/api/admin/intelligence/overview`, {
+        cache: "no-store",
+        headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_KEY },
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
+      return json.data as IntelligenceOverview;
+    },
   },
 
   cancellationSettings: {
