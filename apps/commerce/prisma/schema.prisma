@@ -888,6 +888,26 @@ model MarketListing {
   scraped_at       DateTime  @default(now())
   created_at       DateTime  @default(now())
 
+  /// Knowledge Extraction Felder (Phase 4A)
+  /// Normalisierte Marke, z. B. "EcoFlow", "BYD", "Pylontech"
+  brand                 String?
+  /// Modellbezeichnung, z. B. "STREAM AC", "US3000C"
+  model                 String?
+  /// Produktserie, z. B. "EcoFlow STREAM", "BYD HVS"
+  productSeries         String?
+  /// Produkttyp, z. B. "Solarspeicher", "Wechselrichter", "Kleinwindanlage"
+  productType           String?
+  /// Unterkategorie-Slug, z. B. "speicher-lifepo4", "kleinwindanlage"
+  subcategory           String?
+  /// Data Completeness Score 0–100 gemaess WSP-Knowledge-Intelligence Skill
+  dataCompletenessScore Int?
+  /// Durchschnittlicher Confidence-Wert aller Extraktionen (0.00–1.00)
+  enrichmentConfidence  Float?
+  /// Zeitstempel der letzten Knowledge-Extraktion
+  enrichedAt            DateTime?
+  /// Vollstaendiges Extraktionsergebnis mit Confidence und Source je Feld (JSONB)
+  enrichmentMetadata    Json?
+
   @@index([scraped_at])
   @@index([source, keyword])
   @@index([price_cents])
@@ -897,6 +917,9 @@ model MarketListing {
   @@index([syncStatus])
   @@index([sourceStatus])
   @@index([opportunityStatus])
+  @@index([enrichedAt])
+  @@index([dataCompletenessScore])
+  @@index([brand])
   @@map("market_listings")
 }
 

@@ -1,11 +1,5 @@
 import type { MarketListing } from "@prisma/client";
-
-type MarketProductCategory =
-  | "solarzaun"
-  | "solarspeicher"
-  | "solaranlage"
-  | "skywind"
-  | "unknown";
+import { inferProductCategory, type MarketProductCategory } from "../utils/marketCategoryUtils";
 
 export interface ProductDraftFaqItem {
   question: string;
@@ -51,23 +45,6 @@ function slugify(text: string): string {
     .slice(0, 80);
 }
 
-function inferProductCategory(listing: Pick<MarketListing, "keyword" | "title" | "description">): MarketProductCategory {
-  const haystack = `${listing.keyword} ${listing.title} ${listing.description ?? ""}`.toLowerCase();
-
-  if (haystack.includes("solarspeicher") || haystack.includes("speicher") || haystack.includes("akku")) {
-    return "solarspeicher";
-  }
-  if (haystack.includes("solarzaun") || haystack.includes("zaun")) {
-    return "solarzaun";
-  }
-  if (haystack.includes("solaranlage") || haystack.includes("pv") || haystack.includes("photovoltaik")) {
-    return "solaranlage";
-  }
-  if (haystack.includes("skywind") || haystack.includes("windrad") || haystack.includes("kleinwind")) {
-    return "skywind";
-  }
-  return "unknown";
-}
 
 function deriveCategorySlug(category: MarketProductCategory): string {
   switch (category) {

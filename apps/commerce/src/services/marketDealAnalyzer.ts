@@ -1,14 +1,9 @@
 import type { MarketListing, MarketReferencePrice } from "@prisma/client";
 import { getPrismaClient } from "../lib/prisma";
+import { inferProductCategory, normalizeCategory, type MarketProductCategory } from "../utils/marketCategoryUtils";
 
 type DealRecommendation = "IMPORT" | "REVIEW" | "IGNORE";
 type DealRiskLevel = "LOW" | "MEDIUM" | "HIGH";
-type MarketProductCategory =
-  | "solarzaun"
-  | "solarspeicher"
-  | "solaranlage"
-  | "skywind"
-  | "unknown";
 
 export interface MarketDealAnalysisResult {
   dealScore: number;
@@ -53,30 +48,6 @@ function inferRiskLevel(score: number): DealRiskLevel {
   return "HIGH";
 }
 
-function inferProductCategory(listing: Pick<MarketListing, "keyword" | "title" | "description">): MarketProductCategory {
-  const haystack = `${listing.keyword} ${listing.title} ${listing.description ?? ""}`.toLowerCase();
-
-  if (haystack.includes("solarspeicher") || haystack.includes("speicher") || haystack.includes("akku")) {
-    return "solarspeicher";
-  }
-  if (haystack.includes("solarzaun") || haystack.includes("zaun")) {
-    return "solarzaun";
-  }
-  if (haystack.includes("solaranlage") || haystack.includes("pv") || haystack.includes("photovoltaik")) {
-    return "solaranlage";
-  }
-  if (haystack.includes("skywind") || haystack.includes("windrad") || haystack.includes("kleinwind")) {
-    return "skywind";
-  }
-  return "unknown";
-}
-
-function normalizeCategory(value: unknown, fallback: MarketProductCategory): MarketProductCategory {
-  const valid: MarketProductCategory[] = ["solarzaun", "solarspeicher", "solaranlage", "skywind", "unknown"];
-  return typeof value === "string" && valid.includes(value as MarketProductCategory)
-    ? (value as MarketProductCategory)
-    : fallback;
-}
 
 function normalizeRecommendation(value: unknown, score: number): DealRecommendation {
   const valid: DealRecommendation[] = ["IMPORT", "REVIEW", "IGNORE"];
@@ -116,6 +87,28 @@ function buildReferenceContext(refs: MarketReferencePrice[]): string {
   ].join("\n");
 }
 
+function buildEnrichmentContext(listing: MarketListing): string {
+  if (!listing.enrichmentMetadata || !listing.enrichedAt) return "";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const meta = listing.enrichmentMetadata as Record<string, any>;
+
+  const parts: string[] = [];
+  if (meta.brand?.value)       parts.push(`Marke: ${meta.brand.value}`);
+  if (meta.model?.value)       parts.push(`Modell: ${meta.model.value}`);
+  if (meta.productType?.value) parts.push(`Produkttyp: ${meta.productType.value}`);
+  if (meta.technology?.value)  parts.push(`Technologie: ${meta.technology.value}`);
+  if (meta.condition?.value && meta.condition.value !== "unknown")
+    parts.push(`Zustand: ${meta.condition.value}`);
+  if (meta.capacityWh?.value)  parts.push(`Kapazitaet: ${meta.capacityWh.value} Wh`);
+  if (meta.wattage?.value)     parts.push(`Leistung: ${meta.wattage.value} W`);
+  if (listing.dataCompletenessScore != null)
+    parts.push(`Datenvollstaendigkeit: ${listing.dataCompletenessScore}/100`);
+
+  if (parts.length === 0) return "";
+  return `Angereicherte Produktdaten (KI-Extraktion, Confidence-geprueft): ${parts.join(", ")}`;
+}
+
 function buildPrompt(listing: MarketListing, refs: MarketReferencePrice[] = []): string {
   const payload = {
     id: listing.id,
@@ -130,11 +123,13 @@ function buildPrompt(listing: MarketListing, refs: MarketReferencePrice[] = []):
   };
 
   const referenceContext = buildReferenceContext(refs);
+  const enrichmentContext = buildEnrichmentContext(listing);
 
   return [
     "Du bewertest Kleinanzeigen-Angebote fuer einen WSP-Commerce Webshop.",
     "Alle Kategorien werden gleich behandelt – bewerте objektiv nach Preis, Zustand und Potenzial.",
     referenceContext || "",
+    enrichmentContext || "",
     "Bewertungsschema (Punkte addieren):",
     "- Preisattraktivitaet (Rabatt zum Marktpreis): 0-30",
     "- Markenwert / Hersteller: 0-20",
