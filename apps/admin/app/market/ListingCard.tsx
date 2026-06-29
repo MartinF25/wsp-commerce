@@ -3,12 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
-import type { MarketListing } from "@/lib/api";
+import type { MarketListing, MarketReferencePrice } from "@/lib/api";
 import { createProductFromListing } from "./actions";
 
 interface Props {
   listing: MarketListing;
   avgPriceCents: number | null;
+  referencePrices?: MarketReferencePrice[];
 }
 
 function formatPrice(cents: number | null, negotiable: boolean): string {
@@ -85,7 +86,14 @@ function scoreStyle(score: number | null | undefined): CSSProperties {
   return badgeStyle("#fecaca", "#7f1d1d");
 }
 
-export function ListingCard({ listing, avgPriceCents }: Props) {
+function completenessStyle(score: number): CSSProperties {
+  if (score >= 90) return badgeStyle("#dcfce7", "#166534");
+  if (score >= 70) return badgeStyle("#dbeafe", "#1d4ed8");
+  if (score >= 50) return badgeStyle("#fef3c7", "#92400e");
+  return badgeStyle("#fee2e2", "#991b1b");
+}
+
+export function ListingCard({ listing, avgPriceCents, referencePrices = [] }: Props) {
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [productType, setProductType] = useState("inquiry_only");
@@ -95,6 +103,7 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
   const [isAnalyzePending, startAnalyzeTransition] = useTransition();
   const [isDraftPending, startDraftTransition] = useTransition();
   const [isAvailabilityPending, startAvailabilityTransition] = useTransition();
+  const [isEnrichPending, startEnrichTransition] = useTransition();
 
   const priceDisplay = formatPrice(currentListing.price_cents, currentListing.price_negotiable);
   const color = priceColor(currentListing.price_cents, avgPriceCents);
@@ -161,6 +170,29 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
           setCurrentListing(body.data.listing as MarketListing);
         }
 
+        router.refresh();
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    });
+  }
+
+  function handleEnrich() {
+    setError(null);
+    startEnrichTransition(async () => {
+      try {
+        const res = await fetch("/api/admin/market/enrich", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listingId: currentListing.id }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error((body as { error?: { message?: string } })?.error?.message ?? `Anreicherung fehlgeschlagen (HTTP ${res.status})`);
+        }
+        if ((body as { data?: { listing?: typeof currentListing } }).data?.listing) {
+          setCurrentListing((body as { data: { listing: typeof currentListing } }).data.listing);
+        }
         router.refresh();
       } catch (e) {
         setError((e as Error).message);
@@ -264,9 +296,56 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
               <span style={badgeStyle("#fed7aa", "#9a3412")}>PREIS GEAENDERT</span>
             )}
           </div>
+          {/* Knowledge Enrichment Badges */}
+          {(currentListing.brand || currentListing.model || currentListing.productType || currentListing.dataCompletenessScore != null) && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+              {currentListing.brand && (
+                <span style={badgeStyle("#f0fdf4", "#15803d")}>
+                  {currentListing.brand}
+                  {currentListing.model ? ` · ${currentListing.model}` : ""}
+                </span>
+              )}
+              {currentListing.productType && (
+                <span style={badgeStyle("#f5f3ff", "#6d28d9")}>{currentListing.productType}</span>
+              )}
+              {currentListing.dataCompletenessScore != null && (
+                <span style={completenessStyle(currentListing.dataCompletenessScore)}>
+                  Vollständigkeit {currentListing.dataCompletenessScore}%
+                </span>
+              )}
+              {typeof currentListing.enrichmentConfidence === "number" && (
+                <span style={badgeStyle("#f8fafc", "#64748b")}>
+                  Ø Confidence {Math.round(currentListing.enrichmentConfidence * 100)}%
+                </span>
+              )}
+            </div>
+          )}
           {currentListing.aiComment && (
             <div style={{ fontSize: 13, lineHeight: 1.5, color: "#4b5563" }}>{currentListing.aiComment}</div>
           )}
+          {referencePrices.length > 0 && (() => {
+            const ekEur = currentListing.price_cents ? Math.round(currentListing.price_cents / 100) : null;
+            const vkValues = referencePrices.map((r) => r.vk_eur);
+            const minVk = Math.min(...vkValues);
+            const maxVk = Math.max(...vkValues);
+            const margeEur = ekEur !== null ? minVk - ekEur : null;
+            const margePercent = ekEur && margeEur !== null && ekEur > 0 ? Math.round((margeEur / ekEur) * 100) : null;
+            const marktpreisStr = minVk === maxVk
+              ? `${minVk.toLocaleString("de-DE")} EUR`
+              : `${minVk.toLocaleString("de-DE")}–${maxVk.toLocaleString("de-DE")} EUR`;
+            return (
+              <div style={{ marginTop: 8, padding: "7px 12px", background: "#f8fafc", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: 12, color: "#374151", display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <span><span style={{ color: "#94a3b8" }}>EK</span> <strong>{ekEur !== null ? `${ekEur.toLocaleString("de-DE")} EUR` : "VB"}</strong></span>
+                <span><span style={{ color: "#94a3b8" }}>Marktpreis</span> <strong>{marktpreisStr}</strong> <span style={{ color: "#94a3b8" }}>(neu)</span></span>
+                {margeEur !== null && (
+                  <span style={{ color: margeEur >= 0 ? "#166534" : "#991b1b", fontWeight: 700 }}>
+                    Marge ca. {margeEur >= 0 ? "+" : ""}{margeEur.toLocaleString("de-DE")} EUR
+                    {margePercent !== null ? ` (+${margePercent}%)` : ""}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
           {currentListing.productDraftId && (
             <div style={{ marginTop: 8 }}>
               <a
@@ -299,6 +378,14 @@ export function ListingCard({ listing, avgPriceCents }: Props) {
         </td>
         <td style={{ width: 260, textAlign: "right" }}>
           <div className="actions-row" style={{ justifyContent: "flex-end", flexWrap: "wrap" }}>
+            <button
+              onClick={handleEnrich}
+              disabled={isEnrichPending}
+              className="btn btn-secondary btn-sm"
+              title={currentListing.enrichedAt ? `Zuletzt angereichert: ${new Date(currentListing.enrichedAt as string).toLocaleDateString("de-DE")}` : "Noch nicht angereichert"}
+            >
+              {isEnrichPending ? "Reichere an..." : currentListing.enrichedAt ? "Erneut anreichern" : "Anreichern"}
+            </button>
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzePending}

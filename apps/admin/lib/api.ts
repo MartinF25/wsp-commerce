@@ -657,6 +657,15 @@ export interface MarketListing {
   enrichmentMetadata?: Record<string, unknown> | null;
 }
 
+export interface MarketReferencePrice {
+  id: string;
+  keyword: string;
+  productName: string;
+  ek_eur: number | null;
+  vk_eur: number;
+  notes: string | null;
+}
+
 export interface MarketOpportunity extends MarketListing {
   purchasePrice: number;
   suggestedSellingPrice: number;
@@ -1128,6 +1137,19 @@ export const api = {
     },
   },
 
+  marketReferencePrices: {
+    list: async (keyword?: string) => {
+      const qs = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
+      const res = await fetch(`${BASE_URL}/api/admin/market-reference-prices${qs}`, {
+        cache: "no-store",
+        headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_KEY },
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
+      return json as { data: MarketReferencePrice[]; total: number };
+    },
+  },
+
   featureDefinitions: {
     list: (params?: { categoryId?: string; activeOnly?: boolean }) => {
       const qs = new URLSearchParams();
@@ -1231,6 +1253,7 @@ export const api = {
       const res = await fetch(`${BASE_URL}/api/admin/intelligence/overview`, {
         cache: "no-store",
         headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_KEY },
+        signal: AbortSignal.timeout(10000),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);

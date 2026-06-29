@@ -61,6 +61,61 @@ adminMarketReferencePriceRoutes.post("/sync", async (c) => {
   return c.json({ ok: true, synced: validated.length });
 });
 
+// ─── POST / (einzeln anlegen) ─────────────────────────────────────────────────
+
+adminMarketReferencePriceRoutes.post("/", async (c) => {
+  const prisma = getPrismaClient();
+  let body: Record<string, unknown> = {};
+  try { body = await c.req.json(); } catch {
+    return c.json({ error: { code: "INVALID_BODY", message: "JSON erforderlich." } }, 422);
+  }
+
+  if (!body.keyword || !body.productName || body.vk_eur == null) {
+    return c.json({ error: { code: "INVALID_BODY", message: "keyword, productName und vk_eur sind erforderlich." } }, 422);
+  }
+
+  const entry = await prisma.marketReferencePrice.create({
+    data: {
+      keyword: String(body.keyword).toLowerCase().trim(),
+      productName: String(body.productName).trim(),
+      ek_eur: body.ek_eur != null && body.ek_eur !== "" ? Math.round(Number(body.ek_eur)) : null,
+      vk_eur: Math.round(Number(body.vk_eur)),
+      notes: body.notes ? String(body.notes).trim() : null,
+    },
+  });
+
+  return c.json({ ok: true, data: entry }, 201);
+});
+
+// ─── PATCH /:id ───────────────────────────────────────────────────────────────
+
+adminMarketReferencePriceRoutes.patch("/:id", async (c) => {
+  const prisma = getPrismaClient();
+  const id = c.req.param("id");
+  let body: Record<string, unknown> = {};
+  try { body = await c.req.json(); } catch {
+    return c.json({ error: { code: "INVALID_BODY", message: "JSON erforderlich." } }, 422);
+  }
+
+  const existing = await prisma.marketReferencePrice.findUnique({ where: { id }, select: { id: true } });
+  if (!existing) {
+    return c.json({ error: { code: "NOT_FOUND", message: "Referenzpreis nicht gefunden." } }, 404);
+  }
+
+  const updated = await prisma.marketReferencePrice.update({
+    where: { id },
+    data: {
+      ...(body.keyword != null && { keyword: String(body.keyword).toLowerCase().trim() }),
+      ...(body.productName != null && { productName: String(body.productName).trim() }),
+      ...(body.vk_eur != null && { vk_eur: Math.round(Number(body.vk_eur)) }),
+      ...(body.ek_eur !== undefined && { ek_eur: body.ek_eur != null && body.ek_eur !== "" ? Math.round(Number(body.ek_eur)) : null }),
+      ...(body.notes !== undefined && { notes: body.notes ? String(body.notes).trim() : null }),
+    },
+  });
+
+  return c.json({ ok: true, data: updated });
+});
+
 // ─── DELETE /:id ──────────────────────────────────────────────────────────────
 
 adminMarketReferencePriceRoutes.delete("/:id", async (c) => {

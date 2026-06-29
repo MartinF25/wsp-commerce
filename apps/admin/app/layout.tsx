@@ -89,6 +89,13 @@ hr { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
 .empty-dashed { border: 1px dashed #e2e8f0; border-radius: 8px; }
 .empty-sub { margin-top: 4px; font-size: 12px; }
 .code-inline { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; }
+.intel-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+.intel-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.intel-card-icon { font-size: 16px; line-height: 1; }
+.intel-card-title { font-size: 13px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.06em; }
+.intel-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 0; }
+.intel-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 0; }
+@media (max-width: 900px) { .intel-grid-2 { grid-template-columns: 1fr; } .intel-grid-3 { grid-template-columns: 1fr; } }
 `;
 
 export const metadata = {
@@ -132,6 +139,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/market/dashboard">Dashboard</Link>
               <Link href="/market/opportunities">Tageschancen</Link>
               <Link href="/market">Listings</Link>
+              <Link href="/market/referenzpreise">Referenzpreise</Link>
               <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Widerruf</div>
               <Link href="/widerrufe">Anfragen</Link>
               <Link href="/settings/widerruf">Einstellungen</Link>

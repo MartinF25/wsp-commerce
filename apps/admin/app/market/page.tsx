@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
-import type { MarketListing, MarketListingStats } from "@/lib/api";
+import type { MarketListing, MarketListingStats, MarketReferencePrice } from "@/lib/api";
 import { ListingCard } from "./ListingCard";
 import { CleanupButton } from "./CleanupButton";
 import { BatchCheckButton } from "./BatchCheckButton";
@@ -80,12 +80,17 @@ export default async function MarketPage({
 
   let listings: MarketListing[] = [];
   let stats: MarketListingStats | null = null;
+  let referencePrices: MarketReferencePrice[] = [];
   let error: string | null = null;
 
   try {
-    const result = await api.marketListings.list({ keyword: activeKeyword, limit: 200 });
-    listings = result.data;
-    stats = result.stats;
+    const [listResult, refResult] = await Promise.all([
+      api.marketListings.list({ keyword: activeKeyword, limit: 200 }),
+      api.marketReferencePrices.list(activeKeyword).catch(() => ({ data: [] as MarketReferencePrice[], total: 0 })),
+    ]);
+    listings = listResult.data;
+    stats = listResult.stats;
+    referencePrices = refResult.data;
   } catch (e) {
     error = (e as Error).message;
   }
@@ -193,6 +198,7 @@ export default async function MarketPage({
                   key={listing.id}
                   listing={listing}
                   avgPriceCents={stats?.avg_price_cents ?? null}
+                  referencePrices={referencePrices}
                 />
               ))}
             </tbody>
