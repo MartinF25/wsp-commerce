@@ -120,8 +120,10 @@ async function selectCandidates(limit: number): Promise<MarketListing[]> {
 
   return prisma.marketListing.findMany({
     where: {
-      dealScore: { gte: MIN_DEAL_SCORE },
-      productCategory: { in: ELIGIBLE_CATEGORIES },
+      OR: [
+        { dealScore: { gte: MIN_DEAL_SCORE }, productCategory: { in: ELIGIBLE_CATEGORIES } },
+        { analyzedAt: null },
+      ],
       productDraftId: null,
       opportunityStatus: { not: "rejected" },
       sourceStatus: { not: "offline" },
