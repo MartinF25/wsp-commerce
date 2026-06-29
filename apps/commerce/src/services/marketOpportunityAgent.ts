@@ -270,12 +270,15 @@ export async function runDailyReport(options: {
         continue;
       }
 
-      if (!listing.price_cents || listing.price_negotiable) {
-        totalSkipped++;
-        continue;
-      }
-
-      const profit = calculateProfit(listing.price_cents);
+      const profit = listing.price_cents && !listing.price_negotiable
+        ? calculateProfit(listing.price_cents)
+        : {
+            purchasePrice: 0,
+            markupPercent: 0,
+            suggestedSellingPrice: 0,
+            estimatedGrossProfit: 0,
+            pricingNote: "VB – Preis wird individuell verhandelt",
+          };
       let productDraftId = listing.productDraftId;
       let draftCreated = false;
       let draftError: string | null = null;
