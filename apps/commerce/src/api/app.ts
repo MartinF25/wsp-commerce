@@ -21,6 +21,7 @@ import { adminMarketListingRoutes } from "./routes/adminMarketListings";
 import { adminMarketOpportunityRoutes } from "./routes/adminMarketOpportunities";
 import { adminMarketReferencePriceRoutes } from "./routes/adminMarketReferencePrices";
 import { adminIntelligenceRoutes } from "./routes/adminIntelligence";
+import { adminReseedRoutes } from "./routes/adminReseed";
 
 /**
  * Hono-App-Factory
@@ -79,6 +80,7 @@ export function createApp() {
   app.route("/api/admin/market-opportunities", adminMarketOpportunityRoutes);
   app.route("/api/admin/market-reference-prices", adminMarketReferencePriceRoutes);
   app.route("/api/admin/intelligence", adminIntelligenceRoutes);
+  app.route("/api/admin/reseed", adminReseedRoutes);
 
   // ─── 404-Handler ────────────────────────────────────────────────────────────
 

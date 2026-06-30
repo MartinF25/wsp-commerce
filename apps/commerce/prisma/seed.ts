@@ -438,53 +438,39 @@ async function main() {
 
   // ─── Demo-Blogbeiträge ────────────────────────────────────────────────────────
 
-  await prisma.blogPost.deleteMany({
-    where: { slug: { in: ["solarzaun-ratgeber", "kleinwindanlage-faq"] } },
-  });
-
-  await prisma.blogPost.createMany({
-    data: [
-      {
-        slug: "solarzaun-ratgeber",
-        title: "Solarzaun: So verwandeln Sie Ihren Zaun in ein Kraftwerk",
-        excerpt: "Ein Solarzaun erzeugt Strom, grenzt Ihr Grundstück ab und sieht dabei modern aus. Wir erklären, wie es funktioniert und für wen es sich lohnt.",
-        content: `<h2>Was ist ein Solarzaun?</h2>
-<p>Ein Solarzaun kombiniert die Funktion eines klassischen Einfriedungszauns mit der Stromerzeugung durch integrierte Solarmodule. Die Module sind vertikal angebracht – ideal für Grundstücksgrenzen, Gärten und Gewerbeflächen.</p>
-<h2>Vorteile gegenüber herkömmlichen Dachmodulen</h2>
-<ul>
-  <li><strong>Doppelte Nutzung:</strong> Zaun und Kraftwerk in einem.</li>
-  <li><strong>Keine Dachstatik notwendig:</strong> Ideal für ältere Gebäude.</li>
-  <li><strong>Sichtschutz + Ästhetik:</strong> Modernes Design, das sich ins Gesamtbild fügt.</li>
-  <li><strong>Förderfähig:</strong> In vielen Bundesländern als Photovoltaikanlage förderbar.</li>
-</ul>
-<h2>Für wen lohnt sich ein Solarzaun?</h2>
-<p>Besonders interessant ist der Solarzaun für Hausbesitzer mit großen Grundstücken, Landwirte mit weitläufigen Hofanlagen sowie Gewerbebetriebe, die Einfriedung und Energieerzeugung kombinieren möchten.</p>
-<h2>Jetzt Beratung anfragen</h2>
-<p>Wir analysieren kostenlos Ihr Grundstück und zeigen Ihnen, welche Leistung mit einem Solarzaun möglich ist.</p>`,
-        author: "Redaktion SolarWind",
-        tags: ["Solarzaun", "Photovoltaik", "Ratgeber"],
-        status: "published" as const,
-        published_at: new Date("2026-04-01"),
-      },
-      {
-        slug: "kleinwindanlage-faq",
-        title: "Kleinwindanlage SkyWind – Die 10 häufigsten Fragen",
-        excerpt: "Wie viel Strom erzeugt eine Kleinwindanlage? Brauche ich eine Genehmigung? Wir beantworten die wichtigsten Fragen rund um SkyWind.",
-        content: `<h2>1. Wie viel Strom erzeugt SkyWind?</h2>
-<p>Je nach Modell und Standort erzeugt eine SkyWind-Anlage zwischen 1.000 und 8.000 kWh pro Jahr. Mit einer 5-kW-Anlage an einem windreichen Standort können Sie einen Großteil Ihres Haushaltsstroms selbst produzieren.</p>
-<h2>2. Brauche ich eine Genehmigung?</h2>
-<p>In den meisten Bundesländern ist für Kleinwindanlagen bis 10 m Nabenhöhe keine Baugenehmigung erforderlich. Wir unterstützen Sie bei der Klärung der lokalen Vorschriften.</p>
-<h2>3. Wie laut ist eine Kleinwindanlage?</h2>
-<p>Moderne Kleinwindanlagen wie SkyWind arbeiten mit deutlich reduziertem Geräuschpegel. Im Normalbetrieb liegt der Schallpegel bei ca. 35–45 dB(A) – vergleichbar mit einem ruhigen Büro.</p>
-<h2>4. Kann ich Solar und Wind kombinieren?</h2>
-<p>Ja – unsere Kombilösungen verbinden SkyWind mit Solarzaun-Modulen für eine wetterunabhängige Eigenversorgung. Wind erzeugt Strom, wenn die Sonne nicht scheint, und umgekehrt.</p>`,
-        author: "Redaktion SolarWind",
-        tags: ["SkyWind", "Kleinwindanlage", "FAQ"],
-        status: "published" as const,
-        published_at: new Date("2026-04-10"),
-      },
-    ],
-  });
+  // Demo-Blogbeiträge mit Translation-Schema
+  for (const post of [
+    {
+      slug: "solarzaun-ratgeber",
+      published_at: new Date("2026-04-01"),
+      author_name: "Redaktion SolarWind",
+      status: "published" as const,
+      title: "Solarzaun: So verwandeln Sie Ihren Zaun in ein Kraftwerk",
+      excerpt: "Ein Solarzaun erzeugt Strom, grenzt Ihr Grundstück ab und sieht dabei modern aus. Wir erklären, wie es funktioniert und für wen es sich lohnt.",
+      content: `<h2>Was ist ein Solarzaun?</h2><p>Ein Solarzaun kombiniert die Funktion eines klassischen Einfriedungszauns mit der Stromerzeugung durch integrierte Solarmodule.</p><h2>Für wen lohnt sich ein Solarzaun?</h2><p>Besonders interessant für Hausbesitzer mit großen Grundstücken, Landwirte und Gewerbebetriebe.</p>`,
+    },
+    {
+      slug: "kleinwindanlage-faq",
+      published_at: new Date("2026-04-10"),
+      author_name: "Redaktion SolarWind",
+      status: "published" as const,
+      title: "Kleinwindanlage SkyWind – Die 10 häufigsten Fragen",
+      excerpt: "Wie viel Strom erzeugt eine Kleinwindanlage? Brauche ich eine Genehmigung?",
+      content: `<h2>1. Wie viel Strom erzeugt SkyWind?</h2><p>Je nach Modell und Standort zwischen 1.000 und 8.000 kWh pro Jahr.</p><h2>2. Brauche ich eine Genehmigung?</h2><p>In den meisten Bundesländern ist für Kleinwindanlagen bis 10 m Nabenhöhe keine Baugenehmigung erforderlich.</p>`,
+    },
+  ]) {
+    const { title, excerpt, content, ...postData } = post;
+    const created = await prisma.blogPost.upsert({
+      where: { slug: postData.slug },
+      update: { status: postData.status, published_at: postData.published_at, author_name: postData.author_name },
+      create: postData,
+    });
+    await prisma.blogPostTranslation.upsert({
+      where: { post_id_locale: { post_id: created.id, locale: "de" as any } },
+      update: { title, excerpt, content },
+      create: { post_id: created.id, locale: "de" as any, title, excerpt, content },
+    });
+  }
 
   console.log("📝 Demo-Blogbeiträge angelegt.");
 
