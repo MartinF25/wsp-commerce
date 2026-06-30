@@ -56,6 +56,14 @@ function deriveCategorySlug(category: MarketProductCategory): string {
       return "kombiloesungen";
     case "solarspeicher":
       return "solar-zubehoer";
+    case "wechselrichter":
+      return "solar-zubehoer";
+    case "laderegler":
+      return "solar-zubehoer";
+    case "optimizer":
+      return "solar-zubehoer";
+    case "halterung":
+      return "solar-zubehoer";
     case "unknown":
     default:
       return "solar-zubehoer";
@@ -134,6 +142,10 @@ function buildPrompt(listing: MarketListing, priceSuggestion: number, category: 
     "Solarspeicher mit Fokus auf technische Daten, Kompatibilitaet und Einsatzbereich formulieren.",
     "Solaranlagen als Set- oder Projektangebot formulieren.",
     "SkyWind nur mit niedriger Prioritaet behandeln, da dafuer bereits Produkte existieren.",
+    "Wechselrichter: Hersteller, Leistung (W/kW), Modultyp (string/mikro/hybrid), Netzkompatibilitaet hervorheben.",
+    "Laderegler: MPPT oder PWM, Ladestrom (A), Systemspannung, kompatible Batterietypen angeben.",
+    "Optimizer/Leistungsoptimierer: Hersteller (SolarEdge, Tigo), kompatible Module, max. Eingangsleistung.",
+    "Halterungen: Modulgroesse/-gewicht, Dachtyp (Flachdach/Schraegedach/Boden), Material (Alu/Stahl), Anker-/Befestigungsart.",
     "Wenn Preis fehlt oder verhandelbar ist, muss priceSuggestion 0 bleiben und availabilityNote auf Anfrage verweisen.",
     "Gib ausschliesslich valides JSON zurueck mit genau diesen Feldern:",
     '{"name":"","slug":"","shortDescription":"","description":"","metaTitle":"","metaDescription":"","category":"","tags":[],"technicalData":[],"faq":[],"priceSuggestion":0,"availabilityNote":""}',

@@ -294,7 +294,7 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
 
 // ─── POST /cleanup ───────────────────────────────────────────────────────────
 
-const VALID_KEYWORDS = ["skywind", "solarzaun", "solaranlage", "solarspeicher"];
+const VALID_KEYWORDS = ["skywind", "solarzaun", "solaranlage", "solarspeicher", "wechselrichter", "laderegler", "optimizer", "halterung"];
 
 adminMarketListingRoutes.post("/cleanup", async (c) => {
   const prisma = getPrismaClient();

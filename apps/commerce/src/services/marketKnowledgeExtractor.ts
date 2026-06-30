@@ -163,7 +163,7 @@ export function calculatePriceQuality(
 // Kategorie-Ableitung aus Keyword (Confidence: 0.85)
 function inferCategoryFromKeyword(keyword: string): KnowledgeExtractionField<string> {
   const kw = keyword.toLowerCase().trim();
-  const valid = ["solarzaun", "solarspeicher", "solaranlage", "wechselrichter", "skywind"];
+  const valid = ["solarzaun", "solarspeicher", "solaranlage", "wechselrichter", "skywind", "laderegler", "optimizer", "halterung"];
   if (valid.includes(kw)) {
     return { value: kw, confidence: 0.85, source: "keyword" };
   }
@@ -194,8 +194,8 @@ function buildExtractionPrompt(listing: MarketListing): string {
     "- Erlaubte sources: title, description, keyword, price, shipping, inferred",
     "- Normalisiere Markennamen: 'Eco Flow' → 'EcoFlow', 'BYD Battery' → 'BYD', 'Victron Energy' → 'Victron'",
     "- Zustand-Mapping: neu/unbenutzt/originalverpackt → new | neuwertig/kaum benutzt → like_new | gebraucht → used | defekt/Bastler → defective | unbekannt → unknown",
-    "- Erlaubte Kategorien: solarspeicher, solarzaun, solaranlage, wechselrichter, skywind, unknown",
-    "- Erlaubte Unterkategorien: speicher-lifepo4, speicher-hochvolt, speicher-niedervolt, hybridwechselrichter, mikrowechselrichter, zaunmodul, pv-komplettset, balkonkraftwerk-speicher, laderegler, kleinwindanlage",
+    "- Erlaubte Kategorien: solarspeicher, solarzaun, solaranlage, wechselrichter, laderegler, optimizer, halterung, skywind, unknown",
+    "- Erlaubte Unterkategorien: speicher-lifepo4, speicher-hochvolt, speicher-niedervolt, hybridwechselrichter, mikrowechselrichter, netzwechselrichter, zaunmodul, pv-komplettset, balkonkraftwerk-speicher, mppt-laderegler, pwm-laderegler, leistungsoptimierer, dachmontage, freiflaeche-montage, balkon-halterung, kleinwindanlage",
     "- Wenn Ah und Spannung bekannt: capacityWh = Ah * V",
     "",
     "Antworte ausschliesslich mit validem JSON ohne Erklaerungen:",

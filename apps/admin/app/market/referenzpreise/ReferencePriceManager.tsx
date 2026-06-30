@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MarketReferencePrice } from "@/lib/api";
 
-const KEYWORDS = ["solarspeicher", "solarzaun", "solaranlage", "skywind"];
+const KEYWORDS = ["wechselrichter", "laderegler", "optimizer", "halterung", "solarspeicher", "solarzaun", "solaranlage", "skywind"];
 
 interface EditState {
   id: string;

@@ -42,7 +42,7 @@ export interface DailyReportResult {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const ELIGIBLE_CATEGORIES: MarketProductCategory[] = ["solarspeicher", "solarzaun", "solaranlage", "skywind"];
+const ELIGIBLE_CATEGORIES: MarketProductCategory[] = ["solarspeicher", "solarzaun", "solaranlage", "skywind", "wechselrichter", "laderegler", "optimizer", "halterung"];
 const MARKUP_PERCENT = 40;
 const MIN_DEAL_SCORE = 40;
 
@@ -95,7 +95,10 @@ async function buildUniqueProductSlug(baseSlug: string): Promise<string> {
 function resolveDraftProductType(listing: Pick<MarketListing, "productCategory" | "keyword" | "price_cents" | "price_negotiable">) {
   if (!listing.price_cents || listing.price_negotiable) return "inquiry_only" as const;
   const category = (listing.productCategory ?? listing.keyword).toLowerCase();
-  if (category === "solarspeicher") return "configurable" as const;
+  // Fixed-price small products get configurable type for direct shop listing
+  if (["solarspeicher", "wechselrichter", "laderegler", "optimizer", "halterung"].includes(category)) {
+    return "configurable" as const;
+  }
   return "inquiry_only" as const;
 }
 
@@ -108,6 +111,14 @@ function resolveProjectNote(category: string | null, tags: string[]): string {
       return `Als Set- und Projektangebot angelegt. Auslegung, Komponentenstand und Einsatzort werden vor Angebotsbestaetigung geprueft.${tagLine}`;
     case "solarspeicher":
       return `Kompatibilitaet mit Wechselrichter, Batteriesystem und Schutzkonzept vor Angebotsbestaetigung pruefen.${tagLine}`;
+    case "wechselrichter":
+      return `Kompatibilitaet mit PV-Anlage, Netzanschluss und Einspeiseleistung vor Angebotsbestaetigung pruefen.${tagLine}`;
+    case "laderegler":
+      return `Kompatibilitaet mit Batterietyp, Modulspannung und Systemspannung pruefen.${tagLine}`;
+    case "optimizer":
+      return `Kompatibilitaet mit Wechselrichter und Modultyp vor Angebotsbestaetigung pruefen.${tagLine}`;
+    case "halterung":
+      return `Passgenauigkeit fuer Modulgroesse, Dachtyp und Montagesituation pruefen.${tagLine}`;
     default:
       return `Produktentwurf fuer interne Qualifizierung angelegt.${tagLine}`;
   }
