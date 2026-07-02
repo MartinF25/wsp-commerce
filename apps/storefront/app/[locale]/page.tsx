@@ -92,16 +92,8 @@ export default async function HomePage({
             url: STOREFRONT_URL,
             logo: LOGO_URL,
             description: "Experte für Solarzaun und SkyWind Kleinwindanlagen – nachhaltige Energie für Privat und Gewerbe.",
-            address: {
-              "@type": "PostalAddress",
-              addressCountry: "DE",
-            },
-            contactPoint: {
-              "@type": "ContactPoint",
-              contactType: "customer service",
-              availableLanguage: ["German", "English", "Spanish"],
-              url: `${STOREFRONT_URL}/kontakt`,
-            },
+            address: { "@type": "PostalAddress", addressCountry: "DE" },
+            contactPoint: { "@type": "ContactPoint", contactType: "customer service", availableLanguage: ["German", "English", "Spanish"], url: `${STOREFRONT_URL}/kontakt` },
           }),
         }}
       />
@@ -113,80 +105,91 @@ export default async function HomePage({
             "@type": "WebSite",
             name: "WSP Solarenergie",
             url: STOREFRONT_URL,
-            description: "Solarzaun und SkyWind Kleinwindanlagen – nachhaltige Energie für Ihr Zuhause und Gewerbe.",
-            potentialAction: {
-              "@type": "SearchAction",
-              target: {
-                "@type": "EntryPoint",
-                urlTemplate: `${STOREFRONT_URL}/products?q={search_term_string}`,
-              },
-              "query-input": "required name=search_term_string",
-            },
-          }),
-        }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ProfessionalService",
-            name: "WSP Solarenergie",
-            description: "Beratung und Installation von Solarzaun und SkyWind Kleinwindanlagen für nachhaltige Energie.",
-            url: STOREFRONT_URL,
-            address: {
-              "@type": "PostalAddress",
-              addressCountry: "DE",
-            },
-            serviceType: "Solarenergie-Beratung",
-            areaServed: "Deutschland",
+            potentialAction: { "@type": "SearchAction", target: { "@type": "EntryPoint", urlTemplate: `${STOREFRONT_URL}/products?q={search_term_string}` }, "query-input": "required name=search_term_string" },
           }),
         }}
       />
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden min-h-[60vh] sm:min-h-[88vh] flex items-center">
+      <section className="relative overflow-hidden flex items-end" style={{ minHeight: "100svh" }}>
         <Image src="/images/hero-bg.png" alt="Modernes Haus mit SkyWind" fill className="object-cover object-center" priority sizes="100vw" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
-        <div className="relative w-full flex items-center min-h-[60vh] sm:min-h-[88vh]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-20 w-full">
-            <div className="max-w-xl">
-              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3 sm:mb-4">
-                {t("hero_eyebrow")}
-              </p>
-              <h1 className="font-display text-3xl sm:text-5xl font-bold text-white leading-tight mb-4 sm:mb-5">
-                {t("hero_h1_line1")}<br />
-                <span className="text-brand-accent">{t("hero_h1_line2")}</span>
-              </h1>
-              <p className="text-base text-white/75 leading-relaxed mb-8 max-w-lg">{t("hero_sub")}</p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/products" className="inline-block bg-brand-accent text-white font-semibold px-8 py-3 rounded-xl hover:bg-green-600 transition-colors duration-150 text-center">
-                  {t("hero_cta_primary")}
-                </Link>
-                <Link href="/solarzaun" className="inline-block border border-white/40 text-white font-semibold px-8 py-3 rounded-xl hover:border-white hover:bg-white/10 transition-colors duration-150 text-center">
-                  {t("hero_cta_secondary")}
-                </Link>
-              </div>
-            </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+
+        <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-8 pb-16 sm:pb-24 pt-32">
+          {/* Pill badge */}
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-accent flex-shrink-0" />
+            <span className="text-xs font-medium text-white/90 tracking-wide uppercase">{t("hero_eyebrow")}</span>
+          </div>
+
+          <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight mb-6 max-w-3xl">
+            {t("hero_h1_line1")}<br />
+            <span className="text-brand-accent">{t("hero_h1_line2")}</span>
+          </h1>
+          <p className="text-lg text-white/65 leading-relaxed mb-10 max-w-lg">{t("hero_sub")}</p>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              href="/products"
+              className="inline-flex items-center justify-center gap-2 bg-brand-accent text-white font-semibold px-8 py-4 rounded-2xl hover:bg-green-600 transition-colors duration-200 text-base"
+            >
+              {t("hero_cta_primary")}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </Link>
+            <Link
+              href="/solarzaun"
+              className="inline-flex items-center justify-center border border-white/30 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-white/10 hover:border-white/60 transition-colors duration-200 text-base"
+            >
+              {t("hero_cta_secondary")}
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ── Trust Strip ── */}
-      <div className="border-y border-gray-100 bg-gray-50/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="border-b border-gray-100 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
             {[
-              { icon: "🚚", title: t("trust_delivery"), sub: t("trust_delivery_sub") },
-              { icon: "🛡️", title: t("trust_warranty"), sub: t("trust_warranty_sub") },
-              { icon: "🔧", title: t("trust_montage"), sub: t("trust_montage_sub") },
-              { icon: "💶", title: t("trust_foerderung"), sub: t("trust_foerderung_sub") },
+              {
+                icon: (
+                  <svg className="w-5 h-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                  </svg>
+                ),
+                title: t("trust_delivery"), sub: t("trust_delivery_sub"),
+              },
+              {
+                icon: (
+                  <svg className="w-5 h-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
+                ),
+                title: t("trust_warranty"), sub: t("trust_warranty_sub"),
+              },
+              {
+                icon: (
+                  <svg className="w-5 h-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
+                  </svg>
+                ),
+                title: t("trust_montage"), sub: t("trust_montage_sub"),
+              },
+              {
+                icon: (
+                  <svg className="w-5 h-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+                title: t("trust_foerderung"), sub: t("trust_foerderung_sub"),
+              },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-3">
-                <span className="text-xl">{item.icon}</span>
+                <div className="flex-shrink-0">{item.icon}</div>
                 <div>
-                  <p className="text-sm font-semibold text-brand-text">{item.title}</p>
-                  <p className="text-xs text-brand-muted">{item.sub}</p>
+                  <p className="text-sm font-semibold text-brand-text leading-tight">{item.title}</p>
+                  <p className="text-xs text-brand-muted mt-0.5">{item.sub}</p>
                 </div>
               </div>
             ))}
@@ -196,23 +199,17 @@ export default async function HomePage({
 
       {/* ── Categories ── */}
       {categories.length > 0 && (
-        <section className="bg-gray-50 py-16 sm:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
-              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">
-                {t("categories_eyebrow")}
-              </p>
-              <h2 className="font-display text-3xl font-bold text-brand-text">
-                {t("categories_h2")}
-              </h2>
+        <section className="bg-gray-50 py-20 sm:py-24">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("categories_eyebrow")}</p>
+                <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-text">{t("categories_h2")}</h2>
+              </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {categories.map((cat) => (
-                <CategoryCard
-                  key={cat.id}
-                  category={cat}
-                  locale={params.locale}
-                />
+                <CategoryCard key={cat.id} category={cat} locale={params.locale} />
               ))}
             </div>
           </div>
@@ -220,14 +217,14 @@ export default async function HomePage({
       )}
 
       {/* ── Products ── */}
-      <section className="py-10 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-6 sm:mb-10">
+      <section className="py-20 sm:py-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-10">
             <div>
               <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("products_eyebrow")}</p>
-              <h2 className="font-display text-3xl font-bold text-brand-text">{t("products_h2")}</h2>
+              <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-text">{t("products_h2")}</h2>
             </div>
-            <Link href="/products" className="text-sm font-semibold text-brand-muted hover:text-brand-accent transition-colors duration-150 hidden sm:block">
+            <Link href="/products" className="text-sm font-semibold text-brand-muted hover:text-brand-accent transition-colors hidden sm:inline-flex items-center gap-1">
               {t("products_all")}
             </Link>
           </div>
@@ -236,52 +233,62 @@ export default async function HomePage({
               <ProductCard key={product.id} product={product} buyLabel={t("products_buy")} learnLabel={t("products_learn")} />
             ))}
           </div>
-          <div className="mt-6 sm:hidden">
-            <Link href="/products" className="text-sm font-semibold text-brand-muted hover:text-brand-accent">{t("products_all_mobile")}</Link>
+          <div className="mt-8 sm:hidden">
+            <Link href="/products" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-accent hover:text-green-700">{t("products_all_mobile")}</Link>
           </div>
         </div>
       </section>
 
-      {/* ── Benefits ── */}
-      <section className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-xl mb-10">
-            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("benefits_eyebrow")}</p>
-            <h2 className="font-display text-3xl font-bold text-brand-text">{t("benefits_h2")}</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {benefits.map((b) => (
-              <div key={b.number}>
-                <p className="font-display text-2xl font-bold text-brand-accent mb-2">{b.number}</p>
-                <h3 className="font-display font-semibold text-brand-text mb-1">{b.title}</h3>
-                <p className="text-sm text-brand-muted leading-relaxed">{b.desc}</p>
-              </div>
-            ))}
+      {/* ── Benefits – Editorial sticky layout ── */}
+      <section className="bg-gray-50 py-20 sm:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="lg:grid lg:grid-cols-[1fr_1.6fr] lg:gap-20 items-start">
+            {/* Sticky heading */}
+            <div className="mb-12 lg:mb-0 lg:sticky lg:top-24">
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-3">{t("benefits_eyebrow")}</p>
+              <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-text leading-tight">{t("benefits_h2")}</h2>
+              <div className="mt-6 w-10 h-0.5 bg-brand-accent" />
+            </div>
+
+            {/* Benefit rows */}
+            <div className="divide-y divide-gray-200">
+              {benefits.map((b) => (
+                <div key={b.number} className="flex gap-6 py-8 group">
+                  <span className="font-display text-sm font-bold text-brand-accent w-8 flex-shrink-0 mt-1">{b.number}</span>
+                  <div>
+                    <h3 className="font-display font-semibold text-lg text-brand-text mb-2">{b.title}</h3>
+                    <p className="text-brand-muted leading-relaxed text-sm">{b.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
-
 
       {/* ── Wind Energy Guides ── */}
-      <section className="py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-xl mb-10">
-            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">
-              {t("guides_eyebrow")}
-            </p>
-            <h2 className="font-display text-3xl font-bold text-brand-text">
-              {t("guides_h2")}
-            </h2>
+      <section className="py-20 sm:py-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="mb-10">
+            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("guides_eyebrow")}</p>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-text">{t("guides_h2")}</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(WIND_GUIDES[params.locale as keyof typeof WIND_GUIDES] ?? WIND_GUIDES.en).map((guide) => (
               <Link
                 key={guide.href}
                 href={guide.href as any}
-                className="group bg-gray-50 rounded-2xl border border-gray-100 p-5 hover:border-brand-accent hover:bg-white hover:shadow-sm transition-all duration-150"
+                className="group flex items-start gap-4 bg-white border border-gray-100 rounded-2xl p-5 hover:border-brand-accent hover:shadow-md transition-all duration-200"
               >
-                <p className="font-display font-semibold text-brand-text text-sm mb-1.5 group-hover:text-brand-accent transition-colors">{guide.label}</p>
-                <p className="text-xs text-brand-muted leading-relaxed">{guide.desc}</p>
+                <div className="mt-0.5 w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0 group-hover:bg-green-100 transition-colors">
+                  <svg className="w-4 h-4 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-display font-semibold text-sm text-brand-text mb-1 group-hover:text-brand-accent transition-colors">{guide.label}</p>
+                  <p className="text-xs text-brand-muted leading-relaxed">{guide.desc}</p>
+                </div>
               </Link>
             ))}
           </div>
@@ -289,45 +296,49 @@ export default async function HomePage({
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-xl mb-10">
-            <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("faq_eyebrow")}</p>
-            <h2 className="font-display text-3xl font-bold text-brand-text">{t("faq_h2")}</h2>
-          </div>
-          <div className="max-w-3xl divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden">
-            {faqItems.map((item) => (
-              <details key={item.q} className="group bg-white">
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-6 py-5 font-display font-semibold text-brand-text hover:text-brand-accent transition-colors duration-150 [&::-webkit-details-marker]:hidden">
-                  <span>{item.q}</span>
-                  <span className="mt-0.5 flex-shrink-0 text-brand-muted text-sm transition-transform duration-200 group-open:rotate-180">↓</span>
-                </summary>
-                <div className="px-6 pb-5">
-                  <p className="text-sm text-brand-muted leading-relaxed">{item.a}</p>
-                </div>
-              </details>
-            ))}
-          </div>
-          <div className="mt-6">
-            <Link href="/faq" className="inline-block text-sm font-semibold text-brand-text border border-gray-200 rounded-xl px-5 py-2.5 hover:border-brand-accent hover:text-brand-accent transition-colors duration-150">
-              {t("faq_all")}
-            </Link>
+      <section className="bg-gray-50 py-20 sm:py-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="lg:grid lg:grid-cols-[1fr_1.6fr] lg:gap-20 items-start">
+            <div className="mb-10 lg:mb-0 lg:sticky lg:top-24">
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("faq_eyebrow")}</p>
+              <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-text">{t("faq_h2")}</h2>
+              <div className="mt-8">
+                <Link href="/faq" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-text border border-gray-300 rounded-xl px-5 py-2.5 hover:border-brand-accent hover:text-brand-accent transition-colors">
+                  {t("faq_all")}
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </Link>
+              </div>
+            </div>
+
+            <div className="divide-y divide-gray-200">
+              {faqItems.map((item) => (
+                <details key={item.q} className="group py-1">
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-4 py-5 font-display font-semibold text-brand-text hover:text-brand-accent transition-colors [&::-webkit-details-marker]:hidden">
+                    <span className="text-base leading-snug">{item.q}</span>
+                    <span className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 group-hover:bg-green-50 flex items-center justify-center transition-colors">
+                      <svg className="w-3.5 h-3.5 text-brand-muted group-open:rotate-180 transition-transform duration-200 group-hover:text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </span>
+                  </summary>
+                  <p className="text-sm text-brand-muted leading-relaxed pb-5 pr-10">{item.a}</p>
+                </details>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Blog Teaser ── */}
       {blogPosts.length > 0 && (
-        <section className="py-16 sm:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-end justify-between mb-8 sm:mb-10">
+        <section className="py-20 sm:py-24">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="flex items-end justify-between mb-10">
               <div>
                 <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">{t("blog_eyebrow")}</p>
-                <h2 className="font-display text-3xl font-bold text-brand-text">{t("blog_h2")}</h2>
+                <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-text">{t("blog_h2")}</h2>
               </div>
-              <Link href="/blog" className="text-sm font-semibold text-brand-muted hover:text-brand-accent transition-colors duration-150 hidden sm:block">
-                {t("blog_all")}
-              </Link>
+              <Link href="/blog" className="text-sm font-semibold text-brand-muted hover:text-brand-accent transition-colors hidden sm:block">{t("blog_all")}</Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {blogPosts.map((post) => (
@@ -341,18 +352,22 @@ export default async function HomePage({
         </section>
       )}
 
-      {/* ── Contact CTA ── */}
-      <section className="bg-brand-text py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-display text-4xl font-bold text-white mb-4 leading-tight">
-            {t("cta_h2_line1")}<br />{t("cta_h2_line2")}
+      {/* ── Contact CTA – Dark with green glow ── */}
+      <section className="relative overflow-hidden bg-[#0a0f0a] py-24 sm:py-32">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(34,197,94,0.18),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_80%_at_80%_110%,rgba(34,197,94,0.08),transparent)]" />
+        <div className="relative max-w-4xl mx-auto px-6 lg:px-8 text-center">
+          <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-4">WSP Solarenergie</p>
+          <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-5 leading-[1.1] tracking-tight">
+            {t("cta_h2_line1")}<br /><span className="text-brand-accent">{t("cta_h2_line2")}</span>
           </h2>
-          <p className="text-gray-400 text-lg leading-relaxed max-w-2xl mx-auto mb-10">{t("cta_sub")}</p>
+          <p className="text-gray-400 text-lg leading-relaxed max-w-xl mx-auto mb-10">{t("cta_sub")}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/kontakt" className="inline-block bg-brand-accent text-white font-semibold px-9 py-3.5 rounded-xl hover:bg-green-600 transition-colors duration-150">
+            <Link href="/kontakt" className="inline-flex items-center justify-center gap-2 bg-brand-accent text-white font-semibold px-10 py-4 rounded-2xl hover:bg-green-600 transition-colors text-base">
               {t("cta_primary")}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </Link>
-            <Link href="/products" className="inline-block border border-gray-600 text-white font-semibold px-9 py-3.5 rounded-xl hover:border-gray-400 transition-colors duration-150">
+            <Link href="/products" className="inline-flex items-center justify-center border border-white/20 text-white font-semibold px-10 py-4 rounded-2xl hover:border-white/40 hover:bg-white/5 transition-colors text-base">
               {t("cta_secondary")}
             </Link>
           </div>
