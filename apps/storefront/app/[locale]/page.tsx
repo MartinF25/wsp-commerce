@@ -267,10 +267,10 @@ export default async function HomePage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl mb-10">
             <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">
-              {params.locale === "de" ? "Ratgeber & Guides" : params.locale === "es" ? "Guías de Energía Eólica" : "Wind Energy Guides"}
+              {t("guides_eyebrow")}
             </p>
             <h2 className="font-display text-3xl font-bold text-brand-text">
-              {params.locale === "de" ? "Alles zur SkyWind NG Windkraftanlage" : params.locale === "es" ? "Todo sobre la turbina eólica SkyWind NG" : "All About the SkyWind NG Wind Turbine"}
+              {t("guides_h2")}
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -403,11 +403,12 @@ function BlogTeaserCard({ post, readMoreLabel }: { post: BlogPostSummary; readMo
 // ─── Category Card ────────────────────────────────────────────────────────────
 
 const CATEGORY_FALLBACK_IMAGES: Record<string, { src: string; alt: string }> = {
-  solarzaun:                   { src: "/images/solarzaun-house.png", alt: "Solarzaun" },
-  "skywind-ng-kleinwindanlage": { src: "/images/skywind-hero.png",   alt: "SkyWind NG Kleinwindanlage" },
-  skywind:                     { src: "/images/skywind-hero.png",    alt: "SkyWind Kleinwindanlage" },
-  kombiloesung:                { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
-  "kombilösung":               { src: "/images/skywind-rooftop.png", alt: "Kombilösung Solar & Wind" },
+  solarzaun:                   { src: "/images/solarzaun-house.png",  alt: "Solarzaun" },
+  "skywind-ng-kleinwindanlage": { src: "/images/skywind-hero.png",    alt: "SkyWind NG Kleinwindanlage" },
+  skywind:                     { src: "/images/skywind-hero.png",     alt: "SkyWind Kleinwindanlage" },
+  kombiloesung:                { src: "/images/skywind-rooftop.png",  alt: "Kombilösung Solar & Wind" },
+  "kombilösung":               { src: "/images/skywind-rooftop.png",  alt: "Kombilösung Solar & Wind" },
+  "solar-zubehoer":            { src: "/images/solarzaun-house.png",  alt: "Solar Zubehör" },
 };
 
 const CATEGORY_ENRICHMENT: Record<string, {
@@ -513,6 +514,34 @@ const CATEGORY_ENRICHMENT: Record<string, {
     ],
     ctaLabel: { de: "Zubehör entdecken", en: "Explore Accessories", es: "Explorar Accesorios" },
   },
+  kombiloesung: {
+    description: {
+      de: "Solar und Wind kombiniert – maximale Autarkie durch ganzjährige Stromerzeugung bei jedem Wetter.",
+      en: "Solar and wind combined – maximum energy independence through year-round power generation in any weather.",
+      es: "Solar y eólico combinados – máxima autonomía energética con generación eléctrica todo el año.",
+    },
+    subcategories: [
+      { name: { de: "Kombiprojekt Privat", en: "Private Combo Project", es: "Proyecto Combinado Privado" }, href: "/products/solar-wind-kombiloesung" },
+      { name: { de: "Kombiprojekt Gewerbe", en: "Commercial Combo Project", es: "Proyecto Combinado Comercial" }, href: "/products/solar-wind-kombiloesung" },
+      { name: { de: "Planung & Beratung", en: "Planning & Consulting", es: "Planificación y Asesoría" }, href: "/kontakt" },
+      { name: { de: "Solarzaun + SkyWind", en: "Solar Fence + SkyWind", es: "Valla Solar + SkyWind" }, href: "/products/solar-wind-kombiloesung" },
+    ],
+    ctaLabel: { de: "Kombilösungen entdecken", en: "Explore Combo Solutions", es: "Explorar Soluciones Combinadas" },
+  },
+  "solar-zubehoer": {
+    description: {
+      de: "Wechselrichter, Laderegler, Optimizer und Halterungen – alles was Ihre Solaranlage vervollständigt.",
+      en: "Inverters, charge controllers, optimisers and mounting systems – everything to complete your solar installation.",
+      es: "Inversores, reguladores de carga, optimizadores y soportes – todo para completar su instalación solar.",
+    },
+    subcategories: [
+      { name: { de: "Wechselrichter", en: "Inverters", es: "Inversores" }, href: "/categories/solar-zubehoer" },
+      { name: { de: "Laderegler", en: "Charge Controllers", es: "Reguladores de Carga" }, href: "/categories/solar-zubehoer" },
+      { name: { de: "Optimizer", en: "Optimisers", es: "Optimizadores" }, href: "/categories/solar-zubehoer" },
+      { name: { de: "Halterungen", en: "Mounting Systems", es: "Sistemas de Montaje" }, href: "/categories/solar-zubehoer" },
+    ],
+    ctaLabel: { de: "Zubehör entdecken", en: "Explore Accessories", es: "Explorar Accesorios" },
+  },
 };
 
 function CategoryCard({
@@ -526,60 +555,63 @@ function CategoryCard({
   const imageSrc = category.coverImageUrl ?? fallback?.src ?? null;
   const imageAlt = fallback?.alt ?? category.name;
   const enrichment = CATEGORY_ENRICHMENT[category.slug];
-  const lang = (enrichment?.subcategories ? locale : "de") as string;
+  const lang = locale as string;
   const subcategories = enrichment?.subcategories ?? [];
+  const description = enrichment?.description[lang] ?? enrichment?.description["de"] ?? category.description ?? "";
+  const ctaLabel = enrichment?.ctaLabel[lang] ?? enrichment?.ctaLabel["de"] ?? "Entdecken →";
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 group">
-
-      {/* ── Hauptkategorie-Header – feste Höhe für gleichmäßige Optik ── */}
-      <Link
-        href={`/categories/${category.slug}`}
-        className="flex items-center gap-3 px-4 h-[72px] bg-gray-900 hover:bg-gray-800 transition-colors duration-150"
-      >
-        {/* Bild-Thumbnail */}
-        <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-700">
-          {imageSrc && (
-            <Image
-              src={imageSrc}
-              alt={imageAlt}
-              fill
-              className="object-cover opacity-90"
-              sizes="40px"
-            />
+    <div className="group rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col">
+      {/* ── Bildbereich mit Gradient-Overlay ── */}
+      <Link href={`/categories/${category.slug}`} className="relative block h-52 sm:h-60 overflow-hidden bg-gray-900">
+        {imageSrc ? (
+          <Image
+            src={imageSrc}
+            alt={imageAlt}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <h3 className="font-display text-xl font-bold text-white leading-snug mb-1">
+            {category.name}
+          </h3>
+          {description && (
+            <p className="text-sm text-white/70 line-clamp-2 leading-relaxed">{description}</p>
           )}
         </div>
-
-        {/* Kategoriename – auf 2 Zeilen begrenzt */}
-        <p className="font-display font-bold text-white text-sm leading-snug flex-1 min-w-0 line-clamp-2">
-          {category.name}
-        </p>
-
-        {/* Pfeil */}
-        <svg className="w-4 h-4 text-white/30 group-hover:text-white/60 shrink-0 transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
       </Link>
 
-      {/* ── Unterkategorien 2×2-Grid – feste Zellenhöhe ── */}
-      {subcategories.length > 0 && (
-        <div className="grid grid-cols-2 bg-white border-t border-gray-100">
-          {subcategories.map((sub, i) => (
-            <Link
-              key={sub.name.de}
-              href={sub.href as any}
-              className={[
-                "flex items-center gap-2 px-4 h-11 text-sm font-medium text-brand-text hover:text-brand-accent hover:bg-green-50 transition-colors duration-150 truncate",
-                i % 2 === 0 ? "border-r border-gray-100" : "",
-                i < 2 ? "border-b border-gray-100" : "",
-              ].join(" ")}
-            >
-              <span className="text-brand-accent text-base leading-none flex-shrink-0">›</span>
-              <span className="truncate">{sub.name[lang] ?? sub.name.de}</span>
-            </Link>
-          ))}
-        </div>
-      )}
+      {/* ── Unterkategorien 2×2-Grid ── */}
+      <div className="bg-white border border-t-0 border-gray-100 rounded-b-2xl flex flex-col flex-1">
+        {subcategories.length > 0 && (
+          <div className="grid grid-cols-2 divide-x divide-y divide-gray-100 flex-1">
+            {subcategories.map((sub) => (
+              <Link
+                key={sub.name.de}
+                href={sub.href as any}
+                className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-brand-text hover:text-brand-accent hover:bg-green-50 transition-colors duration-150"
+              >
+                <span className="text-brand-accent flex-shrink-0">›</span>
+                <span className="truncate">{sub.name[lang] ?? sub.name.de}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+        <Link
+          href={`/categories/${category.slug}`}
+          className="flex items-center justify-between px-5 py-3.5 border-t border-gray-100 text-sm font-semibold text-brand-accent hover:text-green-700 transition-colors duration-150"
+        >
+          <span>{ctaLabel}</span>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
     </div>
   );
 }
@@ -606,10 +638,11 @@ function ProductCard({
 }) {
   const tProducts = useTranslations("products");
   const imageMap: Record<string, { src: string; alt: string }> = {
-    solarzaun: { src: "/images/solarzaun-house.png", alt: "Solarzaun" },
-    skywind: { src: "/images/skywind-hero.png", alt: "SkyWind" },
-    kombiloesung: { src: "/images/skywind-rooftop.png", alt: "Kombilösung" },
-    kombilösung: { src: "/images/skywind-rooftop.png", alt: "Kombilösung" },
+    solarzaun:         { src: "/images/solarzaun-house.png", alt: "Solarzaun" },
+    skywind:           { src: "/images/skywind-hero.png",    alt: "SkyWind" },
+    kombiloesung:      { src: "/images/skywind-rooftop.png", alt: "Kombilösung" },
+    kombilösung:       { src: "/images/skywind-rooftop.png", alt: "Kombilösung" },
+    "solar-zubehoer":  { src: "/images/solarzaun-house.png", alt: "Solar Zubehör" },
   };
   const image = product.coverImageUrl
     ? { src: product.coverImageUrl, alt: product.name }
