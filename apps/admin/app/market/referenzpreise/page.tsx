@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { api, type MarketReferencePrice } from "@/lib/api";
 import { ReferencePriceManager } from "./ReferencePriceManager";
 
 export const dynamic = "force-dynamic";
 
 export default async function ReferenzpreisePage() {
-  let prices = [];
+  let prices: MarketReferencePrice[] = [];
   let error: string | null = null;
 
   try {
