@@ -1,0 +1,24 @@
+name: Deploy Storefront
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/storefront/**"
+      - "packages/**"
+      - ".github/workflows/deploy-storefront.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel Production
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: team_1sjD8341iIat4SBBMoqnys6I
+          VERCEL_PROJECT_ID: prj_ZKjqFoW5a61kVMoLYyiCEq7pXTeV
