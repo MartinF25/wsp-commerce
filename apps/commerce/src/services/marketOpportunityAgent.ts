@@ -131,13 +131,17 @@ async function selectCandidates(limit: number): Promise<MarketListing[]> {
 
   return prisma.marketListing.findMany({
     where: {
-      OR: [
-        { dealScore: { gte: MIN_DEAL_SCORE } },
-        { analyzedAt: null },
+      AND: [
+        {
+          OR: [
+            { dealScore: { gte: MIN_DEAL_SCORE } },
+            { analyzedAt: null },
+          ],
+        },
+        { productDraftId: null },
+        { OR: [{ opportunityStatus: null }, { opportunityStatus: { not: "rejected" } }] },
+        { OR: [{ sourceStatus: null }, { sourceStatus: { not: "offline" } }] },
       ],
-      productDraftId: null,
-      opportunityStatus: { not: "rejected" },
-      sourceStatus: { not: "offline" },
     },
     orderBy: [
       { dealScore: "desc" },
