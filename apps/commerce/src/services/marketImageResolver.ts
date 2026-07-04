@@ -2,29 +2,42 @@ import type { MarketListing } from "@prisma/client";
 
 interface OpenAIImageResponse {
   data?: Array<{ url?: string }>;
+  error?: { message?: string; code?: string };
 }
 
+// Category fallback images from Unsplash (stable CDN URLs, no auth needed)
+const CATEGORY_FALLBACKS: Record<string, string> = {
+  wechselrichter:  "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
+  solarspeicher:   "https://images.unsplash.com/photo-1584677626646-7c8f83690304?w=800&q=80",
+  solaranlage:     "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=800&q=80",
+  solarzaun:       "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=800&q=80",
+  laderegler:      "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
+  optimizer:       "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
+  halterung:       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
+  skywind:         "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80",
+};
+
 const BRAND_DOMAINS: Record<string, string> = {
-  goodwe: "https://en.goodwe.com",
-  fronius: "https://www.fronius.com",
-  sma: "https://www.sma.de",
+  goodwe:    "https://en.goodwe.com",
+  fronius:   "https://www.fronius.com",
+  sma:       "https://www.sma.de",
   solaredge: "https://www.solaredge.com",
-  huawei: "https://solar.huawei.com",
-  sungrow: "https://www.sungrowpower.com",
-  growatt: "https://www.growatt.com",
-  victron: "https://www.victronenergy.com",
-  enphase: "https://enphase.com",
-  tigo: "https://www.tigoenergy.com",
-  lg: "https://www.lgessbattery.com",
-  byd: "https://www.bydbatterybox.com",
+  huawei:    "https://solar.huawei.com",
+  sungrow:   "https://www.sungrowpower.com",
+  growatt:   "https://www.growatt.com",
+  victron:   "https://www.victronenergy.com",
+  enphase:   "https://enphase.com",
+  tigo:      "https://www.tigoenergy.com",
+  lg:        "https://www.lgessbattery.com",
+  byd:       "https://www.bydbatterybox.com",
   pylontech: "https://www.pylontech.com.cn",
-  anker: "https://www.anker.com",
-  hoymiles: "https://www.hoymiles.com",
-  deye: "https://www.deyeinverter.com",
-  sofar: "https://www.sofarsolar.com",
-  solax: "https://www.solaxpower.com",
-  fox: "https://www.foxess.com",
-  marstek: "https://www.marstek.com",
+  anker:     "https://www.anker.com",
+  hoymiles:  "https://www.hoymiles.com",
+  deye:      "https://www.deyeinverter.com",
+  sofar:     "https://www.sofarsolar.com",
+  solax:     "https://www.solaxpower.com",
+  fox:       "https://www.foxess.com",
+  marstek:   "https://www.marstek.com",
 };
 
 function detectBrand(listing: MarketListing): string | null {
@@ -77,53 +90,58 @@ function buildProductPageUrl(brand: string, listing: MarketListing): string | nu
       return `${domain}/us/products/inverters`;
     },
     growatt: () => `${domain}/solution/storage`,
-    huawei: () => `${domain}/en/products/commercial-pv`,
+    huawei:  () => `${domain}/en/products/commercial-pv`,
   };
 
   const handler = modelPatterns[brand];
   return handler ? handler(titleLower) : domain;
 }
 
-async function generateDallEImage(listing: MarketListing, category: string): Promise<string | null> {
+async function generateDallEImage(listing: MarketListing, category: string): Promise<{ url: string | null; error?: string }> {
   const apiKey = (process.env.OPENAI_API_KEY ?? "").trim();
-  if (!apiKey) return null;
+  if (!apiKey) return { url: null, error: "OPENAI_API_KEY nicht gesetzt" };
 
   const productName = (listing.title ?? "").trim().slice(0, 80);
-  const categoryHint = {
-    wechselrichter: "solar inverter",
-    solarspeicher: "home battery storage unit",
-    laderegler: "solar charge controller",
-    optimizer: "solar power optimizer",
-    halterung: "solar panel mounting bracket",
-    solaranlage: "solar panel set",
-    solarzaun: "solar fence panel",
-    skywind: "small wind turbine",
-  }[category] ?? "solar energy product";
+  const categoryHint = ({
+    wechselrichter: "solar inverter device",
+    solarspeicher:  "home battery storage system",
+    laderegler:     "solar charge controller device",
+    optimizer:      "solar power optimizer module",
+    halterung:      "solar panel mounting bracket",
+    solaranlage:    "solar panel installation",
+    solarzaun:      "solar fence panel",
+    skywind:        "small wind turbine",
+  } as Record<string, string>)[category] ?? "solar energy device";
 
-  const prompt = `Professional product photography of a ${categoryHint}, white background, studio lighting, high resolution, photorealistic, no text, no logo overlay. Product: ${productName}`;
+  const prompt = `Professional product photo of a ${categoryHint} on a clean white background, studio lighting, sharp focus, high resolution. No text, no watermarks. Product context: ${productName}`;
 
   try {
     const res = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({ model: "dall-e-3", prompt, n: 1, size: "1024x1024", quality: "standard" }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(90000),
     });
-    if (!res.ok) return null;
+
     const data = (await res.json()) as OpenAIImageResponse;
-    return data.data?.[0]?.url ?? null;
-  } catch {
-    return null;
+
+    if (!res.ok) {
+      return { url: null, error: `OpenAI ${res.status}: ${data?.error?.message ?? "unbekannter Fehler"}` };
+    }
+
+    return { url: data.data?.[0]?.url ?? null };
+  } catch (e) {
+    return { url: null, error: (e as Error).message };
   }
 }
 
 export async function resolveProductImage(
   listing: MarketListing,
   category: string,
-  options: { useDallE?: boolean } = {},
+  options: { useDallE?: boolean; useFallback?: boolean } = {},
 ): Promise<string | null> {
+  // 1. Try manufacturer website OG image
   const brand = detectBrand(listing);
-
   if (brand) {
     const pageUrl = buildProductPageUrl(brand, listing);
     if (pageUrl) {
@@ -132,10 +150,39 @@ export async function resolveProductImage(
     }
   }
 
+  // 2. Try DALL-E generation
   if (options.useDallE !== false) {
-    const generated = await generateDallEImage(listing, category);
-    if (generated) return generated;
+    const { url } = await generateDallEImage(listing, category);
+    if (url) return url;
+  }
+
+  // 3. Category fallback (Unsplash, stable URLs)
+  if (options.useFallback !== false) {
+    const fallback = CATEGORY_FALLBACKS[category] ?? CATEGORY_FALLBACKS["solaranlage"];
+    if (fallback) return fallback;
   }
 
   return null;
+}
+
+export async function resolveProductImageWithDetails(
+  listing: MarketListing,
+  category: string,
+): Promise<{ url: string | null; source: string; error?: string }> {
+  const brand = detectBrand(listing);
+  if (brand) {
+    const pageUrl = buildProductPageUrl(brand, listing);
+    if (pageUrl) {
+      const ogImage = await tryFetchOgImage(pageUrl);
+      if (ogImage) return { url: ogImage, source: "manufacturer" };
+    }
+  }
+
+  const dallE = await generateDallEImage(listing, category);
+  if (dallE.url) return { url: dallE.url, source: "dall-e" };
+
+  const fallback = CATEGORY_FALLBACKS[category] ?? CATEGORY_FALLBACKS["solaranlage"] ?? null;
+  if (fallback) return { url: fallback, source: "fallback" };
+
+  return { url: null, source: "none", error: dallE.error };
 }

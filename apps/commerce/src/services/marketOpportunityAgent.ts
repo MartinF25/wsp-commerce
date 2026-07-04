@@ -3,6 +3,7 @@ import { getPrismaClient } from "../lib/prisma";
 import { analyzeMarketListingDeal } from "./marketDealAnalyzer";
 import { generateMarketProductDraft } from "./marketProductDraftGenerator";
 import { resolveProductImage } from "./marketImageResolver";
+// resolveProductImage uses: manufacturer OG image → DALL-E → category fallback (Unsplash)
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

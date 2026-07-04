@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { getPrismaClient } from "../../lib/prisma";
 import { runDailyReport, sendDailyReportMail } from "../../services/marketOpportunityAgent";
-import { resolveProductImage } from "../../services/marketImageResolver";
+import { resolveProductImageWithDetails } from "../../services/marketImageResolver";
 import { requireAdminKey } from "../middleware/requireAdminKey";
 
 /**
@@ -99,10 +99,10 @@ adminMarketOpportunityRoutes.post("/:listingId/refresh-image", async (c) => {
     return c.json({ error: { code: "NO_PRODUCT", message: "Kein Produkt mit diesem Listing verknüpft." } }, 400);
   }
 
-  const category = listing.productCategory ?? listing.keyword ?? "solar-zubehoer";
-  const resolved = await resolveProductImage(listing, category, { useDallE: true });
+  const category = listing.productCategory ?? listing.keyword ?? "solaranlage";
+  const { url: resolved, source, error: imgError } = await resolveProductImageWithDetails(listing, category);
   if (!resolved) {
-    return c.json({ ok: false, message: "Kein Herstellerbild gefunden, DALL-E fehlgeschlagen." });
+    return c.json({ ok: false, message: "Kein Bild gefunden.", error: imgError });
   }
 
   const existing = await prisma.productImage.findFirst({
@@ -141,7 +141,7 @@ adminMarketOpportunityRoutes.post("/:listingId/refresh-image", async (c) => {
     }
   }
 
-  return c.json({ ok: true, imageUrl: resolved });
+  return c.json({ ok: true, imageUrl: resolved, source });
 });
 
 // ─── PATCH /:listingId/reject ─────────────────────────────────────────────────
