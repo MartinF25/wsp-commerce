@@ -34,9 +34,10 @@ jobs:
           push: true
           tags: marfauer2026/wsp-commerce-api:latest
 
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
       - name: Trigger Railway redeploy
-        run: |
-          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{"query":"mutation{serviceInstanceRedeploy(serviceId:\"f99ad58f-1c99-446c-97e7-0e5831eb73f2\",environmentId:\"ca453501-04bd-4d01-b67a-2a034e189cf1\")}"}'
+        run: railway redeploy --service wsp-commerce-api --yes
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
