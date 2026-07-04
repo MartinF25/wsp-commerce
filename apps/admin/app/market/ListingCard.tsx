@@ -275,11 +275,7 @@ export function ListingCard({ listing, avgPriceCents, referencePrices = [] }: Pr
             {typeof currentListing.seoPotential === "number" && (
               <span style={badgeStyle("#ede9fe", "#5b21b6")}>SEO {currentListing.seoPotential}/10</span>
             )}
-            {typeof currentListing.estimatedMargin === "number" && (
-              <span style={badgeStyle("#ecfccb", "#3f6212")}>
-                Marge ca. {currentListing.estimatedMargin.toLocaleString("de-DE")} EUR
-              </span>
-            )}
+            {false && currentListing.estimatedMargin /* moved to column */}
             {currentListing.productDraftId && (
               <span style={badgeStyle("#cffafe", "#155e75")}>Entwurf vorhanden</span>
             )}
@@ -373,10 +369,75 @@ export function ListingCard({ listing, avgPriceCents, referencePrices = [] }: Pr
             </div>
           )}
         </td>
-        <td style={{ textAlign: "right", width: 120, fontWeight: 600, color }}>
+        <td style={{ textAlign: "right", width: 110, fontWeight: 600, color }}>
           {priceDisplay}
         </td>
-        <td style={{ width: 260, textAlign: "right" }}>
+        <td style={{ textAlign: "right", width: 110 }}>
+          {(() => {
+            const vk = currentListing.suggestedSellingPrice
+              ?? (currentListing.price_cents && !currentListing.price_negotiable
+                ? Math.round(currentListing.price_cents * 1.4)
+                : null);
+            if (!vk) return <span style={{ color: "#94a3b8" }}>–</span>;
+            return (
+              <span style={{ fontWeight: 600, color: "#1d4ed8" }}>
+                {Math.round(vk / 100).toLocaleString("de-DE")} EUR
+              </span>
+            );
+          })()}
+        </td>
+        <td style={{ textAlign: "right", width: 110 }}>
+          {(() => {
+            const gross = currentListing.estimatedGrossProfit
+              ?? (currentListing.price_cents && !currentListing.price_negotiable
+                ? Math.round(currentListing.price_cents * 0.4)
+                : null);
+            if (!gross) return <span style={{ color: "#94a3b8" }}>–</span>;
+            const margeEur = Math.round(gross / 100);
+            const margePercent = currentListing.price_cents
+              ? Math.round((gross / currentListing.price_cents) * 100)
+              : 40;
+            return (
+              <span style={{ fontWeight: 700, color: margeEur >= 0 ? "#166534" : "#991b1b" }}>
+                +{margeEur.toLocaleString("de-DE")} EUR
+                <span style={{ display: "block", fontSize: 11, fontWeight: 400, color: "#64748b" }}>
+                  {margePercent}%
+                </span>
+              </span>
+            );
+          })()}
+        </td>
+        <td style={{ textAlign: "center", width: 90 }}>
+          {currentListing.listing_url ? (
+            <a
+              href={currentListing.listing_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Originalanzeige öffnen"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "4px 8px",
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                background: "#f1f5f9",
+                color: "#2563eb",
+                border: "1px solid #e2e8f0",
+                textDecoration: "none",
+              }}
+            >
+              <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              {currentListing.source ?? "KA"}
+            </a>
+          ) : (
+            <span style={{ color: "#94a3b8", fontSize: 12 }}>–</span>
+          )}
+        </td>
+        <td style={{ width: 240, textAlign: "right" }}>
           <div className="actions-row" style={{ justifyContent: "flex-end", flexWrap: "wrap" }}>
             <button
               onClick={handleEnrich}
@@ -418,16 +479,6 @@ export function ListingCard({ listing, avgPriceCents, referencePrices = [] }: Pr
             >
               {isAvailabilityPending ? "Pruefe..." : "Verfuegbarkeit"}
             </button>
-            {currentListing.listing_url && (
-              <a
-                href={currentListing.listing_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary btn-sm"
-              >
-                Anzeige -&gt;
-              </a>
-            )}
             <button
               onClick={() => setModalOpen(true)}
               className="btn btn-primary btn-sm"

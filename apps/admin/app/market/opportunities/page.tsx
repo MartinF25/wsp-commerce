@@ -132,7 +132,8 @@ export default async function OpportunitiesPage() {
                 <th style={{ textAlign: "right" }}>EK</th>
                 <th style={{ textAlign: "right" }}>VK (+40%)</th>
                 <th style={{ textAlign: "right" }}>Marge</th>
-                <th style={{ textAlign: "right", width: 260 }}>Aktion</th>
+                <th style={{ textAlign: "center", width: 80 }}>Quelle</th>
+                <th style={{ textAlign: "right", width: 200 }}>Aktion</th>
               </tr>
             </thead>
             <tbody>
@@ -146,16 +147,6 @@ export default async function OpportunitiesPage() {
                         {op.aiComment}
                       </div>
                     )}
-                    {op.listing_url && (
-                      <a
-                        href={op.listing_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: 11, color: "#2563eb" }}
-                      >
-                        Kleinanzeige →
-                      </a>
-                    )}
                   </td>
                   <td>{catBadge(op.productCategory)}</td>
                   <td style={{ textAlign: "right", ...scoreStyle(op.dealScore) }}>
@@ -168,6 +159,34 @@ export default async function OpportunitiesPage() {
                   </td>
                   <td style={{ textAlign: "right", fontSize: 13, color: "#166534", fontWeight: 600 }}>
                     +{fmt(op.estimatedGrossProfit)}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {op.listing_url ? (
+                      <a
+                        href={op.listing_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Originalanzeige öffnen"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          padding: "4px 8px",
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          background: "#f1f5f9",
+                          color: "#2563eb",
+                          border: "1px solid #e2e8f0",
+                          textDecoration: "none",
+                        }}
+                      >
+                        <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        KA
+                      </a>
+                    ) : <span style={{ color: "#94a3b8" }}>–</span>}
                   </td>
                   <td style={{ textAlign: "right" }}>
                     <OpportunityActions

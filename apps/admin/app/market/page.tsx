@@ -188,7 +188,10 @@ export default async function MarketPage({
               <tr>
                 <th style={{ width: 56 }}></th>
                 <th>Titel und Analyse</th>
-                <th style={{ textAlign: "right" }}>Preis</th>
+                <th style={{ textAlign: "right" }}>EK</th>
+                <th style={{ textAlign: "right" }}>VK (+40%)</th>
+                <th style={{ textAlign: "right" }}>Marge</th>
+                <th style={{ textAlign: "center", width: 90 }}>Quelle</th>
                 <th style={{ textAlign: "right" }}>Aktion</th>
               </tr>
             </thead>
