@@ -3,10 +3,6 @@ name: Deploy Storefront
 on:
   push:
     branches: [main]
-    paths:
-      - "apps/storefront/**"
-      - "packages/**"
-      - ".github/workflows/deploy-storefront.yml"
 
 jobs:
   deploy:
