@@ -97,30 +97,26 @@ function buildProductPageUrl(brand: string, listing: MarketListing): string | nu
   return handler ? handler(titleLower) : domain;
 }
 
-async function uploadToImgBB(tempUrl: string): Promise<string | null> {
-  const apiKey = (process.env.IMGBB_API_KEY ?? "").trim();
-  if (!apiKey) return null;
+async function uploadToCloudinary(tempUrl: string): Promise<string | null> {
+  const cloudName = (process.env.CLOUDINARY_CLOUD_NAME ?? "").trim();
+  const preset = (process.env.CLOUDINARY_UPLOAD_PRESET ?? "").trim();
+  if (!cloudName || !preset) return null;
 
   try {
-    const imgRes = await fetch(tempUrl, { signal: AbortSignal.timeout(30000) });
-    if (!imgRes.ok) return null;
-
-    const buffer = await imgRes.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString("base64");
-
     const form = new URLSearchParams();
-    form.append("image", base64);
+    form.append("file", tempUrl);
+    form.append("upload_preset", preset);
 
-    const uploadRes = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: form.toString(),
       signal: AbortSignal.timeout(30000),
     });
 
-    if (!uploadRes.ok) return null;
-    const data = (await uploadRes.json()) as { data?: { url?: string } };
-    return data?.data?.url ?? null;
+    if (!res.ok) return null;
+    const data = (await res.json()) as { secure_url?: string };
+    return data?.secure_url ?? null;
   } catch {
     return null;
   }
@@ -162,7 +158,7 @@ async function generateDallEImage(listing: MarketListing, category: string): Pro
     if (!tempUrl) return { url: null, error: "Kein URL in OpenAI-Antwort" };
 
     // DALL-E URLs expire after 1h — upload to permanent storage
-    const permanent = await uploadToImgBB(tempUrl);
+    const permanent = await uploadToCloudinary(tempUrl);
     if (permanent) return { url: permanent };
 
     // Fallback: return temp URL anyway (valid for ~1h)
