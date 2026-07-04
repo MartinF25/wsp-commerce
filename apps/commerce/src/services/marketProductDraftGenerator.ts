@@ -120,33 +120,48 @@ function buildPrompt(listing: MarketListing, priceSuggestion: number, category: 
     title: listing.title,
     description: listing.description ?? null,
     keyword: listing.keyword,
+    brand: listing.brand ?? null,
+    model: listing.model ?? null,
     location: listing.location ?? null,
     priceCents: listing.price_cents,
     priceRaw: listing.price_raw ?? null,
     dealScore: listing.dealScore ?? null,
-    recommendation: listing.recommendation ?? null,
-    riskLevel: listing.riskLevel ?? null,
-    estimatedMargin: listing.estimatedMargin ?? null,
-    seoPotential: listing.seoPotential ?? null,
     aiComment: listing.aiComment ?? null,
     inferredCategory: category,
     priceSuggestion,
   };
 
+  const categoryInstructions: Record<string, string> = {
+    wechselrichter: [
+      "Wechselrichter: Hersteller, Modell, Nennleistung (kW), Topologie (String/Hybrid/Mikro), MPP-Tracker-Anzahl, max. Eingangsspannung (V), max. Eingangsstrom (A), Wirkungsgrad (%), Schutzklasse (IP), Abmessungen, Gewicht, Garantie.",
+      "PFLICHT: technicalData MUSS mindestens 8 Eintraege haben. Nutze dein Trainingswissen ueber bekannte Modelle (z.B. GoodWe GW10K-ET: 2 MPP-Tracker, max. 1000V, 97.6% Wirkungsgrad, IP65, etc.).",
+    ].join(" "),
+    solarspeicher: [
+      "Solarspeicher: Kapazitaet (kWh brutto/netto), Zellchemie (LiFePO4/NMC), max. Lade-/Entladeleistung (kW), Rundeneffizienz (%), kompatible Wechselrichter, Schutzklasse, Gewicht, Garantie (Jahre/Zyklen).",
+      "PFLICHT: technicalData MUSS mindestens 8 Eintraege haben.",
+    ].join(" "),
+    laderegler: "Laderegler: MPPT oder PWM, Ladestrom (A), max. PV-Leistung (W), Systemspannung (V), kompatible Batterietypen, Schutzklasse. technicalData MUSS mindestens 6 Eintraege haben.",
+    optimizer: "Optimizer: Hersteller, Eingangsleistung (W), max. Eingangsspannung, Ausgangsleistung, kompatible Wechselrichter-Serie, Wirkungsgrad. technicalData MUSS mindestens 6 Eintraege haben.",
+    halterung: "Halterung: Modulgroesse/-gewicht, Dachtyp (Flachdach/Schraegedach/Boden/Fassade), Material (Alu/Edelstahl), max. Windlast, Montageart. technicalData MUSS mindestens 5 Eintraege haben.",
+    solaranlage: "Solaranlage: Nennleistung (kWp), Modulanzahl, Wechselrichter-Typ, Speicher-Option, Jahresertrag-Schaetzung, Flaeche. technicalData MUSS mindestens 6 Eintraege haben.",
+    solarzaun: "Solarzaun: Modulleistung (Wp), Modulgroesse, Zaun-Laenge/-Hoehe, Rahmentyp, Einspeisung oder Eigenverbrauch. technicalData MUSS mindestens 5 Eintraege haben.",
+    skywind: "Windkraftanlage: Nennleistung (W/kW), Rotordurchmesser, Anlaufwindgeschwindigkeit, Nennwindgeschwindigkeit, Netzanschluss (V/Hz). technicalData MUSS mindestens 5 Eintraege haben.",
+  };
+
+  const catInstruction = categoryInstructions[category] ?? "Gib alle relevanten technischen Daten an. technicalData MUSS mindestens 5 Eintraege haben.";
+
   return [
     "Du erstellst einen Produktentwurf fuer den WSP Adminbereich auf Basis eines Marktangebots.",
     "Sprache: Deutsch. SEO-optimiert. Kein Copy & Paste aus Kleinanzeigen.",
-    "Rechtlich vorsichtig formulieren. Keine Garantieversprechen uebernehmen. Keine falschen Lagerbestaende behaupten.",
-    'Der Hinweis "Verfuegbarkeit und Zustand werden vor Angebotsbestaetigung geprueft." muss sinnvoll eingebaut werden.',
-    "Solarzaun eher als Projekt- oder Anfrageprodukt formulieren.",
-    "Solarspeicher mit Fokus auf technische Daten, Kompatibilitaet und Einsatzbereich formulieren.",
-    "Solaranlagen als Set- oder Projektangebot formulieren.",
-    "SkyWind nur mit niedriger Prioritaet behandeln, da dafuer bereits Produkte existieren.",
-    "Wechselrichter: Hersteller, Leistung (W/kW), Modultyp (string/mikro/hybrid), Netzkompatibilitaet hervorheben.",
-    "Laderegler: MPPT oder PWM, Ladestrom (A), Systemspannung, kompatible Batterietypen angeben.",
-    "Optimizer/Leistungsoptimierer: Hersteller (SolarEdge, Tigo), kompatible Module, max. Eingangsleistung.",
-    "Halterungen: Modulgroesse/-gewicht, Dachtyp (Flachdach/Schraegedach/Boden), Material (Alu/Stahl), Anker-/Befestigungsart.",
-    "Wenn Preis fehlt oder verhandelbar ist, muss priceSuggestion 0 bleiben und availabilityNote auf Anfrage verweisen.",
+    "WICHTIG: Nutze dein Trainingswissen! Wenn Hersteller und Modell erkennbar sind (z.B. GoodWe GW10K-ET, Fronius Symo, SMA Sunny Tripower), ergaenze bekannte technische Daten aus deinem Wissen. Kennzeichne geschaetzte Werte mit '(typ.)' am Ende.",
+    "Rechtlich vorsichtig formulieren. Keine Garantieversprechen uebernehmen. Keine falschen Lagerbestaende.",
+    catInstruction,
+    "description: Gut strukturierter Text mit Absaetzen. Nutzen zuerst, dann technischer Kontext, dann Einsatzbereich. KEIN Hinweis auf Verfuegbarkeit im description-Feld – der steht separat.",
+    "shortDescription: 1-2 Saetze, SEO-stark, mit Hauptkeyword und Nutzen.",
+    "metaTitle: Max 60 Zeichen, Hauptkeyword zuerst, keine Wiederholung von WSP.",
+    "metaDescription: 140-155 Zeichen, Nutzen + Handlungsaufforderung.",
+    "faq: Mindestens 3 praxisnahe Fragen aus Kundenperspektive (Kompatibilitaet, Installation, Foerderung, Garantie).",
+    "Wenn Preis fehlt oder verhandelbar: priceSuggestion=0, availabilityNote auf Anfrage verweisen.",
     "Gib ausschliesslich valides JSON zurueck mit genau diesen Feldern:",
     '{"name":"","slug":"","shortDescription":"","description":"","metaTitle":"","metaDescription":"","category":"","tags":[],"technicalData":[],"faq":[],"priceSuggestion":0,"availabilityNote":""}',
     `Eingabedaten: ${JSON.stringify(payload)}`,
@@ -224,13 +239,13 @@ export async function generateMarketProductDraft(listing: MarketListing): Promis
   const tags = toStringArray(parsed.tags).slice(0, 8);
 
   const faqText = faq.length > 0
-    ? `\n\nFAQ\n${faq.map((item) => `- ${item.question}\n  ${item.answer}`).join("\n")}`
+    ? `\n\n**Häufige Fragen**\n${faq.map((item) => `**${item.question}**\n${item.answer}`).join("\n\n")}`
     : "";
   const technicalDataText = technicalData.length > 0
-    ? `\n\nTechnische Daten\n${technicalData.map((item) => `- ${item}`).join("\n")}`
+    ? `\n\n**Technische Daten**\n${technicalData.map((item) => `- ${item}`).join("\n")}`
     : "";
 
-  const description = `${baseDescription}${technicalDataText}${faqText}\n\nVerfuegbarkeit und Zustand werden vor Angebotsbestaetigung geprueft.`.trim();
+  const description = `${baseDescription}${technicalDataText}${faqText}`.trim();
 
   const metaTitle =
     typeof parsed.metaTitle === "string" && parsed.metaTitle.trim().length > 0

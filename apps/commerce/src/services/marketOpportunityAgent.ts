@@ -2,6 +2,7 @@ import type { MarketListing, MarketProductCategory } from "@prisma/client";
 import { getPrismaClient } from "../lib/prisma";
 import { analyzeMarketListingDeal } from "./marketDealAnalyzer";
 import { generateMarketProductDraft } from "./marketProductDraftGenerator";
+import { resolveProductImage } from "./marketImageResolver";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -230,15 +231,27 @@ async function createDraftForListing(
     });
   }
 
-  if (listing.image_url) {
+  const resolvedImageUrl = await resolveProductImage(listing, generatedDraft.category, { useDallE: true }).catch(() => null);
+  const finalImageUrl = resolvedImageUrl ?? listing.image_url;
+  if (finalImageUrl) {
     await prisma.productImage.create({
       data: {
         product_id: createdProduct.id,
-        url: listing.image_url,
+        url: finalImageUrl,
         alt: generatedDraft.name,
         sort_order: 0,
       },
     }).catch(() => null);
+    if (resolvedImageUrl && listing.image_url) {
+      await prisma.productImage.create({
+        data: {
+          product_id: createdProduct.id,
+          url: listing.image_url,
+          alt: `${generatedDraft.name} – Originalangebot`,
+          sort_order: 1,
+        },
+      }).catch(() => null);
+    }
   }
 
   await prisma.marketListing.update({
