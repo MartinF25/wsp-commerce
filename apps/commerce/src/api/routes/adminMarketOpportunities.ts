@@ -101,6 +101,9 @@ adminMarketOpportunityRoutes.post("/:listingId/refresh-image", async (c) => {
 
   const category = listing.productCategory ?? listing.keyword ?? "solaranlage";
   const { url: resolved, source, error: imgError } = await resolveProductImageWithDetails(listing, category);
+
+  console.log(`[refresh-image] listing=${listingId} category=${category} source=${source} url=${resolved} error=${imgError}`);
+
   if (!resolved) {
     return c.json({ ok: false, message: "Kein Bild gefunden.", error: imgError });
   }

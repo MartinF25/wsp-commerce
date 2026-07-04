@@ -97,23 +97,52 @@ function buildProductPageUrl(brand: string, listing: MarketListing): string | nu
   return handler ? handler(titleLower) : domain;
 }
 
+async function uploadToImgBB(tempUrl: string): Promise<string | null> {
+  const apiKey = (process.env.IMGBB_API_KEY ?? "").trim();
+  if (!apiKey) return null;
+
+  try {
+    const imgRes = await fetch(tempUrl, { signal: AbortSignal.timeout(30000) });
+    if (!imgRes.ok) return null;
+
+    const buffer = await imgRes.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+
+    const form = new URLSearchParams();
+    form.append("image", base64);
+
+    const uploadRes = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form.toString(),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!uploadRes.ok) return null;
+    const data = (await uploadRes.json()) as { data?: { url?: string } };
+    return data?.data?.url ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function generateDallEImage(listing: MarketListing, category: string): Promise<{ url: string | null; error?: string }> {
   const apiKey = (process.env.OPENAI_API_KEY ?? "").trim();
   if (!apiKey) return { url: null, error: "OPENAI_API_KEY nicht gesetzt" };
 
   const productName = (listing.title ?? "").trim().slice(0, 80);
   const categoryHint = ({
-    wechselrichter: "solar inverter device",
-    solarspeicher:  "home battery storage system",
-    laderegler:     "solar charge controller device",
-    optimizer:      "solar power optimizer module",
-    halterung:      "solar panel mounting bracket",
-    solaranlage:    "solar panel installation",
-    solarzaun:      "solar fence panel",
-    skywind:        "small wind turbine",
-  } as Record<string, string>)[category] ?? "solar energy device";
+    wechselrichter: "solar inverter wall-mounted device, white box with display",
+    solarspeicher:  "home battery storage unit, modern white cabinet",
+    laderegler:     "solar charge controller, compact electronic device",
+    optimizer:      "solar power optimizer, small black electronic module",
+    halterung:      "solar panel aluminum mounting bracket system",
+    solaranlage:    "solar panel array on rooftop",
+    solarzaun:      "solar fence with integrated photovoltaic panels",
+    skywind:        "small vertical axis wind turbine",
+  } as Record<string, string>)[category] ?? "solar energy electronic device";
 
-  const prompt = `Professional product photo of a ${categoryHint} on a clean white background, studio lighting, sharp focus, high resolution. No text, no watermarks. Product context: ${productName}`;
+  const prompt = `Professional product photography of a ${categoryHint}. Clean white background, soft studio lighting, sharp focus, photorealistic. No text overlays, no logos. Product: ${productName}`;
 
   try {
     const res = await fetch("https://api.openai.com/v1/images/generations", {
@@ -129,7 +158,15 @@ async function generateDallEImage(listing: MarketListing, category: string): Pro
       return { url: null, error: `OpenAI ${res.status}: ${data?.error?.message ?? "unbekannter Fehler"}` };
     }
 
-    return { url: data.data?.[0]?.url ?? null };
+    const tempUrl = data.data?.[0]?.url;
+    if (!tempUrl) return { url: null, error: "Kein URL in OpenAI-Antwort" };
+
+    // DALL-E URLs expire after 1h — upload to permanent storage
+    const permanent = await uploadToImgBB(tempUrl);
+    if (permanent) return { url: permanent };
+
+    // Fallback: return temp URL anyway (valid for ~1h)
+    return { url: tempUrl };
   } catch (e) {
     return { url: null, error: (e as Error).message };
   }
