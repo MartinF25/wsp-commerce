@@ -41,3 +41,4 @@ jobs:
         run: railway redeploy --service wsp-commerce-api --yes
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: 16150905-95f0-4e63-90a5-9caa0ff6566f
