@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { getPrismaClient } from "../../lib/prisma";
 import { runDailyReport, sendDailyReportMail } from "../../services/marketOpportunityAgent";
+import { resolveProductImage } from "../../services/marketImageResolver";
 import { requireAdminKey } from "../middleware/requireAdminKey";
 
 /**
@@ -82,6 +83,65 @@ adminMarketOpportunityRoutes.get("/prepared", async (c) => {
     })),
     total: listings.length,
   });
+});
+
+// ─── POST /:listingId/refresh-image ──────────────────────────────────────────
+
+adminMarketOpportunityRoutes.post("/:listingId/refresh-image", async (c) => {
+  const prisma = getPrismaClient();
+  const listingId = c.req.param("listingId");
+
+  const listing = await prisma.marketListing.findUnique({ where: { id: listingId } });
+  if (!listing) {
+    return c.json({ error: { code: "NOT_FOUND", message: "Listing nicht gefunden." } }, 404);
+  }
+  if (!listing.productDraftId) {
+    return c.json({ error: { code: "NO_PRODUCT", message: "Kein Produkt mit diesem Listing verknüpft." } }, 400);
+  }
+
+  const category = listing.productCategory ?? listing.keyword ?? "solar-zubehoer";
+  const resolved = await resolveProductImage(listing, category, { useDallE: true });
+  if (!resolved) {
+    return c.json({ ok: false, message: "Kein Herstellerbild gefunden, DALL-E fehlgeschlagen." });
+  }
+
+  const existing = await prisma.productImage.findFirst({
+    where: { product_id: listing.productDraftId, sort_order: 0 },
+  });
+
+  if (existing) {
+    await prisma.productImage.update({
+      where: { id: existing.id },
+      data: { url: resolved },
+    });
+  } else {
+    await prisma.productImage.create({
+      data: {
+        product_id: listing.productDraftId,
+        url: resolved,
+        alt: listing.title ?? "Produktbild",
+        sort_order: 0,
+      },
+    });
+  }
+
+  if (listing.image_url && listing.image_url !== resolved) {
+    const hasOriginal = await prisma.productImage.findFirst({
+      where: { product_id: listing.productDraftId, sort_order: 1 },
+    });
+    if (!hasOriginal) {
+      await prisma.productImage.create({
+        data: {
+          product_id: listing.productDraftId,
+          url: listing.image_url,
+          alt: `${listing.title ?? "Artikel"} – Originalangebot`,
+          sort_order: 1,
+        },
+      }).catch(() => null);
+    }
+  }
+
+  return c.json({ ok: true, imageUrl: resolved });
 });
 
 // ─── PATCH /:listingId/reject ─────────────────────────────────────────────────
