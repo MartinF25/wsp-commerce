@@ -144,7 +144,7 @@ async function selectCandidates(limit: number): Promise<MarketListing[]> {
       ],
     },
     orderBy: [
-      { dealScore: "desc" },
+      { dealScore: { sort: "desc", nulls: "last" } },
       { listed_at: "desc" },
     ],
     take: limit,
