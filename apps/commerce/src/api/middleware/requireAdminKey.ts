@@ -28,7 +28,7 @@ export const requireAdminKey: MiddlewareHandler = async (c, next) => {
       {
         error: {
           code: "UNAUTHORIZED",
-          message: "Ungültiger oder fehlender Admin-Key. [v4]",
+          message: "Ungültiger oder fehlender Admin-Key (X-Admin-Key, Bearer oder ?key=).",
           status: 401,
         },
       },
