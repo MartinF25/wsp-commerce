@@ -288,6 +288,96 @@ async function generateDallEImage(
   }
 }
 
+// ─── Kling AI Generierung ─────────────────────────────────────────────────────
+
+interface KlingTaskResponse {
+  code?: number;
+  message?: string;
+  data?: {
+    task_id?: string;
+    task_status?: "submitted" | "processing" | "succeed" | "failed";
+    task_result?: {
+      images?: Array<{ url?: string }>;
+    };
+  };
+}
+
+async function generateKlingImage(
+  listing: MarketListing,
+  category: string,
+): Promise<{ url: string | null; source: "kling-cloudinary" | "kling-temp"; error?: string }> {
+  const apiKey = (process.env.KLING_API_KEY ?? "").trim();
+  if (!apiKey) return { url: null, source: "kling-temp", error: "KLING_API_KEY nicht gesetzt" };
+
+  const prompt = buildDallEPrompt(listing, category); // gleicher Prompt funktioniert gut
+
+  try {
+    // Schritt 1: Task einreichen
+    const submitRes = await fetch("https://api.klingai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "kling-v1",
+        prompt,
+        n: 1,
+        image_count: 1,
+        aspect_ratio: "1:1",
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!submitRes.ok) {
+      const txt = await submitRes.text().catch(() => "");
+      return { url: null, source: "kling-temp", error: `Kling Submit HTTP ${submitRes.status}: ${txt}` };
+    }
+
+    const submitted = (await submitRes.json()) as KlingTaskResponse;
+    if (submitted.code !== 0) {
+      return { url: null, source: "kling-temp", error: `Kling API Fehler: ${submitted.message ?? "unbekannt"}` };
+    }
+
+    const taskId = submitted.data?.task_id;
+    if (!taskId) return { url: null, source: "kling-temp", error: "Kein task_id in Kling-Antwort" };
+
+    // Schritt 2: Pollen bis Ergebnis vorliegt (max 90s, alle 5s)
+    for (let attempt = 0; attempt < 18; attempt++) {
+      await new Promise((r) => setTimeout(r, 5000));
+
+      const pollRes = await fetch(`https://api.klingai.com/v1/images/generations/${taskId}`, {
+        headers: { "Authorization": `Bearer ${apiKey}` },
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!pollRes.ok) continue;
+
+      const poll = (await pollRes.json()) as KlingTaskResponse;
+      const status = poll.data?.task_status;
+
+      if (status === "succeed") {
+        const tempUrl = poll.data?.task_result?.images?.[0]?.url;
+        if (!tempUrl) return { url: null, source: "kling-temp", error: "Kling: succeed aber kein Bild-URL" };
+
+        // Permanent in Cloudinary speichern
+        const permanent = await uploadToCloudinary(tempUrl);
+        if (permanent) return { url: permanent, source: "kling-cloudinary" };
+        return { url: tempUrl, source: "kling-temp" };
+      }
+
+      if (status === "failed") {
+        return { url: null, source: "kling-temp", error: "Kling: Task fehlgeschlagen" };
+      }
+      // submitted / processing → weiter pollen
+    }
+
+    return { url: null, source: "kling-temp", error: "Kling: Timeout nach 90s" };
+  } catch (e) {
+    return { url: null, source: "kling-temp", error: (e as Error).message };
+  }
+}
+
 // ─── Kleinanzeigen URL Erkennung ──────────────────────────────────────────────
 
 export function isKleinanzeigenUrl(url: string | null | undefined): boolean {
@@ -307,18 +397,22 @@ export async function resolveProductImage(
   listing: MarketListing,
   category: string,
 ): Promise<string | null> {
-  // 1. Herstellerwebseite (nur wenn Brand + Model aus Knowledge Extraction bekannt)
+  // 1. Herstellerwebseite (nur wenn Brand + Model bekannt)
   const brand = detectBrand(listing);
   if (brand && listing.model) {
     const mfImg = await tryManufacturerImage(brand, listing);
     if (mfImg) return mfImg;
   }
 
-  // 2. DALL-E mit reichhaltigem Prompt → Cloudinary Upload
-  const { url } = await generateDallEImage(listing, category);
-  if (url) return url;
+  // 2. Kling AI (realistische Produktfotos, async) → Cloudinary
+  const klingResult = await generateKlingImage(listing, category);
+  if (klingResult.url) return klingResult.url;
 
-  // 3. Kein Bild (bewusste Entscheidung – kein KA-Bild, kein Unsplash-Fallback)
+  // 3. DALL-E HD als Fallback → Cloudinary
+  const dalleResult = await generateDallEImage(listing, category);
+  if (dalleResult.url) return dalleResult.url;
+
+  // 4. Kein Bild
   return null;
 }
 
@@ -332,8 +426,11 @@ export async function resolveProductImageWithDetails(
     if (mfImg) return { url: mfImg, source: "manufacturer" };
   }
 
-  const result = await generateDallEImage(listing, category);
-  if (result.url) return { url: result.url, source: result.source };
+  const klingResult = await generateKlingImage(listing, category);
+  if (klingResult.url) return { url: klingResult.url, source: klingResult.source };
 
-  return { url: null, source: "none", error: result.error };
+  const dalleResult = await generateDallEImage(listing, category);
+  if (dalleResult.url) return { url: dalleResult.url, source: dalleResult.source };
+
+  return { url: null, source: "none", error: klingResult.error ?? dalleResult.error };
 }
