@@ -16,9 +16,12 @@ export const requireAdminKey: MiddlewareHandler = async (c, next) => {
     );
   }
 
-  const provided = c.req.header("X-Admin-Key");
+  const provided =
+    c.req.header("X-Admin-Key") ??
+    c.req.header("Authorization")?.replace(/^Bearer\s+/i, "") ??
+    c.req.query("key");
 
-  if (!provided || provided !== secret) {
+  if (!provided || provided.trim() !== secret) {
     return c.json(
       {
         error: {
