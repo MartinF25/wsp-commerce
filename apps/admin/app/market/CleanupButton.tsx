@@ -5,7 +5,7 @@ import { cleanupListings } from "./actions";
 
 export function CleanupButton() {
   const [isPending, setIsPending] = useState(false);
-  const [result, setResult] = useState<{ deleted: number; reclassified: number } | null>(null);
+  const [result, setResult] = useState<{ deleted: number; reclassified: number; irrelevantDeleted: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleCleanup() {
@@ -30,7 +30,9 @@ export function CleanupButton() {
       </button>
       {result && (
         <span className="listing-meta">
-          {result.deleted} gelöscht · {result.reclassified} neu klassifiziert
+          {result.deleted} gelöscht
+          {result.irrelevantDeleted > 0 ? ` (davon ${result.irrelevantDeleted} irrelevant)` : ""}
+          {" · "}{result.reclassified} neu klassifiziert
         </span>
       )}
       {error && <span style={{ fontSize: 12, color: "#991b1b" }}>{error}</span>}

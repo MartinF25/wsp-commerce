@@ -334,6 +334,21 @@ adminMarketListingRoutes.post("/bulk", async (c) => {
 
 const VALID_KEYWORDS = ["skywind", "solarzaun", "solaranlage", "solarspeicher", "wechselrichter", "laderegler", "optimizer", "halterung"];
 
+// Begriffe, die das Hauptprodukt einer Anzeige als für uns irrelevant kennzeichnen
+const IRRELEVANT_TITLE_TERMS = [
+  "wohnmobil", "wohnwagen", "camper", "caravan", "kastenwagen",
+  "wohnhaus", "einfamilienhaus", "doppelhaus", "reihenhaus", "bungalow", "mehrfamilienhaus",
+  "grundstück", "baugrundstück", "immobilie", "eigentumswohnung", "mietwohnung",
+  "motorrad", "oldtimer", "pkw", "anhänger", "trailer",
+  "möbel", "küche", "sofa", "schrank",
+];
+
+// Falls der Titel dennoch Solar/Wind erwähnt, behalten wir das Listing
+const SOLAR_WIND_INDICATORS = [
+  "solar", "pv", "photovoltaik", "wechselrichter", "speicher", "akku",
+  "batterie", "windkraft", "windanlage", "skywind", "solarzaun", "laderegler",
+];
+
 adminMarketListingRoutes.post("/cleanup", async (c) => {
   const prisma = getPrismaClient();
 
@@ -378,10 +393,32 @@ adminMarketListingRoutes.post("/cleanup", async (c) => {
     await prisma.marketListing.update({ where: { id }, data: { keyword } });
   }
 
+  // Step 3: Inhaltlich irrelevante Listings löschen (Wohnmobile, Häuser, etc.)
+  // Nur Listings ohne verknüpften Produktentwurf werden gelöscht.
+  const remaining = await prisma.marketListing.findMany({
+    where: { productDraftId: null },
+    select: { id: true, title: true },
+  });
+
+  const irrelevantIds = remaining
+    .filter(({ title }) => {
+      const lower = title.toLowerCase();
+      const hasIrrelevant = IRRELEVANT_TITLE_TERMS.some((t) => lower.includes(t));
+      if (!hasIrrelevant) return false;
+      const hasSolar = SOLAR_WIND_INDICATORS.some((s) => lower.includes(s));
+      return !hasSolar;
+    })
+    .map(({ id }) => id);
+
+  const { count: irrelevantDeleted } = await prisma.marketListing.deleteMany({
+    where: { id: { in: irrelevantIds } },
+  });
+
   return c.json({
     ok: true,
-    deleted: invalidDeleted + falsePositivesDeleted,
+    deleted: invalidDeleted + falsePositivesDeleted + irrelevantDeleted,
     reclassified: toReclassify.length,
+    irrelevantDeleted,
   });
 });
 
