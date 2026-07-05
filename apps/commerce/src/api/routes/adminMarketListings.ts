@@ -422,7 +422,117 @@ adminMarketListingRoutes.post("/cleanup", async (c) => {
   });
 });
 
-// ─── DELETE / ────────────────────────────────────────────────────────────────
+// ─── GET /needs-images ───────────────────────────────────────────────────────
+// Gibt Listings zurück, deren Produktentwurf kein Bild hat oder ein KA-Bild hat.
+// Wird vom n8n Kling-Workflow verwendet.
+
+adminMarketListingRoutes.get("/needs-images", async (c) => {
+  const prisma = getPrismaClient();
+  const limit = Math.min(Number(c.req.query("limit") ?? "10"), 20);
+
+  const listings = await prisma.marketListing.findMany({
+    where: {
+      productDraftId: { not: null },
+      opportunityStatus: { not: "rejected" },
+    },
+    select: {
+      id: true,
+      title: true,
+      keyword: true,
+      productCategory: true,
+      productDraftId: true,
+      brand: true,
+      model: true,
+      productType: true,
+      productSeries: true,
+    },
+    orderBy: { dailyReportAt: "desc" },
+    take: limit * 5, // mehr holen, dann filtern
+  });
+
+  // Für jedes Listing prüfen ob das verknüpfte Produkt kein oder ein KA-Bild hat
+  const results = [];
+  for (const l of listings) {
+    if (!l.productDraftId) continue;
+    const img = await prisma.productImage.findFirst({
+      where: { product_id: l.productDraftId, sort_order: 0 },
+      select: { url: true },
+    });
+    const needsImage =
+      !img?.url ||
+      img.url.includes("kleinanzeigen.de") ||
+      img.url.includes("ebay-kleinanzeigen.de") ||
+      img.url.includes("i.ebayimg.com") ||
+      img.url.includes("ebayimg.com");
+
+    if (needsImage) {
+      results.push({
+        id: l.id,
+        title: l.title,
+        keyword: l.keyword,
+        category: l.productCategory ?? l.keyword ?? "solaranlage",
+        productDraftId: l.productDraftId,
+        brand: l.brand,
+        model: l.model,
+        productType: l.productType,
+        productSeries: l.productSeries,
+        currentImageUrl: img?.url ?? null,
+      });
+    }
+    if (results.length >= limit) break;
+  }
+
+  return c.json({ data: results, total: results.length });
+});
+
+// ─── POST /:id/set-image ─────────────────────────────────────────────────────
+// Setzt das Produktbild eines Listings direkt (für n8n-Workflows).
+
+adminMarketListingRoutes.post("/:listingId/set-image", async (c) => {
+  const prisma = getPrismaClient();
+  const listingId = c.req.param("listingId");
+  const body = await c.req.json().catch(() => null) as { imageUrl?: string; source?: string } | null;
+  const imageUrl = body?.imageUrl?.trim();
+  const source = body?.source ?? "kling-n8n";
+
+  if (!imageUrl) {
+    return c.json({ error: { code: "INVALID_BODY", message: "imageUrl ist erforderlich." } }, 422);
+  }
+
+  const listing = await prisma.marketListing.findUnique({
+    where: { id: listingId },
+    select: { productDraftId: true, title: true },
+  });
+
+  if (!listing?.productDraftId) {
+    return c.json({ error: { code: "NO_PRODUCT", message: "Kein Produktentwurf verknüpft." } }, 404);
+  }
+
+  const existing = await prisma.productImage.findFirst({
+    where: { product_id: listing.productDraftId, sort_order: 0 },
+    select: { id: true },
+  });
+
+  if (existing) {
+    await prisma.productImage.update({
+      where: { id: existing.id },
+      data: { url: imageUrl, alt: listing.title },
+    });
+  } else {
+    await prisma.productImage.create({
+      data: {
+        product_id: listing.productDraftId,
+        url: imageUrl,
+        alt: listing.title,
+        sort_order: 0,
+      },
+    });
+  }
+
+  return c.json({ ok: true, listingId, productId: listing.productDraftId, source, imageUrl });
+});
+
+// ─── POST /analyze-deal ───────────────────────────────────────────────────────
 
 adminMarketListingRoutes.post("/analyze-deal", async (c) => {
   const prisma = getPrismaClient();
