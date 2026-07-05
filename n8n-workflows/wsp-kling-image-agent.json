@@ -43,11 +43,16 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "https://commerce-api-production-614e.up.railway.app/api/admin/market-listings/needs-images?key={{ $vars.WSP_ADMIN_KEY }}",
+        "url": "https://commerce-api-production-614e.up.railway.app/api/admin/market-listings/needs-images",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": []
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.WSP_ADMIN_KEY }}"
+            }
+          ]
         },
         "sendQuery": true,
         "queryParameters": {
@@ -428,11 +433,15 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "=https://commerce-api-production-614e.up.railway.app/api/admin/market-listings/{{ $('Task-ID merken').first().json.id }}/set-image?key={{ $vars.WSP_ADMIN_KEY }}",
+        "url": "=https://commerce-api-production-614e.up.railway.app/api/admin/market-listings/{{ $('Task-ID merken').first().json.id }}/set-image",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.WSP_ADMIN_KEY }}"
+            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -458,11 +467,15 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "=https://commerce-api-production-614e.up.railway.app/api/admin/market-listings/{{ $('Task-ID merken').first().json.id }}/set-image?key={{ $vars.WSP_ADMIN_KEY }}",
+        "url": "=https://commerce-api-production-614e.up.railway.app/api/admin/market-listings/{{ $('Task-ID merken').first().json.id }}/set-image",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.WSP_ADMIN_KEY }}"
+            },
             {
               "name": "Content-Type",
               "value": "application/json"

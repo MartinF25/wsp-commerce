@@ -46,14 +46,14 @@ export function createApp() {
     cors({
       origin: process.env.CORS_ORIGIN ?? "*",
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowHeaders: ["Content-Type", "x-api-key", "X-Admin-Key"],
+      allowHeaders: ["Content-Type", "x-api-key", "X-Admin-Key", "Authorization"],
     })
   );
 
   // ─── Health ─────────────────────────────────────────────────────────────────
 
   app.get("/health", (c) =>
-    c.json({ status: "ok", service: "commerce", version: "f26f174", ts: new Date().toISOString() })
+    c.json({ status: "ok", service: "commerce", version: "bb8656b", ts: new Date().toISOString() })
   );
 
   // ─── Routen ─────────────────────────────────────────────────────────────────
