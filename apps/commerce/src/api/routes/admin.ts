@@ -42,11 +42,11 @@
  */
 
 import { Hono } from "hono";
-import type { MiddlewareHandler } from "hono";
 import { Prisma } from "@prisma/client";
 import { getPrismaClient } from "../../lib/prisma";
 import { CatalogError } from "../../types";
 import { BlogService } from "../../services/blogService";
+import { requireAdminKey } from "../middleware/requireAdminKey";
 import {
   BlogPostInputSchema,
   BlogPostStatusInputSchema,
@@ -82,42 +82,6 @@ function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
-
-// ─── Auth-Middleware ──────────────────────────────────────────────────────────
-
-const requireAdminKey: MiddlewareHandler = async (c, next) => {
-  const secret = process.env.ADMIN_SECRET;
-
-  if (!secret) {
-    return c.json(
-      {
-        error: {
-          code: "ADMIN_NOT_CONFIGURED",
-          message: "Admin-API ist nicht konfiguriert. ADMIN_SECRET setzen.",
-          status: 503,
-        },
-      },
-      503
-    );
-  }
-
-  const provided = c.req.header("X-Admin-Key");
-
-  if (!provided || provided !== secret) {
-    return c.json(
-      {
-        error: {
-          code: "UNAUTHORIZED",
-          message: "Ungültiger oder fehlender X-Admin-Key Header.",
-          status: 401,
-        },
-      },
-      401
-    );
-  }
-
-  await next();
-};
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 
