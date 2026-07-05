@@ -104,6 +104,8 @@ export function ListingCard({ listing, avgPriceCents, referencePrices = [] }: Pr
   const [isDraftPending, startDraftTransition] = useTransition();
   const [isAvailabilityPending, startAvailabilityTransition] = useTransition();
   const [isEnrichPending, startEnrichTransition] = useTransition();
+  const [isApprovePending, startApproveTransition] = useTransition();
+  const [approveSuccess, setApproveSuccess] = useState(false);
 
   const priceDisplay = formatPrice(currentListing.price_cents, currentListing.price_negotiable);
   const color = priceColor(currentListing.price_cents, avgPriceCents);
@@ -170,6 +172,25 @@ export function ListingCard({ listing, avgPriceCents, referencePrices = [] }: Pr
           setCurrentListing(body.data.listing as MarketListing);
         }
 
+        router.refresh();
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    });
+  }
+
+  function handleApprove() {
+    setError(null);
+    startApproveTransition(async () => {
+      try {
+        const res = await fetch(`/api/admin/market/opportunities/${currentListing.id}/approve`, {
+          method: "PATCH",
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(body?.error?.message ?? `Freigabe fehlgeschlagen (HTTP ${res.status})`);
+        }
+        setApproveSuccess(true);
         router.refresh();
       } catch (e) {
         setError((e as Error).message);
@@ -472,6 +493,24 @@ export function ListingCard({ listing, avgPriceCents, referencePrices = [] }: Pr
                   ? "Entwurf erstellt..."
                   : "Produktentwurf"}
             </button>
+            {currentListing.productDraftId && (
+              <button
+                onClick={handleApprove}
+                disabled={isApprovePending || approveSuccess || currentListing.productStatus === "active"}
+                className="btn btn-sm"
+                style={
+                  approveSuccess || currentListing.productStatus === "active"
+                    ? { background: "#dcfce7", color: "#166534", borderColor: "#86efac", cursor: "default" }
+                    : { background: "#166534", color: "#fff", borderColor: "#166534" }
+                }
+              >
+                {approveSuccess || currentListing.productStatus === "active"
+                  ? "Eingereicht ✓"
+                  : isApprovePending
+                    ? "Wird eingereicht..."
+                    : "Einreichen"}
+              </button>
+            )}
             <button
               onClick={handleCheckAvailability}
               disabled={isAvailabilityPending}
