@@ -16,10 +16,11 @@ export const requireAdminKey: MiddlewareHandler = async (c, next) => {
     );
   }
 
+  const urlKey = new URL(c.req.url).searchParams.get("key") ?? undefined;
   const provided =
     c.req.header("X-Admin-Key") ??
     c.req.header("Authorization")?.replace(/^Bearer\s+/i, "") ??
-    c.req.query("key");
+    urlKey;
 
   if (!provided || provided.trim() !== secret) {
     return c.json(
