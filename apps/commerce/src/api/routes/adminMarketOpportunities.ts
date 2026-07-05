@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import { getPrismaClient } from "../../lib/prisma";
 import { runDailyReport, sendDailyReportMail } from "../../services/marketOpportunityAgent";
-import { resolveProductImageWithDetails } from "../../services/marketImageResolver";
+import { generateMarketProductDraft } from "../../services/marketProductDraftGenerator";
+import { resolveProductImageWithDetails, isKleinanzeigenUrl } from "../../services/marketImageResolver";
 import { requireAdminKey } from "../middleware/requireAdminKey";
+import { computeOpportunityScore } from "../../utils/opportunityScoreUtils";
 
 /**
  * Admin Market Opportunity Routes
@@ -61,9 +63,14 @@ adminMarketOpportunityRoutes.get("/prepared", async (c) => {
       keyword: l.keyword,
       productCategory: l.productCategory,
       dealScore: l.dealScore,
+      opportunityScore: computeOpportunityScore(l.dealScore, l.dataCompletenessScore, l.price_cents, l.price_negotiable),
+      dataCompletenessScore: l.dataCompletenessScore,
+      enrichmentConfidence: l.enrichmentConfidence,
       riskLevel: l.riskLevel,
       recommendation: l.recommendation,
       aiComment: l.aiComment,
+      brand: l.brand,
+      model: l.model,
       purchasePrice: l.purchasePrice,
       markupPercent: l.markupPercent,
       suggestedSellingPrice: l.suggestedSellingPrice,
@@ -79,6 +86,7 @@ adminMarketOpportunityRoutes.get("/prepared", async (c) => {
       location: l.location,
       image_url: l.image_url,
       listed_at: l.listed_at?.toISOString() ?? null,
+      scraped_at: l.scraped_at.toISOString(),
       sourceStatus: l.sourceStatus,
     })),
     total: listings.length,
@@ -185,6 +193,104 @@ adminMarketOpportunityRoutes.patch("/:listingId/reject", async (c) => {
   return c.json({ ok: true, data: updated });
 });
 
+// ─── PATCH /:listingId/approve ────────────────────────────────────────────────
+
+adminMarketOpportunityRoutes.patch("/:listingId/approve", async (c) => {
+  const prisma = getPrismaClient();
+  const listingId = c.req.param("listingId");
+
+  const listing = await prisma.marketListing.findUnique({
+    where: { id: listingId },
+    select: { id: true, productDraftId: true, opportunityStatus: true },
+  });
+
+  if (!listing) {
+    return c.json({ error: { code: "NOT_FOUND", message: "Listing nicht gefunden." } }, 404);
+  }
+  if (!listing.productDraftId) {
+    return c.json({ error: { code: "NO_PRODUCT", message: "Kein Produktentwurf mit diesem Listing verknüpft." } }, 400);
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: listing.productDraftId },
+    select: { id: true, status: true },
+  });
+
+  if (!product) {
+    return c.json({ error: { code: "PRODUCT_NOT_FOUND", message: "Produktentwurf wurde nicht gefunden." } }, 404);
+  }
+
+  await prisma.product.update({
+    where: { id: product.id },
+    data: { status: "active" },
+  });
+
+  await prisma.marketListing.update({
+    where: { id: listingId },
+    data: { productStatus: "active" },
+  });
+
+  return c.json({ ok: true, productId: product.id, productStatus: "active" });
+});
+
+// ─── POST /:listingId/refresh-seo ─────────────────────────────────────────────
+
+adminMarketOpportunityRoutes.post("/:listingId/refresh-seo", async (c) => {
+  const prisma = getPrismaClient();
+  const listingId = c.req.param("listingId");
+
+  const listing = await prisma.marketListing.findUnique({ where: { id: listingId } });
+
+  if (!listing) {
+    return c.json({ error: { code: "NOT_FOUND", message: "Listing nicht gefunden." } }, 404);
+  }
+  if (!listing.productDraftId) {
+    return c.json({ error: { code: "NO_PRODUCT", message: "Kein Produktentwurf mit diesem Listing verknüpft." } }, 400);
+  }
+
+  const draft = await generateMarketProductDraft(listing);
+
+  const locales = ["de", "en", "es"] as const;
+  const productId = listing.productDraftId;
+
+  for (const locale of locales) {
+    const t = draft.translations[locale];
+    await prisma.productTranslation.upsert({
+      where: { product_id_locale: { product_id: productId, locale } },
+      update: {
+        name: t.name,
+        short_description: t.shortDescription,
+        description: t.description,
+        meta_title: t.metaTitle,
+        meta_description: t.metaDescription,
+        features: t.technicalData,
+      },
+      create: {
+        product_id: productId,
+        locale,
+        name: t.name,
+        short_description: t.shortDescription,
+        description: t.description,
+        meta_title: t.metaTitle,
+        meta_description: t.metaDescription,
+        features: t.technicalData,
+        delivery_note: t.availabilityNote,
+      },
+    });
+  }
+
+  return c.json({
+    ok: true,
+    productId,
+    localesUpdated: locales,
+    updated: {
+      name: draft.translations.de.name,
+      metaTitle: draft.translations.de.metaTitle,
+      metaDescription: draft.translations.de.metaDescription,
+    },
+  });
+});
+
 // ─── PATCH /:listingId/restore ────────────────────────────────────────────────
 
 adminMarketOpportunityRoutes.patch("/:listingId/restore", async (c) => {
@@ -211,4 +317,186 @@ adminMarketOpportunityRoutes.patch("/:listingId/restore", async (c) => {
   });
 
   return c.json({ ok: true, data: updated });
+});
+
+// ─── POST /batch-refresh-images ───────────────────────────────────────────────
+// Findet Produkt-Drafts mit Kleinanzeigen-Bildern oder ohne Bild.
+// Generiert für jedes Produkt ein neues DALL-E HD Bild → Cloudinary.
+// Limit: max 20 pro Lauf (~10–30 s pro Bild).
+
+adminMarketOpportunityRoutes.post("/batch-refresh-images", async (c) => {
+  const prisma = getPrismaClient();
+
+  let body: Record<string, unknown> = {};
+  try { body = await c.req.json(); } catch { /* optional */ }
+
+  const limit = typeof body.limit === "number" ? Math.min(body.limit, 20) : 10;
+  // mode "ka-images": ersetze KA-Bilder + Produkte ohne Bild
+  // mode "no-image": nur Produkte ohne Bild
+  const mode = body.mode === "no-image" ? "no-image" : "ka-images";
+
+  const listings = await prisma.marketListing.findMany({
+    where: {
+      productDraftId: { not: null },
+      productStatus: "draft",
+    },
+    select: {
+      id: true,
+      productDraftId: true,
+      productCategory: true,
+      keyword: true,
+      title: true,
+      brand: true,
+      model: true,
+      productType: true,
+      productSeries: true,
+      description: true,
+      price_cents: true,
+      price_negotiable: true,
+      listing_url: true,
+      location: true,
+      plz: true,
+      dealScore: true,
+      aiComment: true,
+      dataCompletenessScore: true,
+      enrichmentConfidence: true,
+      enrichmentMetadata: true,
+      analyzedAt: true,
+      sourceStatus: true,
+      scraped_at: true,
+      created_at: true,
+    },
+    take: 200,
+  });
+
+  const results: Array<{
+    listingId: string;
+    productId: string;
+    title: string;
+    action: string;
+    imageUrl: string | null;
+    source: string;
+    error?: string;
+  }> = [];
+
+  let processed = 0;
+
+  for (const l of listings) {
+    if (processed >= limit) break;
+
+    const productId = l.productDraftId!;
+
+    const images = await prisma.productImage.findMany({
+      where: { product_id: productId },
+      orderBy: { sort_order: "asc" },
+    });
+
+    const primaryImage = images.find((img) => img.sort_order === 0);
+    const primaryUrl = primaryImage?.url ?? null;
+
+    const needsRefresh =
+      mode === "no-image"
+        ? !primaryUrl
+        : !primaryUrl || isKleinanzeigenUrl(primaryUrl);
+
+    if (!needsRefresh) continue;
+
+    processed++;
+
+    const fullListing = {
+      id: l.id,
+      ad_id: l.id,
+      source: "kleinanzeigen",
+      keyword: l.keyword,
+      title: l.title,
+      price_raw: null,
+      price_cents: l.price_cents,
+      price_negotiable: l.price_negotiable,
+      description: l.description ?? null,
+      location: l.location ?? null,
+      plz: l.plz ?? null,
+      listing_url: l.listing_url ?? null,
+      image_url: null,
+      shipping: null,
+      listed_at: null,
+      dealScore: l.dealScore ?? null,
+      recommendation: null,
+      riskLevel: null,
+      productCategory: l.productCategory ?? null,
+      estimatedMargin: null,
+      seoPotential: null,
+      aiComment: l.aiComment ?? null,
+      analyzedAt: l.analyzedAt ?? null,
+      productDraftId: l.productDraftId ?? null,
+      productCreatedAt: null,
+      productStatus: null,
+      sourceStatus: l.sourceStatus ?? null,
+      lastAvailabilityCheckAt: null,
+      lastKnownPrice: null,
+      currentPrice: null,
+      priceChanged: false,
+      priceChangeAmount: null,
+      availabilityNote: null,
+      syncStatus: null,
+      purchasePrice: null,
+      markupPercent: null,
+      suggestedSellingPrice: null,
+      estimatedGrossProfit: null,
+      pricingNote: null,
+      opportunityStatus: null,
+      dailyReportAt: null,
+      rejectedAt: null,
+      rejectedReason: null,
+      scraped_at: l.scraped_at,
+      created_at: l.created_at,
+      brand: l.brand ?? null,
+      model: l.model ?? null,
+      productSeries: l.productSeries ?? null,
+      productType: l.productType ?? null,
+      subcategory: null,
+      dataCompletenessScore: l.dataCompletenessScore ?? null,
+      enrichmentConfidence: l.enrichmentConfidence ?? null,
+      enrichedAt: null,
+      enrichmentMetadata: l.enrichmentMetadata ?? null,
+    } as Parameters<typeof resolveProductImageWithDetails>[0];
+
+    const category = (l.productCategory ?? l.keyword ?? "solaranlage") as string;
+    const { url, source, error } = await resolveProductImageWithDetails(fullListing, category);
+
+    if (!url) {
+      results.push({ listingId: l.id, productId, title: l.title, action: "skipped", imageUrl: null, source, error });
+      continue;
+    }
+
+    if (primaryImage && isKleinanzeigenUrl(primaryImage.url)) {
+      await prisma.productImage.update({ where: { id: primaryImage.id }, data: { url } });
+    } else if (!primaryImage) {
+      const translation = await prisma.productTranslation.findUnique({
+        where: { product_id_locale: { product_id: productId, locale: "de" } },
+        select: { name: true },
+      });
+      await prisma.productImage.create({
+        data: { product_id: productId, url, alt: translation?.name ?? l.title, sort_order: 0 },
+      });
+    }
+
+    // KA-Sekundärbild entfernen
+    const secondaryKaImage = images.find((img) => img.sort_order > 0 && isKleinanzeigenUrl(img.url));
+    if (secondaryKaImage) {
+      await prisma.productImage.delete({ where: { id: secondaryKaImage.id } }).catch(() => null);
+    }
+
+    results.push({ listingId: l.id, productId, title: l.title, action: "updated", imageUrl: url, source });
+
+    await new Promise((r) => setTimeout(r, 500));
+  }
+
+  return c.json({
+    ok: true,
+    mode,
+    processed,
+    updated: results.filter((r) => r.action === "updated").length,
+    skipped: results.filter((r) => r.action === "skipped").length,
+    results,
+  });
 });

@@ -5,17 +5,7 @@ interface OpenAIImageResponse {
   error?: { message?: string; code?: string };
 }
 
-// Category fallback images from Unsplash (stable CDN URLs, no auth needed)
-const CATEGORY_FALLBACKS: Record<string, string> = {
-  wechselrichter:  "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
-  solarspeicher:   "https://images.unsplash.com/photo-1584677626646-7c8f83690304?w=800&q=80",
-  solaranlage:     "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=800&q=80",
-  solarzaun:       "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=800&q=80",
-  laderegler:      "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
-  optimizer:       "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
-  halterung:       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
-  skywind:         "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80",
-};
+// ─── Hersteller-Domains ───────────────────────────────────────────────────────
 
 const BRAND_DOMAINS: Record<string, string> = {
   goodwe:    "https://en.goodwe.com",
@@ -23,12 +13,11 @@ const BRAND_DOMAINS: Record<string, string> = {
   sma:       "https://www.sma.de",
   solaredge: "https://www.solaredge.com",
   huawei:    "https://solar.huawei.com",
-  sungrow:   "https://www.sungrowpower.com",
+  sungrow:   "https://en.sungrowpower.com",
   growatt:   "https://www.growatt.com",
   victron:   "https://www.victronenergy.com",
   enphase:   "https://enphase.com",
   tigo:      "https://www.tigoenergy.com",
-  lg:        "https://www.lgessbattery.com",
   byd:       "https://www.bydbatterybox.com",
   pylontech: "https://www.pylontech.com.cn",
   anker:     "https://www.anker.com",
@@ -41,11 +30,66 @@ const BRAND_DOMAINS: Record<string, string> = {
 };
 
 function detectBrand(listing: MarketListing): string | null {
+  const stored = (listing.brand ?? "").toLowerCase().trim();
+  if (stored && BRAND_DOMAINS[stored]) return stored;
+
   const text = `${listing.title ?? ""} ${listing.description ?? ""}`.toLowerCase();
   for (const brand of Object.keys(BRAND_DOMAINS)) {
     if (text.includes(brand)) return brand;
   }
   return null;
+}
+
+// ─── Hersteller-Produktseite aufrufen ────────────────────────────────────────
+
+function buildProductPageUrls(brand: string, listing: MarketListing): string[] {
+  const domain = BRAND_DOMAINS[brand];
+  if (!domain) return [];
+
+  const model = (listing.model ?? "").trim();
+  const modelSlug = model.toLowerCase().replace(/\s+/g, "-");
+  const titleLower = (listing.title ?? "").toLowerCase();
+
+  const candidates: string[] = [];
+
+  if (model) {
+    candidates.push(
+      `${domain}/product/${modelSlug}`,
+      `${domain}/products/${modelSlug}`,
+      `${domain}/en/products/${modelSlug}`,
+      `${domain}/de/produkte/${modelSlug}`,
+    );
+  }
+
+  // Brand-spezifische Patterns
+  switch (brand) {
+    case "goodwe": {
+      const m = titleLower.match(/gw[\d]+-[a-z0-9]+/i);
+      if (m) candidates.push(`${domain}/product/${m[0].toLowerCase()}`);
+      candidates.push(`${domain}/inverter`);
+      break;
+    }
+    case "fronius":
+      if (titleLower.includes("symo")) candidates.push(`${domain}/en/products/inverters/symo`);
+      else if (titleLower.includes("primo")) candidates.push(`${domain}/en/products/inverters/primo`);
+      else candidates.push(`${domain}/en/products/inverters`);
+      break;
+    case "sma":
+      if (titleLower.includes("tripower")) candidates.push(`${domain}/en/products/sma-product-range/inverters/string-inverters/sunny-tripower`);
+      else if (titleLower.includes("sunny boy")) candidates.push(`${domain}/en/products/sma-product-range/inverters/string-inverters/sunny-boy`);
+      else candidates.push(`${domain}/en/products`);
+      break;
+    case "sungrow":
+      candidates.push(`${domain}/product/list`);
+      break;
+    case "hoymiles":
+      candidates.push(`${domain}/products`);
+      break;
+    default:
+      candidates.push(domain);
+  }
+
+  return [...new Set(candidates)];
 }
 
 async function tryFetchOgImage(url: string): Promise<string | null> {
@@ -56,46 +100,123 @@ async function tryFetchOgImage(url: string): Promise<string | null> {
     });
     if (!res.ok) return null;
     const html = await res.text();
-    const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-    return match?.[1] ?? null;
+
+    const ogMatch =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ??
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+
+    return ogMatch?.[1] ?? null;
   } catch {
     return null;
   }
 }
 
-function buildProductPageUrl(brand: string, listing: MarketListing): string | null {
-  const domain = BRAND_DOMAINS[brand];
-  if (!domain) return null;
-
-  const titleLower = (listing.title ?? "").toLowerCase();
-  const modelPatterns: Record<string, (title: string) => string | null> = {
-    goodwe: (t) => {
-      const m = t.match(/gw[\d]+-[a-z]+/i);
-      return m ? `${domain}/product/${m[0].toLowerCase()}` : `${domain}/inverter`;
-    },
-    fronius: (t) => {
-      if (t.includes("symo")) return `${domain}/en/products/inverters/symo`;
-      if (t.includes("primo")) return `${domain}/en/products/inverters/primo`;
-      if (t.includes("eco")) return `${domain}/en/products/inverters/eco`;
-      return `${domain}/en/products/inverters`;
-    },
-    sma: (t) => {
-      if (t.includes("sunny tripower")) return `${domain}/en/products/sma-product-range/inverters/string-inverters/sunny-tripower`;
-      if (t.includes("sunny boy")) return `${domain}/en/products/sma-product-range/inverters/string-inverters/sunny-boy`;
-      return `${domain}/en/products`;
-    },
-    solaredge: (t) => {
-      if (t.includes("optimizer") || t.includes("optimirer")) return `${domain}/us/products/power-optimizer`;
-      return `${domain}/us/products/inverters`;
-    },
-    growatt: () => `${domain}/solution/storage`,
-    huawei:  () => `${domain}/en/products/commercial-pv`,
-  };
-
-  const handler = modelPatterns[brand];
-  return handler ? handler(titleLower) : domain;
+async function tryManufacturerImage(brand: string, listing: MarketListing): Promise<string | null> {
+  const urls = buildProductPageUrls(brand, listing);
+  for (const url of urls.slice(0, 3)) {
+    const img = await tryFetchOgImage(url);
+    if (img) return img;
+  }
+  return null;
 }
+
+// ─── DALL-E Prompt Builder ────────────────────────────────────────────────────
+
+interface CategoryArtDirection {
+  subject: (brand: string | null, model: string | null, productType: string | null) => string;
+  setting: string;
+  detail: string;
+}
+
+const CATEGORY_ART: Record<string, CategoryArtDirection> = {
+  wechselrichter: {
+    subject: (brand, model, pt) =>
+      brand && model ? `${brand} ${model} solar string inverter`
+        : pt ? `${pt}` : "solar string inverter",
+    setting: "wall-mounted in a clean technical room",
+    detail: "white or light grey rectangular enclosure, LED status display, cable connections at bottom, wall mounting bracket visible",
+  },
+  solarspeicher: {
+    subject: (brand, model, pt) =>
+      brand && model ? `${brand} ${model} home battery storage system`
+        : pt ? `${pt}` : "home battery energy storage cabinet",
+    setting: "installed in a modern garage or technical utility room",
+    detail: "tall white or anthracite cabinet, battery management system display, ventilation grilles, power connections",
+  },
+  laderegler: {
+    subject: (brand, model, _) =>
+      brand && model ? `${brand} ${model} MPPT solar charge controller`
+        : "MPPT solar charge controller",
+    setting: "mounted on a white panel",
+    detail: "compact electronic device with LCD display showing voltage and current, DIN rail mounting or wall mounting, LED indicators",
+  },
+  optimizer: {
+    subject: (brand, model, _) =>
+      brand && model ? `${brand} ${model} solar power optimizer`
+        : "solar power optimizer module",
+    setting: "isolated product shot",
+    detail: "small rectangular black electronic module, MC4 connectors, heat sink fins, product label visible",
+  },
+  halterung: {
+    subject: (_, __, ___) => "solar panel aluminum mounting bracket system",
+    setting: "clean white background, component layout view",
+    detail: "anodized aluminium profiles, mounting rails, clamps and bolts, professional technical product presentation",
+  },
+  solaranlage: {
+    subject: (brand, model, _) =>
+      brand && model ? `${brand} ${model} photovoltaic solar system`
+        : "residential rooftop photovoltaic solar system",
+    setting: "installed on a modern single-family house, blue sky in background",
+    detail: "black monocrystalline solar panels in neat rows, professional installation, sunny day",
+  },
+  solarzaun: {
+    subject: (_, __, ___) => "solar fence with integrated photovoltaic panels",
+    setting: "modern residential property garden boundary",
+    detail: "elegant fence posts with solar glass panels integrated, professional installation, green garden in background",
+  },
+  skywind: {
+    subject: (brand, model, _) =>
+      brand && model ? `${brand} ${model} small wind turbine`
+        : "small vertical axis wind turbine",
+    setting: "installed on a rooftop or open land, clear blue sky",
+    detail: "modern compact wind turbine design, rotating blades, professional installation, open landscape",
+  },
+};
+
+function buildDallEPrompt(listing: MarketListing, category: string): string {
+  const brand = listing.brand ?? null;
+  const model = listing.model ?? null;
+  const productType = listing.productType ?? null;
+  const productSeries = listing.productSeries ?? null;
+
+  const art = CATEGORY_ART[category];
+
+  if (!art) {
+    const fallbackSubject = brand && model
+      ? `${brand} ${model} solar energy product`
+      : productType ?? "solar energy device";
+    return [
+      "Commercial e-commerce product photograph:",
+      `${fallbackSubject}.`,
+      "Clean white studio background, professional studio lighting with soft shadows,",
+      "photorealistic, sharp focus, 4K quality. No text overlays, no watermarks, no logos on background.",
+    ].join(" ");
+  }
+
+  const subject = art.subject(brand, model, productType);
+  const seriesHint = productSeries ? ` (${productSeries} series)` : "";
+
+  return [
+    `Commercial e-commerce product photograph: ${subject}${seriesHint},`,
+    `${art.setting}.`,
+    `${art.detail}.`,
+    "Professional studio lighting with soft shadows, photorealistic render, sharp focus, 4K quality.",
+    "Clean background appropriate for the setting. No text overlays, no watermarks.",
+    "High-end commercial product photography suitable for a professional solar energy webshop.",
+  ].join(" ");
+}
+
+// ─── Cloudinary Upload ────────────────────────────────────────────────────────
 
 async function uploadToCloudinary(tempUrl: string): Promise<string | null> {
   const cloudName = (process.env.CLOUDINARY_CLOUD_NAME ?? "").trim();
@@ -111,7 +232,7 @@ async function uploadToCloudinary(tempUrl: string): Promise<string | null> {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: form.toString(),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(45000),
     });
 
     if (!res.ok) return null;
@@ -122,79 +243,82 @@ async function uploadToCloudinary(tempUrl: string): Promise<string | null> {
   }
 }
 
-async function generateDallEImage(listing: MarketListing, category: string): Promise<{ url: string | null; error?: string }> {
+// ─── DALL-E Generierung ───────────────────────────────────────────────────────
+
+async function generateDallEImage(
+  listing: MarketListing,
+  category: string,
+): Promise<{ url: string | null; source: "dall-e-cloudinary" | "dall-e-temp"; error?: string }> {
   const apiKey = (process.env.OPENAI_API_KEY ?? "").trim();
-  if (!apiKey) return { url: null, error: "OPENAI_API_KEY nicht gesetzt" };
+  if (!apiKey) return { url: null, source: "dall-e-temp", error: "OPENAI_API_KEY nicht gesetzt" };
 
-  const productName = (listing.title ?? "").trim().slice(0, 80);
-  const categoryHint = ({
-    wechselrichter: "solar inverter wall-mounted device, white box with display",
-    solarspeicher:  "home battery storage unit, modern white cabinet",
-    laderegler:     "solar charge controller, compact electronic device",
-    optimizer:      "solar power optimizer, small black electronic module",
-    halterung:      "solar panel aluminum mounting bracket system",
-    solaranlage:    "solar panel array on rooftop",
-    solarzaun:      "solar fence with integrated photovoltaic panels",
-    skywind:        "small vertical axis wind turbine",
-  } as Record<string, string>)[category] ?? "solar energy electronic device";
-
-  const prompt = `Professional product photography of a ${categoryHint}. Clean white background, soft studio lighting, sharp focus, photorealistic. No text overlays, no logos. Product: ${productName}`;
+  const prompt = buildDallEPrompt(listing, category);
 
   try {
     const res = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: "dall-e-3", prompt, n: 1, size: "1024x1024", quality: "standard" }),
-      signal: AbortSignal.timeout(90000),
+      body: JSON.stringify({
+        model: "dall-e-3",
+        prompt,
+        n: 1,
+        size: "1024x1024",
+        quality: "hd",
+      }),
+      signal: AbortSignal.timeout(120000),
     });
 
     const data = (await res.json()) as OpenAIImageResponse;
 
     if (!res.ok) {
-      return { url: null, error: `OpenAI ${res.status}: ${data?.error?.message ?? "unbekannter Fehler"}` };
+      return { url: null, source: "dall-e-temp", error: `OpenAI ${res.status}: ${data?.error?.message ?? "unbekannter Fehler"}` };
     }
 
     const tempUrl = data.data?.[0]?.url;
-    if (!tempUrl) return { url: null, error: "Kein URL in OpenAI-Antwort" };
+    if (!tempUrl) return { url: null, source: "dall-e-temp", error: "Kein URL in OpenAI-Antwort" };
 
-    // DALL-E URLs expire after 1h — upload to permanent storage
+    // DALL-E URLs laufen nach ~1h ab → permanent in Cloudinary speichern
     const permanent = await uploadToCloudinary(tempUrl);
-    if (permanent) return { url: permanent };
+    if (permanent) return { url: permanent, source: "dall-e-cloudinary" };
 
-    // Fallback: return temp URL anyway (valid for ~1h)
-    return { url: tempUrl };
+    // Cloudinary nicht konfiguriert: temp URL als Fallback zurückgeben
+    return { url: tempUrl, source: "dall-e-temp" };
   } catch (e) {
-    return { url: null, error: (e as Error).message };
+    return { url: null, source: "dall-e-temp", error: (e as Error).message };
   }
 }
+
+// ─── Kleinanzeigen URL Erkennung ──────────────────────────────────────────────
+
+export function isKleinanzeigenUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return (
+    url.includes("kleinanzeigen.de") ||
+    url.includes("ebay-kleinanzeigen.de") ||
+    url.includes("img.kleinanzeigen") ||
+    url.includes("i.ebayimg.com") ||
+    url.includes("ebayimg.com")
+  );
+}
+
+// ─── Öffentliche API ──────────────────────────────────────────────────────────
 
 export async function resolveProductImage(
   listing: MarketListing,
   category: string,
-  options: { useDallE?: boolean; useFallback?: boolean } = {},
 ): Promise<string | null> {
-  // 1. Try manufacturer website OG image
+  // 1. Herstellerwebseite (nur wenn Brand + Model aus Knowledge Extraction bekannt)
   const brand = detectBrand(listing);
-  if (brand) {
-    const pageUrl = buildProductPageUrl(brand, listing);
-    if (pageUrl) {
-      const ogImage = await tryFetchOgImage(pageUrl);
-      if (ogImage) return ogImage;
-    }
+  if (brand && listing.model) {
+    const mfImg = await tryManufacturerImage(brand, listing);
+    if (mfImg) return mfImg;
   }
 
-  // 2. Try DALL-E generation
-  if (options.useDallE !== false) {
-    const { url } = await generateDallEImage(listing, category);
-    if (url) return url;
-  }
+  // 2. DALL-E mit reichhaltigem Prompt → Cloudinary Upload
+  const { url } = await generateDallEImage(listing, category);
+  if (url) return url;
 
-  // 3. Category fallback (Unsplash, stable URLs)
-  if (options.useFallback !== false) {
-    const fallback = CATEGORY_FALLBACKS[category] ?? CATEGORY_FALLBACKS["solaranlage"];
-    if (fallback) return fallback;
-  }
-
+  // 3. Kein Bild (bewusste Entscheidung – kein KA-Bild, kein Unsplash-Fallback)
   return null;
 }
 
@@ -203,19 +327,13 @@ export async function resolveProductImageWithDetails(
   category: string,
 ): Promise<{ url: string | null; source: string; error?: string }> {
   const brand = detectBrand(listing);
-  if (brand) {
-    const pageUrl = buildProductPageUrl(brand, listing);
-    if (pageUrl) {
-      const ogImage = await tryFetchOgImage(pageUrl);
-      if (ogImage) return { url: ogImage, source: "manufacturer" };
-    }
+  if (brand && listing.model) {
+    const mfImg = await tryManufacturerImage(brand, listing);
+    if (mfImg) return { url: mfImg, source: "manufacturer" };
   }
 
-  const dallE = await generateDallEImage(listing, category);
-  if (dallE.url) return { url: dallE.url, source: "dall-e" };
+  const result = await generateDallEImage(listing, category);
+  if (result.url) return { url: result.url, source: result.source };
 
-  const fallback = CATEGORY_FALLBACKS[category] ?? CATEGORY_FALLBACKS["solaranlage"] ?? null;
-  if (fallback) return { url: fallback, source: "fallback" };
-
-  return { url: null, source: "none", error: dallE.error };
+  return { url: null, source: "none", error: result.error };
 }

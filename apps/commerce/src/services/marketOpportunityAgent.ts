@@ -3,7 +3,8 @@ import { getPrismaClient } from "../lib/prisma";
 import { analyzeMarketListingDeal } from "./marketDealAnalyzer";
 import { generateMarketProductDraft } from "./marketProductDraftGenerator";
 import { resolveProductImage } from "./marketImageResolver";
-// resolveProductImage uses: manufacturer OG image → DALL-E → category fallback (Unsplash)
+import { computeOpportunityScore } from "../utils/opportunityScoreUtils";
+// resolveProductImage: manufacturer OG image (brand+model) → DALL-E HD → kein Fallback
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,8 @@ export interface OpportunityItem {
   title: string;
   category: string | null;
   dealScore: number;
+  opportunityScore: number;
+  dataCompletenessScore: number | null;
   riskLevel: string | null;
   purchasePrice: number;
   suggestedSellingPrice: number;
@@ -104,26 +107,79 @@ function resolveDraftProductType(listing: Pick<MarketListing, "productCategory" 
   return "inquiry_only" as const;
 }
 
-function resolveProjectNote(category: string | null, tags: string[]): string {
-  const tagLine = tags.length > 0 ? ` Interne Tags: ${tags.join(", ")}.` : "";
-  switch ((category ?? "").toLowerCase()) {
-    case "solarzaun":
-      return `Als Projekt- und Anfrageprodukt angelegt. Bauliche Voraussetzungen, Abmessungen und Zustand werden vor Angebotsbestaetigung individuell geprueft.${tagLine}`;
-    case "solaranlage":
-      return `Als Set- und Projektangebot angelegt. Auslegung, Komponentenstand und Einsatzort werden vor Angebotsbestaetigung geprueft.${tagLine}`;
-    case "solarspeicher":
-      return `Kompatibilitaet mit Wechselrichter, Batteriesystem und Schutzkonzept vor Angebotsbestaetigung pruefen.${tagLine}`;
-    case "wechselrichter":
-      return `Kompatibilitaet mit PV-Anlage, Netzanschluss und Einspeiseleistung vor Angebotsbestaetigung pruefen.${tagLine}`;
-    case "laderegler":
-      return `Kompatibilitaet mit Batterietyp, Modulspannung und Systemspannung pruefen.${tagLine}`;
-    case "optimizer":
-      return `Kompatibilitaet mit Wechselrichter und Modultyp vor Angebotsbestaetigung pruefen.${tagLine}`;
-    case "halterung":
-      return `Passgenauigkeit fuer Modulgroesse, Dachtyp und Montagesituation pruefen.${tagLine}`;
-    default:
-      return `Produktentwurf fuer interne Qualifizierung angelegt.${tagLine}`;
-  }
+// ─── Mehrsprachige Hinweistexte ───────────────────────────────────────────────
+
+const LEGAL_NOTES: Record<"de" | "en" | "es", string> = {
+  de: "Verfügbarkeit und Zustand werden vor Angebotsbestätigung geprüft.",
+  en: "Availability and condition will be verified before order confirmation.",
+  es: "La disponibilidad y condición serán verificadas antes de la confirmación del pedido.",
+};
+
+const VARIANT_NAMES: Record<"de" | "en" | "es", string> = {
+  de: "Standard",
+  en: "Standard",
+  es: "Estándar",
+};
+
+type Locale = "de" | "en" | "es";
+
+function buildDeliveryNote(availabilityNote: string, locale: Locale): string {
+  const legal = LEGAL_NOTES[locale];
+  return availabilityNote.includes(legal)
+    ? availabilityNote
+    : `${availabilityNote} ${legal}`.trim();
+}
+
+const PROJECT_NOTES: Record<string, Record<Locale, string>> = {
+  solarzaun: {
+    de: "Als Projekt- und Anfrageprodukt angelegt. Bauliche Voraussetzungen, Abmessungen und Zustand werden vor Angebotsbestätigung individuell geprüft.",
+    en: "Listed as a project and inquiry product. Structural requirements, dimensions and condition will be individually assessed before order confirmation.",
+    es: "Listado como producto de proyecto y consulta. Los requisitos estructurales, dimensiones y condición serán evaluados individualmente antes de la confirmación del pedido.",
+  },
+  solaranlage: {
+    de: "Als Set- und Projektangebot angelegt. Auslegung, Komponentenstand und Einsatzort werden vor Angebotsbestätigung geprüft.",
+    en: "Listed as a system and project offer. Configuration, component status and installation site will be verified before order confirmation.",
+    es: "Listado como oferta de sistema y proyecto. La configuración, estado de los componentes y lugar de instalación serán verificados antes de la confirmación.",
+  },
+  solarspeicher: {
+    de: "Kompatibilität mit Wechselrichter, Batteriesystem und Schutzkonzept vor Angebotsbestätigung prüfen.",
+    en: "Compatibility with inverter, battery system and protection concept must be verified before order confirmation.",
+    es: "La compatibilidad con el inversor, el sistema de baterías y el concepto de protección deben verificarse antes de la confirmación del pedido.",
+  },
+  wechselrichter: {
+    de: "Kompatibilität mit PV-Anlage, Netzanschluss und Einspeiseleistung vor Angebotsbestätigung prüfen.",
+    en: "Compatibility with PV system, grid connection and feed-in capacity must be verified before order confirmation.",
+    es: "La compatibilidad con el sistema fotovoltaico, la conexión a la red y la capacidad de inyección deben verificarse antes de la confirmación.",
+  },
+  laderegler: {
+    de: "Kompatibilität mit Batterietyp, Modulspannung und Systemspannung prüfen.",
+    en: "Compatibility with battery type, module voltage and system voltage must be verified.",
+    es: "Debe verificarse la compatibilidad con el tipo de batería, la tensión del módulo y la tensión del sistema.",
+  },
+  optimizer: {
+    de: "Kompatibilität mit Wechselrichter und Modultyp vor Angebotsbestätigung prüfen.",
+    en: "Compatibility with inverter and module type must be verified before order confirmation.",
+    es: "La compatibilidad con el inversor y el tipo de módulo debe verificarse antes de la confirmación del pedido.",
+  },
+  halterung: {
+    de: "Passgenauigkeit für Modulgröße, Dachtyp und Montagesituation prüfen.",
+    en: "Suitability for module size, roof type and mounting situation must be verified.",
+    es: "Debe verificarse la idoneidad para el tamaño del módulo, el tipo de cubierta y la situación de montaje.",
+  },
+};
+
+const DEFAULT_PROJECT_NOTE: Record<Locale, string> = {
+  de: "Produktentwurf für interne Qualifizierung angelegt.",
+  en: "Product draft created for internal qualification.",
+  es: "Borrador de producto creado para calificación interna.",
+};
+
+function resolveProjectNote(category: string | null, tags: string[], locale: Locale): string {
+  const tagLine = tags.length > 0
+    ? ` ${locale === "de" ? "Interne Tags" : locale === "en" ? "Internal tags" : "Etiquetas internas"}: ${tags.join(", ")}.`
+    : "";
+  const notes = PROJECT_NOTES[(category ?? "").toLowerCase()] ?? DEFAULT_PROJECT_NOTE;
+  return `${notes[locale]}${tagLine}`;
 }
 
 // ─── Core Agent Functions ─────────────────────────────────────────────────────
@@ -188,10 +244,9 @@ async function createDraftForListing(
 
   const finalSlug = await buildUniqueProductSlug(generatedDraft.slug);
   const productType = resolveDraftProductType(listing);
-  const legalNote = "Verfuegbarkeit und Zustand werden vor Angebotsbestaetigung geprueft.";
-  const deliveryNote = generatedDraft.availabilityNote.includes(legalNote)
-    ? generatedDraft.availabilityNote
-    : `${generatedDraft.availabilityNote} ${legalNote}`.trim();
+
+  const { de: tDe, en: tEn, es: tEs } = generatedDraft.translations;
+  const locales = (["de", "en", "es"] as const);
 
   const createdProduct = await prisma.product.create({
     data: {
@@ -201,26 +256,28 @@ async function createDraftForListing(
       availability_status: "on_request",
       category_id: category?.id ?? null,
       translations: {
-        create: [
-          {
-            locale: "de",
-            name: generatedDraft.name,
-            short_description: generatedDraft.shortDescription,
-            description: generatedDraft.description,
+        create: locales.map((locale) => {
+          const t = locale === "de" ? tDe : locale === "en" ? tEn : tEs;
+          const deliveryNote = buildDeliveryNote(t.availabilityNote, locale);
+          return {
+            locale,
+            name: t.name,
+            short_description: t.shortDescription,
+            description: t.description,
             delivery_note: deliveryNote,
-            features: generatedDraft.technicalData,
-            meta_title: generatedDraft.metaTitle,
-            meta_description: generatedDraft.metaDescription,
+            features: t.technicalData,
+            meta_title: t.metaTitle,
+            meta_description: t.metaDescription,
             mounting_note: deliveryNote,
-            project_note: resolveProjectNote(listing.productCategory, generatedDraft.tags),
-          },
-        ],
+            project_note: resolveProjectNote(listing.productCategory, generatedDraft.tags, locale),
+          };
+        }),
       },
     },
   });
 
   if (profit.suggestedSellingPrice > 0) {
-    await prisma.productVariant.create({
+    const variant = await prisma.productVariant.create({
       data: {
         product_id: createdProduct.id,
         sku: `${finalSlug.slice(0, 32)}-${createdProduct.id.slice(0, 8)}`,
@@ -230,29 +287,26 @@ async function createDraftForListing(
         is_active: true,
       },
     });
+    await prisma.productVariantTranslation.createMany({
+      data: locales.map((locale) => ({
+        variant_id: variant.id,
+        locale,
+        name: VARIANT_NAMES[locale],
+      })),
+    });
   }
 
-  const resolvedImageUrl = await resolveProductImage(listing, generatedDraft.category, { useDallE: true }).catch(() => null);
-  const finalImageUrl = resolvedImageUrl ?? listing.image_url;
-  if (finalImageUrl) {
+  // Kein Kleinanzeigen-Bild verwenden (Copyright). Nur generiertes Bild speichern.
+  const resolvedImageUrl = await resolveProductImage(listing, generatedDraft.category).catch(() => null);
+  if (resolvedImageUrl) {
     await prisma.productImage.create({
       data: {
         product_id: createdProduct.id,
-        url: finalImageUrl,
-        alt: generatedDraft.name,
+        url: resolvedImageUrl,
+        alt: tDe.name,
         sort_order: 0,
       },
     }).catch(() => null);
-    if (resolvedImageUrl && listing.image_url) {
-      await prisma.productImage.create({
-        data: {
-          product_id: createdProduct.id,
-          url: listing.image_url,
-          alt: `${generatedDraft.name} – Originalangebot`,
-          sort_order: 1,
-        },
-      }).catch(() => null);
-    }
   }
 
   await prisma.marketListing.update({
@@ -338,11 +392,20 @@ export async function runDailyReport(options: {
         },
       });
 
+      const opportunityScore = computeOpportunityScore(
+        listing.dealScore,
+        listing.dataCompletenessScore,
+        listing.price_cents,
+        listing.price_negotiable,
+      );
+
       topOpportunities.push({
         listingId: listing.id,
         title: listing.title,
         category: listing.productCategory,
         dealScore: score,
+        opportunityScore,
+        dataCompletenessScore: listing.dataCompletenessScore,
         riskLevel: listing.riskLevel,
         purchasePrice: profit.purchasePrice,
         suggestedSellingPrice: profit.suggestedSellingPrice,
@@ -360,7 +423,7 @@ export async function runDailyReport(options: {
     }
   }
 
-  topOpportunities.sort((a, b) => b.dealScore - a.dealScore);
+  topOpportunities.sort((a, b) => b.opportunityScore - a.opportunityScore);
 
   return {
     date: now.toISOString().split("T")[0],

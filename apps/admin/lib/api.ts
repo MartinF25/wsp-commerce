@@ -674,6 +674,9 @@ export interface MarketOpportunity extends MarketListing {
   opportunityStatus: "prepared";
   dailyReportAt: string;
   productDraftId: string;
+  opportunityScore: number;
+  dataCompletenessScore: number | null;
+  enrichmentConfidence: number | null;
 }
 
 export interface DailyReportResult {
@@ -686,6 +689,8 @@ export interface DailyReportResult {
     title: string;
     category: string | null;
     dealScore: number;
+    opportunityScore: number;
+    dataCompletenessScore: number | null;
     riskLevel: string | null;
     purchasePrice: number;
     suggestedSellingPrice: number;
@@ -1134,6 +1139,26 @@ export const api = {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
       return json as { data: MarketOpportunity[]; total: number };
+    },
+    approve: async (listingId: string) => {
+      const res = await fetch(`${BASE_URL}/api/admin/market-opportunities/${listingId}/approve`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_KEY },
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
+      return json as { ok: boolean; productId: string; productStatus: string };
+    },
+    refreshSeo: async (listingId: string) => {
+      const res = await fetch(`${BASE_URL}/api/admin/market-opportunities/${listingId}/refresh-seo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_KEY },
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
+      return json as { ok: boolean; productId: string; updated: { name: string; metaTitle: string; metaDescription: string } };
     },
   },
 

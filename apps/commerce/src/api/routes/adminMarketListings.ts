@@ -127,21 +127,59 @@ function resolveDraftProductType(listing: {
   return "inquiry_only" as const;
 }
 
-function resolveProjectNote(category: string | null, tags: string[]) {
-  const tagLine = tags.length > 0 ? ` Interne Tags: ${tags.join(", ")}.` : "";
+type DraftLocale = "de" | "en" | "es";
 
-  switch ((category ?? "").toLowerCase()) {
-    case "solarzaun":
-      return `Als Projekt- und Anfrageprodukt angelegt. Bauliche Voraussetzungen, Abmessungen und Zustand werden vor Angebotsbestaetigung individuell geprueft.${tagLine}`;
-    case "solaranlage":
-      return `Als Set- und Projektangebot angelegt. Auslegung, Komponentenstand und Einsatzort werden vor Angebotsbestaetigung geprueft.${tagLine}`;
-    case "solarspeicher":
-      return `Kompatibilitaet mit Wechselrichter, Batteriesystem und Schutzkonzept vor Angebotsbestaetigung pruefen.${tagLine}`;
-    case "skywind":
-      return `Niedrige Prioritaet im Draft-Agenten, da bereits bestehende SkyWind-Produkte vorhanden sind.${tagLine}`;
-    default:
-      return `Produktentwurf fuer interne Qualifizierung angelegt.${tagLine}`;
-  }
+const DRAFT_LEGAL_NOTES: Record<DraftLocale, string> = {
+  de: "Verfügbarkeit und Zustand werden vor Angebotsbestätigung geprüft.",
+  en: "Availability and condition will be verified before order confirmation.",
+  es: "La disponibilidad y condición serán verificadas antes de la confirmación del pedido.",
+};
+
+const DRAFT_VARIANT_NAMES: Record<DraftLocale, string> = {
+  de: "Standard",
+  en: "Standard",
+  es: "Estándar",
+};
+
+const DRAFT_PROJECT_NOTES: Record<string, Record<DraftLocale, string>> = {
+  solarzaun: {
+    de: "Als Projekt- und Anfrageprodukt angelegt. Bauliche Voraussetzungen, Abmessungen und Zustand werden vor Angebotsbestätigung individuell geprüft.",
+    en: "Listed as a project and inquiry product. Structural requirements, dimensions and condition will be individually assessed before order confirmation.",
+    es: "Listado como producto de proyecto y consulta. Los requisitos estructurales, dimensiones y condición serán evaluados individualmente antes de la confirmación.",
+  },
+  solaranlage: {
+    de: "Als Set- und Projektangebot angelegt. Auslegung, Komponentenstand und Einsatzort werden vor Angebotsbestätigung geprüft.",
+    en: "Listed as a system and project offer. Configuration, component status and installation site will be verified before order confirmation.",
+    es: "Listado como oferta de sistema y proyecto. La configuración, estado de los componentes y lugar de instalación serán verificados antes de la confirmación.",
+  },
+  solarspeicher: {
+    de: "Kompatibilität mit Wechselrichter, Batteriesystem und Schutzkonzept vor Angebotsbestätigung prüfen.",
+    en: "Compatibility with inverter, battery system and protection concept must be verified before order confirmation.",
+    es: "La compatibilidad con el inversor, el sistema de baterías y el concepto de protección deben verificarse antes de la confirmación.",
+  },
+  skywind: {
+    de: "Niedrige Priorität – bereits bestehende SkyWind-Produkte vorhanden. Entwurf zur Weiterbearbeitung.",
+    en: "Low priority – existing SkyWind products already available. Draft created for further processing.",
+    es: "Baja prioridad – ya existen productos SkyWind. Borrador creado para procesamiento adicional.",
+  },
+};
+
+const DEFAULT_DRAFT_PROJECT_NOTE: Record<DraftLocale, string> = {
+  de: "Produktentwurf für interne Qualifizierung angelegt.",
+  en: "Product draft created for internal qualification.",
+  es: "Borrador de producto creado para calificación interna.",
+};
+
+function buildDraftDeliveryNote(availabilityNote: string, locale: DraftLocale): string {
+  const legal = DRAFT_LEGAL_NOTES[locale];
+  return availabilityNote.includes(legal) ? availabilityNote : `${availabilityNote} ${legal}`.trim();
+}
+
+function resolveProjectNote(category: string | null, tags: string[], locale: DraftLocale = "de"): string {
+  const tagLabel = locale === "de" ? "Interne Tags" : locale === "en" ? "Internal tags" : "Etiquetas internas";
+  const tagLine = tags.length > 0 ? ` ${tagLabel}: ${tags.join(", ")}.` : "";
+  const notes = DRAFT_PROJECT_NOTES[(category ?? "").toLowerCase()] ?? DEFAULT_DRAFT_PROJECT_NOTE;
+  return `${notes[locale]}${tagLine}`;
 }
 
 // ─── GET / ───────────────────────────────────────────────────────────────────
@@ -440,10 +478,7 @@ adminMarketListingRoutes.post("/create-product-draft", async (c) => {
 
   const finalSlug = await buildUniqueProductSlug(generatedDraft.slug);
   const productType = resolveDraftProductType(listing);
-  const legalNote = "Verfuegbarkeit und Zustand werden vor Angebotsbestaetigung geprueft.";
-  const deliveryNote = generatedDraft.availabilityNote.includes(legalNote)
-    ? generatedDraft.availabilityNote
-    : `${generatedDraft.availabilityNote} ${legalNote}`.trim();
+  const draftLocales: DraftLocale[] = ["de", "en", "es"];
 
   const createdProduct = await prisma.product.create({
     data: {
@@ -453,20 +488,22 @@ adminMarketListingRoutes.post("/create-product-draft", async (c) => {
       availability_status: "on_request",
       category_id: category?.id ?? null,
       translations: {
-        create: [
-          {
-            locale: "de",
-            name: generatedDraft.name,
-            short_description: generatedDraft.shortDescription,
-            description: generatedDraft.description,
+        create: draftLocales.map((locale) => {
+          const t = generatedDraft.translations[locale];
+          const deliveryNote = buildDraftDeliveryNote(t.availabilityNote, locale);
+          return {
+            locale,
+            name: t.name,
+            short_description: t.shortDescription,
+            description: t.description,
             delivery_note: deliveryNote,
-            features: generatedDraft.technicalData,
-            meta_title: generatedDraft.metaTitle,
-            meta_description: generatedDraft.metaDescription,
+            features: t.technicalData,
+            meta_title: t.metaTitle,
+            meta_description: t.metaDescription,
             mounting_note: deliveryNote,
-            project_note: resolveProjectNote(listing.productCategory, generatedDraft.tags),
-          },
-        ],
+            project_note: resolveProjectNote(listing.productCategory, generatedDraft.tags, locale),
+          };
+        }),
       },
     },
     include: {
@@ -478,7 +515,7 @@ adminMarketListingRoutes.post("/create-product-draft", async (c) => {
   });
 
   if (generatedDraft.priceSuggestion > 0) {
-    await prisma.productVariant.create({
+    const variant = await prisma.productVariant.create({
       data: {
         product_id: createdProduct.id,
         sku: `${finalSlug.slice(0, 32)}-${createdProduct.id.slice(0, 8)}`,
@@ -488,17 +525,13 @@ adminMarketListingRoutes.post("/create-product-draft", async (c) => {
         is_active: true,
       },
     });
-  }
-
-  if (listing.image_url) {
-    await prisma.productImage.create({
-      data: {
-        product_id: createdProduct.id,
-        url: listing.image_url,
-        alt: generatedDraft.name,
-        sort_order: 0,
-      },
-    }).catch(() => null);
+    await prisma.productVariantTranslation.createMany({
+      data: draftLocales.map((locale) => ({
+        variant_id: variant.id,
+        locale,
+        name: DRAFT_VARIANT_NAMES[locale],
+      })),
+    });
   }
 
   const updatedListing = await prisma.marketListing.update({

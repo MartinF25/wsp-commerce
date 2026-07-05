@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import type { MarketOpportunity } from "@/lib/api";
 import { OpportunityActions } from "./OpportunityActions";
 import { RunReportButton } from "./RunReportButton";
+import { BatchImageButton } from "./BatchImageButton";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,27 @@ function scoreStyle(score: number | null | undefined) {
   return { color: "#991b1b", fontWeight: 700 };
 }
 
+function oppScoreBadge(score: number | null | undefined) {
+  if (score == null) return <span style={{ color: "#94a3b8" }}>–</span>;
+  const bg = score >= 75 ? "#dcfce7" : score >= 55 ? "#fef3c7" : "#fee2e2";
+  const color = score >= 75 ? "#166534" : score >= 55 ? "#92400e" : "#991b1b";
+  return (
+    <span style={{ background: bg, color, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700, display: "inline-block" }}>
+      {score}
+    </span>
+  );
+}
+
+function knowledgeBadge(score: number | null | undefined) {
+  if (score == null) return <span style={{ color: "#94a3b8", fontSize: 11 }}>–</span>;
+  const color = score >= 70 ? "#166534" : score >= 40 ? "#92400e" : "#94a3b8";
+  return (
+    <span style={{ color, fontSize: 11, fontWeight: 600 }} title={`Knowledge Score: ${score}/100`}>
+      K:{score}
+    </span>
+  );
+}
+
 function catBadge(cat: string | null | undefined) {
   if (!cat) return null;
   const colors: Record<string, { bg: string; color: string }> = {
@@ -30,6 +52,30 @@ function catBadge(cat: string | null | undefined) {
   return (
     <span style={{ ...style, display: "inline-flex", borderRadius: 999, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>
       {cat}
+    </span>
+  );
+}
+
+function fmtDate(iso: string | null | undefined): string {
+  if (!iso) return "–";
+  const d = new Date(iso);
+  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
+}
+
+function ageDays(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+}
+
+function ageBadge(listedAt: string | null | undefined, scrapedAt: string | null | undefined) {
+  const days = ageDays(listedAt ?? scrapedAt);
+  if (days === null) return <span style={{ color: "#94a3b8", fontSize: 11 }}>–</span>;
+  const color = days <= 3 ? "#166534" : days <= 14 ? "#92400e" : "#991b1b";
+  const bg = days <= 3 ? "#dcfce7" : days <= 14 ? "#fef3c7" : "#fee2e2";
+  const label = days === 0 ? "heute" : days === 1 ? "1 Tag" : `${days} Tage`;
+  return (
+    <span style={{ background: bg, color, borderRadius: 999, padding: "2px 7px", fontSize: 11, fontWeight: 600, display: "inline-block", whiteSpace: "nowrap" }}>
+      {label}
     </span>
   );
 }
@@ -60,8 +106,14 @@ export default async function OpportunitiesPage() {
     fetchError = (e as Error).message;
   }
 
+  // Sortierung nach opportunityScore (höchster zuerst)
+  opportunities = [...opportunities].sort((a, b) => (b.opportunityScore ?? 0) - (a.opportunityScore ?? 0));
+
   const totalGrossProfit = opportunities.reduce((sum, op) => sum + (op.estimatedGrossProfit ?? 0), 0);
-  const topScore = opportunities.length > 0 ? Math.max(...opportunities.map((op) => op.dealScore ?? 0)) : 0;
+  const topOppScore = opportunities.length > 0 ? Math.max(...opportunities.map((op) => op.opportunityScore ?? 0)) : 0;
+  const avgKnowledge = opportunities.length > 0
+    ? Math.round(opportunities.reduce((sum, op) => sum + (op.dataCompletenessScore ?? 0), 0) / opportunities.length)
+    : 0;
 
   return (
     <div>
@@ -69,12 +121,13 @@ export default async function OpportunitiesPage() {
         <div>
           <h1>Tageschancen</h1>
           <div className="page-subtitle">
-            Vom Agent ausgewählte Listings · Score ≥ 75 · Kategorien: Solarspeicher, Solarzaun, Solaranlage
+            Sortiert nach Opportunity Score (Deal 50% · Knowledge 30% · Pricing 20%)
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <Link href="/market/dashboard" className="btn btn-secondary btn-sm">Dashboard</Link>
           <Link href="/market" className="btn btn-secondary btn-sm">Listings</Link>
+          <BatchImageButton />
           <RunReportButton />
         </div>
       </div>
@@ -91,12 +144,12 @@ export default async function OpportunitiesPage() {
           <div className="kpi-value" style={{ color: "#166534" }}>{fmt(totalGrossProfit)}</div>
         </div>
         <div className="kpi-card">
-          <div className="kpi-label">Bester Score</div>
-          <div className="kpi-value" style={{ color: "#166534" }}>{topScore > 0 ? topScore : "–"}</div>
+          <div className="kpi-label">Bester Opp-Score</div>
+          <div className="kpi-value" style={{ color: "#166534" }}>{topOppScore > 0 ? topOppScore : "–"}</div>
         </div>
         <div className="kpi-card">
-          <div className="kpi-label">Aufschlag</div>
-          <div className="kpi-value">40 %</div>
+          <div className="kpi-label">Ø Knowledge</div>
+          <div className="kpi-value">{avgKnowledge > 0 ? `${avgKnowledge}%` : "–"}</div>
         </div>
       </div>
 
@@ -127,13 +180,15 @@ export default async function OpportunitiesPage() {
               <tr>
                 <th>Titel</th>
                 <th>Kategorie</th>
-                <th style={{ textAlign: "right" }}>Score</th>
+                <th style={{ textAlign: "right" }}>Alter</th>
+                <th style={{ textAlign: "right" }}>Opp-Score</th>
+                <th style={{ textAlign: "right" }}>Deal</th>
                 <th style={{ textAlign: "right" }}>Risiko</th>
                 <th style={{ textAlign: "right" }}>EK</th>
                 <th style={{ textAlign: "right" }}>VK (+40%)</th>
                 <th style={{ textAlign: "right" }}>Marge</th>
-                <th style={{ textAlign: "center", width: 80 }}>Quelle</th>
-                <th style={{ textAlign: "right", width: 200 }}>Aktion</th>
+                <th style={{ textAlign: "center", width: 60 }}>Quelle</th>
+                <th style={{ textAlign: "right", width: 230 }}>Aktion</th>
               </tr>
             </thead>
             <tbody>
@@ -141,7 +196,11 @@ export default async function OpportunitiesPage() {
                 <tr key={op.id}>
                   <td>
                     <div className="listing-title">{op.title}</div>
-                    {op.location && <div className="listing-meta">{op.location}</div>}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 2 }}>
+                      {op.location && <span className="listing-meta">{op.location}</span>}
+                      {knowledgeBadge(op.dataCompletenessScore)}
+                      {op.brand && <span style={{ fontSize: 11, color: "#64748b" }}>{op.brand}{op.model ? ` ${op.model}` : ""}</span>}
+                    </div>
                     {op.aiComment && (
                       <div style={{ fontSize: 12, color: "#64748b", marginTop: 2, maxWidth: 360 }}>
                         {op.aiComment}
@@ -149,6 +208,19 @@ export default async function OpportunitiesPage() {
                     )}
                   </td>
                   <td>{catBadge(op.productCategory)}</td>
+                  <td style={{ textAlign: "right" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+                      {ageBadge(op.listed_at, op.scraped_at)}
+                      {op.listed_at && (
+                        <span style={{ fontSize: 10, color: "#94a3b8" }} title="Inserat-Datum (Kleinanzeigen)">
+                          {fmtDate(op.listed_at)}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    {oppScoreBadge(op.opportunityScore)}
+                  </td>
                   <td style={{ textAlign: "right", ...scoreStyle(op.dealScore) }}>
                     {op.dealScore ?? "–"}
                   </td>
@@ -191,7 +263,7 @@ export default async function OpportunitiesPage() {
                   <td style={{ textAlign: "right" }}>
                     <OpportunityActions
                       listingId={op.id}
-                      productDraftId={op.productDraftId!}
+                      productDraftId={op.productDraftId}
                       title={op.title}
                     />
                   </td>
