@@ -178,6 +178,7 @@ export default async function OpportunitiesPage() {
           <table>
             <thead>
               <tr>
+                <th style={{ width: 56 }}>Bild</th>
                 <th>Titel</th>
                 <th>Kategorie</th>
                 <th style={{ textAlign: "right" }}>Alter</th>
@@ -194,6 +195,28 @@ export default async function OpportunitiesPage() {
             <tbody>
               {opportunities.map((op) => (
                 <tr key={op.id}>
+                  <td style={{ padding: "6px 8px" }}>
+                    {op.productImageUrl ? (
+                      <img
+                        src={op.productImageUrl}
+                        alt={op.title}
+                        style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid #e2e8f0", display: "block" }}
+                      />
+                    ) : op.image_url ? (
+                      <img
+                        src={op.image_url}
+                        alt={op.title}
+                        style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid #e2e8f0", display: "block", opacity: 0.5 }}
+                        title="Originalanzeige (kein KI-Bild)"
+                      />
+                    ) : (
+                      <div style={{ width: 44, height: 44, borderRadius: 6, background: "#f1f5f9", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <svg width="16" height="16" fill="none" stroke="#94a3b8" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M4.5 19.5h15A2.25 2.25 0 0021.75 17.25V6.75A2.25 2.25 0 0019.5 4.5h-15A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5z" />
+                        </svg>
+                      </div>
+                    )}
+                  </td>
                   <td>
                     <div className="listing-title">{op.title}</div>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 2 }}>

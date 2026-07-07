@@ -56,6 +56,13 @@ adminMarketOpportunityRoutes.get("/prepared", async (c) => {
     take: 100,
   });
 
+  const productIds = listings.map((l) => l.productDraftId!).filter(Boolean);
+  const productImages = await prisma.productImage.findMany({
+    where: { product_id: { in: productIds }, sort_order: 0 },
+    select: { product_id: true, url: true },
+  });
+  const productImageMap = new Map(productImages.map((img) => [img.product_id, img.url]));
+
   return c.json({
     data: listings.map((l) => ({
       id: l.id,
@@ -85,6 +92,7 @@ adminMarketOpportunityRoutes.get("/prepared", async (c) => {
       price_negotiable: l.price_negotiable,
       location: l.location,
       image_url: l.image_url,
+      productImageUrl: productImageMap.get(l.productDraftId!) ?? null,
       listed_at: l.listed_at?.toISOString() ?? null,
       scraped_at: l.scraped_at.toISOString(),
       sourceStatus: l.sourceStatus,

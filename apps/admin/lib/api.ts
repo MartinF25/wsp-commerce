@@ -677,6 +677,7 @@ export interface MarketOpportunity extends MarketListing {
   opportunityScore: number;
   dataCompletenessScore: number | null;
   enrichmentConfidence: number | null;
+  productImageUrl: string | null;
 }
 
 export interface DailyReportResult {

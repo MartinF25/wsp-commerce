@@ -32,5 +32,8 @@ Thumbs.db
 # Misc
 *.tsbuildinfo
 
+# Pre-configured workflow files with embedded credentials (never commit)
+*.configured.json
+
 .vercel
 .env*.local
