@@ -288,6 +288,51 @@ async function generateDallEImage(
   }
 }
 
+// ─── fal.ai Generierung ──────────────────────────────────────────────────────
+
+async function generateFalImage(
+  listing: MarketListing,
+  category: string,
+): Promise<{ url: string | null; source: "fal-cloudinary" | "fal-temp"; error?: string }> {
+  const apiKey = (process.env.FAL_API_KEY ?? "").trim();
+  if (!apiKey) return { url: null, source: "fal-temp", error: "FAL_API_KEY nicht gesetzt" };
+
+  const prompt = buildDallEPrompt(listing, category);
+
+  try {
+    const res = await fetch("https://fal.run/fal-ai/flux/schnell", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Key ${apiKey}`,
+      },
+      body: JSON.stringify({
+        prompt,
+        image_size: "square_hd",
+        num_inference_steps: 4,
+        num_images: 1,
+        enable_safety_checker: false,
+      }),
+      signal: AbortSignal.timeout(120000),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      return { url: null, source: "fal-temp", error: `fal.ai HTTP ${res.status}: ${txt}` };
+    }
+
+    const data = (await res.json()) as { images?: Array<{ url?: string }> };
+    const tempUrl = data.images?.[0]?.url;
+    if (!tempUrl) return { url: null, source: "fal-temp", error: "Kein Bild-URL in fal.ai-Antwort" };
+
+    const permanent = await uploadToCloudinary(tempUrl);
+    if (permanent) return { url: permanent, source: "fal-cloudinary" };
+    return { url: tempUrl, source: "fal-temp" };
+  } catch (e) {
+    return { url: null, source: "fal-temp", error: (e as Error).message };
+  }
+}
+
 // ─── Kling AI Generierung ─────────────────────────────────────────────────────
 
 interface KlingTaskResponse {
@@ -404,15 +449,19 @@ export async function resolveProductImage(
     if (mfImg) return mfImg;
   }
 
-  // 2. Kling AI (realistische Produktfotos, async) → Cloudinary
+  // 2. fal.ai Flux Schnell → Cloudinary
+  const falResult = await generateFalImage(listing, category);
+  if (falResult.url) return falResult.url;
+
+  // 3. Kling AI → Cloudinary
   const klingResult = await generateKlingImage(listing, category);
   if (klingResult.url) return klingResult.url;
 
-  // 3. DALL-E HD als Fallback → Cloudinary
+  // 4. DALL-E HD als Fallback → Cloudinary
   const dalleResult = await generateDallEImage(listing, category);
   if (dalleResult.url) return dalleResult.url;
 
-  // 4. Kein Bild
+  // 5. Kein Bild
   return null;
 }
 
@@ -426,11 +475,15 @@ export async function resolveProductImageWithDetails(
     if (mfImg) return { url: mfImg, source: "manufacturer" };
   }
 
+  // fal.ai (fast, cheap) – primary AI generator if FAL_API_KEY is set
+  const falResult = await generateFalImage(listing, category);
+  if (falResult.url) return { url: falResult.url, source: falResult.source };
+
   const klingResult = await generateKlingImage(listing, category);
   if (klingResult.url) return { url: klingResult.url, source: klingResult.source };
 
   const dalleResult = await generateDallEImage(listing, category);
   if (dalleResult.url) return { url: dalleResult.url, source: dalleResult.source };
 
-  return { url: null, source: "none", error: klingResult.error ?? dalleResult.error };
+  return { url: null, source: "none", error: falResult.error ?? klingResult.error ?? dalleResult.error };
 }
