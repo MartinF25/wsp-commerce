@@ -115,12 +115,12 @@ adminMarketOpportunityRoutes.post("/:listingId/refresh-image", async (c) => {
     return c.json({ error: { code: "NO_PRODUCT", message: "Kein Produkt mit diesem Listing verknüpft." } }, 400);
   }
 
-  // If product already has an AI-generated image (e.g. set by n8n), return it immediately.
+  // If product already has a non-KA image (e.g. set by n8n/fal.ai), return it immediately.
   const alreadySet = await prisma.productImage.findFirst({
     where: { product_id: listing.productDraftId, sort_order: 0 },
     select: { url: true },
   });
-  if (alreadySet) {
+  if (alreadySet && !isKleinanzeigenUrl(alreadySet.url)) {
     return c.json({ ok: true, imageUrl: alreadySet.url, source: "existing" });
   }
 
