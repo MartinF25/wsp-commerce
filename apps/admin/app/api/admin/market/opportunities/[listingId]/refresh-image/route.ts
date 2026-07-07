@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 
+export const maxDuration = 120;
+
 const BASE_URL = (process.env.COMMERCE_API_URL ?? "http://localhost:3000").trim().replace(/\/$/, "");
 const ADMIN_KEY = (process.env.ADMIN_API_KEY ?? "").trim();
 
@@ -11,6 +13,7 @@ export async function POST(
     method: "POST",
     headers: { "X-Admin-Key": ADMIN_KEY },
     cache: "no-store",
+    signal: AbortSignal.timeout(115000),
   });
   return new Response(await res.text(), {
     status: res.status,

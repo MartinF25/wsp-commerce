@@ -20,8 +20,8 @@ export function BatchImageButton() {
   async function handleRun() {
     if (!confirm(
       mode === "ka-images"
-        ? "Alle KA-Bilder + bildlose Drafts mit DALL-E neu bebildern? (bis 10 Produkte, dauert mehrere Minuten)"
-        : "Nur bildlose Drafts mit DALL-E bebildern? (bis 10 Produkte)"
+        ? "KA-Bilder + bildlose Drafts mit fal.ai neu bebildern? (3 Produkte pro Durchlauf, ca. 30–60 Sek)"
+        : "Bildlose Drafts mit fal.ai bebildern? (3 Produkte pro Durchlauf)"
     )) return;
 
     setRunning(true);
@@ -32,7 +32,7 @@ export function BatchImageButton() {
       const res = await fetch("/api/admin/market/opportunities/batch-refresh-images", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ limit: 10, mode }),
+        body: JSON.stringify({ limit: 3, mode }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
@@ -70,7 +70,7 @@ export function BatchImageButton() {
         style={{ whiteSpace: "nowrap" }}
         title="Generiert DALL-E HD Bilder für Produkt-Drafts mit Kleinanzeigen-Bildern oder ohne Bild"
       >
-        {running ? "DALL-E läuft…" : "Bilder generieren"}
+        {running ? "fal.ai läuft…" : "Bilder generieren"}
       </button>
       {result && !running && (
         <span style={{ fontSize: 12, color: "#166534" }}>

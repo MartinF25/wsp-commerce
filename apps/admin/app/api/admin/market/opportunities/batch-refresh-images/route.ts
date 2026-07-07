@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 
+export const maxDuration = 300;
+
 const BASE_URL = (process.env.COMMERCE_API_URL ?? "http://localhost:3000").trim().replace(/\/$/, "");
 const ADMIN_KEY = (process.env.ADMIN_API_KEY ?? "").trim();
 
@@ -10,8 +12,7 @@ export async function POST(req: NextRequest) {
     headers: { "Content-Type": "application/json", "X-Admin-Key": ADMIN_KEY },
     body: body || "{}",
     cache: "no-store",
-    // DALL-E HD kann 10-30s pro Bild dauern – großzügiger Timeout
-    signal: AbortSignal.timeout(600000),
+    signal: AbortSignal.timeout(295000),
   });
   return new Response(await res.text(), {
     status: res.status,
