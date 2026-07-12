@@ -110,6 +110,8 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   const [editingVariantPrice, setEditingVariantPrice] = useState("");
   const [editingSalePriceId, setEditingSalePriceId] = useState<string | null>(null);
   const [editingSalePrice, setEditingSalePrice] = useState("");
+  const [editingStockId, setEditingStockId] = useState<string | null>(null);
+  const [editingStockValue, setEditingStockValue] = useState("");
 
   // ── Bilder
   const [images, setImages] = useState<ProductImage[]>(product?.images ?? []);
@@ -307,6 +309,29 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
       if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       setVariants((prev) => prev.map((v) => v.id === varId ? { ...v, sale_price_cents: json.data.sale_price_cents } : v));
       setEditingSalePriceId(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleUpdateVariantStock(varId: string) {
+    const raw = editingStockValue.trim();
+    const parsed = parseInt(raw, 10);
+    if (raw !== "" && (isNaN(parsed) || parsed < 0)) {
+      setError("Ungültiger Lagerbestand. Bitte eine ganze Zahl eingeben (z.B. 5).");
+      return;
+    }
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin-proxy/variants/${varId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stock_quantity: raw === "" ? 0 : parsed }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
+      setVariants((prev) => prev.map((v) => v.id === varId ? { ...v, stock_quantity: json.data.stock_quantity } : v));
+      setEditingStockId(null);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -1186,7 +1211,43 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                         )}
                       </td>
                       <td>{v.currency}</td>
-                      <td>{v.stock_quantity}</td>
+                      <td>
+                        {editingStockId === v.id ? (
+                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                            <input
+                              type="number"
+                              min="0"
+                              value={editingStockValue}
+                              onChange={(e) => setEditingStockValue(e.target.value)}
+                              style={{ width: 70 }}
+                              placeholder="0"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleUpdateVariantStock(v.id);
+                                if (e.key === "Escape") setEditingStockId(null);
+                              }}
+                            />
+                            <button type="button" className="btn btn-primary btn-sm" onClick={() => handleUpdateVariantStock(v.id)}>✓</button>
+                            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditingStockId(null)}>✕</button>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                            <span style={{ color: (v.stock_quantity ?? 0) === 0 ? "#ef4444" : undefined, fontWeight: (v.stock_quantity ?? 0) === 0 ? 600 : undefined }}>
+                              {v.stock_quantity ?? 0}
+                            </span>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => {
+                                setEditingStockId(v.id);
+                                setEditingStockValue(String(v.stock_quantity ?? 0));
+                              }}
+                            >
+                              Ändern
+                            </button>
+                          </div>
+                        )}
+                      </td>
                       <td>
                         <span className={`badge ${v.is_active ? "badge-active" : "badge-inactive"}`}>
                           {v.is_active ? "Ja" : "Nein"}
