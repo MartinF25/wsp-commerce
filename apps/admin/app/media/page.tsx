@@ -1,4 +1,7 @@
+﻿"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 interface ImageEntry {
   id: string;
@@ -9,23 +12,37 @@ interface ImageEntry {
   product: { id: string; slug: string; name: string };
 }
 
-async function fetchAllImages(): Promise<ImageEntry[]> {
-  const BASE_URL = (process.env.COMMERCE_API_URL ?? "").replace(/\/$/, "");
-  const ADMIN_KEY = process.env.ADMIN_API_KEY ?? "";
+export default function MediaPage() {
+  const [images, setImages] = useState<ImageEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const res = await fetch(`${BASE_URL}/api/admin/images`, {
-    headers: { "X-Admin-Key": ADMIN_KEY },
-    cache: "no-store",
-  });
+  useEffect(() => {
+    fetch("/api/admin-proxy/images")
+      .then((r) => r.json())
+      .then((j) => { setImages(j.data ?? []); setLoading(false); })
+      .catch((e) => { setError(e.message); setLoading(false); });
+  }, []);
 
-  if (!res.ok) return [];
+  async function handleDelete(imgId: string) {
+    if (!confirm("Bild aus dem Produkt entfernen?")) return;
+    setDeletingId(imgId);
+    try {
+      const res = await fetch(`/api/admin-proxy/images/${imgId}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 204) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error?.message ?? `HTTP ${res.status}`);
+      }
+      setImages((prev) => prev.filter((i) => i.id !== imgId));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
-  const json = await res.json();
-  return json.data ?? [];
-}
-
-export default async function MediaPage() {
-  const images = await fetchAllImages();
+  const productCount = new Set(images.map((e) => e.product_id)).size;
 
   return (
     <div style={{ padding: "24px 32px", maxWidth: 1200 }}>
@@ -34,22 +51,26 @@ export default async function MediaPage() {
         <Link href="/" style={{ fontSize: 13, color: "#6b7280" }}>← Zurück</Link>
       </div>
 
-      {images.length === 0 ? (
+      {error && (
+        <div className="alert alert-error" style={{ marginBottom: 16 }}>{error}</div>
+      )}
+
+      {loading ? (
+        <div style={{ padding: "48px 0", textAlign: "center", color: "#9ca3af" }}>Lädt…</div>
+      ) : images.length === 0 ? (
         <div style={{ padding: "48px 0", textAlign: "center", color: "#9ca3af" }}>
-          Noch keine Bilder vorhanden. Bilder über die Produktbearbeitung hochladen.
+          Noch keine Bilder vorhanden.
         </div>
       ) : (
         <>
           <p style={{ color: "#6b7280", fontSize: 13, marginBottom: 20 }}>
             {images.length} Bild{images.length !== 1 ? "er" : ""} in{" "}
-            {new Set(images.map((e) => e.product_id)).size} Produkt
-            {new Set(images.map((e) => e.product_id)).size !== 1 ? "en" : ""}
+            {productCount} Produkt{productCount !== 1 ? "en" : ""}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
             {images.map((image) => (
               <div key={image.id} style={{ border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden", background: "#fff" }}>
                 <div style={{ aspectRatio: "4/3", background: "#f9fafb", overflow: "hidden" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={image.url}
                     alt={image.alt ?? image.product.name}
@@ -76,6 +97,25 @@ export default async function MediaPage() {
                   >
                     {image.url}
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(image.id)}
+                    disabled={deletingId === image.id}
+                    style={{
+                      marginTop: 8,
+                      width: "100%",
+                      padding: "5px 0",
+                      background: deletingId === image.id ? "#fca5a5" : "#fee2e2",
+                      color: "#991b1b",
+                      border: "1px solid #fca5a5",
+                      borderRadius: 5,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: deletingId === image.id ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {deletingId === image.id ? "Wird gelöscht…" : "Entfernen"}
+                  </button>
                 </div>
               </div>
             ))}
@@ -85,3 +125,4 @@ export default async function MediaPage() {
     </div>
   );
 }
+
