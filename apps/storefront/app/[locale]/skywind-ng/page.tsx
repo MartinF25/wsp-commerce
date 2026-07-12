@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { fetchProducts } from "@/lib/catalog";
+import { fetchProducts, fetchCategory } from "@/lib/catalog";
 import { ProductCard } from "@/components/ProductCard";
 import { FaqSection } from "@/components/FaqSection";
 import { SKYWIND_FAQ_ITEMS, SKYWIND_FAQ_ITEMS_DE } from "@/lib/skywindFaq";
@@ -181,6 +181,14 @@ export default async function SkywindNgPage({ params }: Props) {
     products = [];
   }
 
+  let skywindChildren: import("@wsp/types").CategorySummary[] = [];
+  try {
+    const skywindCat = await fetchCategory("skywind", params.locale);
+    if (skywindCat) skywindChildren = skywindCat.children;
+  } catch {
+    skywindChildren = [];
+  }
+
   const localePrefix = params.locale === "de" ? "" : `/${params.locale}`;
   const canonicalUrl = `${BASE}${localePrefix}/skywind-ng`;
 
@@ -342,6 +350,70 @@ export default async function SkywindNgPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* ── Kategorien / Schnellnavigation ── */}
+      {skywindChildren.length > 0 && (
+        <section className="py-10 sm:py-14">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-7">
+              <p className="text-xs font-medium text-brand-accent uppercase tracking-widest mb-2">
+                {isDE ? "Kategorien" : "Categories"}
+              </p>
+              <h2 className="font-display text-2xl font-bold text-brand-text">
+                {isDE ? "Direkt zur richtigen Kategorie" : "Jump to the Right Category"}
+              </h2>
+              <p className="text-sm text-brand-muted mt-1">
+                {isDE
+                  ? "Alle SkyWind NG Unterkategorien auf einen Blick – Komplettsets, Zubehör, Masten und mehr."
+                  : "All SkyWind NG subcategories at a glance — complete sets, accessories, masts and more."}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {skywindChildren.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/categories/${cat.slug}` as any}
+                  className="group flex items-start gap-4 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:border-brand-accent hover:shadow-md transition-all duration-150"
+                >
+                  {cat.imageUrl ? (
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0">
+                      <Image
+                        src={cat.imageUrl}
+                        alt={cat.name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-green-50 flex items-center justify-center shrink-0 text-2xl group-hover:bg-green-100 transition-colors">
+                      🌬️
+                    </div>
+                  )}
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <h3 className="font-display font-semibold text-brand-text text-sm group-hover:text-brand-accent transition-colors leading-snug mb-1">
+                      {cat.name}
+                    </h3>
+                    {cat.description && (
+                      <p className="text-xs text-brand-muted leading-relaxed line-clamp-2">{cat.description}</p>
+                    )}
+                    <div className="flex items-center justify-between mt-2">
+                      {cat.productCount > 0 && (
+                        <span className="text-xs text-brand-muted">
+                          {cat.productCount} {isDE ? "Produkte" : "products"}
+                        </span>
+                      )}
+                      <span className="text-xs font-semibold text-brand-accent ml-auto">
+                        {isDE ? "Ansehen →" : "View →"}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Was ist die SkyWind NG? ── */}
       <section className="py-16 sm:py-20">

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Sora, Inter } from "next/font/google";
-import Image from "next/image";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -120,17 +119,10 @@ export default async function LocaleLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
               <Link
                 href="/"
-                className="flex items-center gap-2.5 shrink-0"
-                aria-label="WSP Solarenergie – Startseite"
+                className="font-display font-bold text-xl text-brand-text hover:text-brand-accent transition-colors duration-150 shrink-0"
+                aria-label="WSP-Webshop – Startseite"
               >
-                <Image
-                  src="/images/logo.png"
-                  alt="WSP Solarenergie Logo"
-                  width={120}
-                  height={36}
-                  className="h-8 w-auto object-contain"
-                  priority
-                />
+                WSP-Webshop
               </Link>
 
               {/* Desktop-Navigation – ab lg sichtbar */}
