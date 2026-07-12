@@ -72,6 +72,9 @@ export function toProductSummary(
     affiliateProvider: product.affiliate_provider ?? null,
     features: toStringArray(t?.features),
     stickers,
+    vatRate: (product as any).vat_rate ?? 19,
+    shippingType: (product as any).shipping_type ?? "freight",
+    shippingCents: (product as any).shipping_cents ?? null,
   };
 }
 
@@ -172,6 +175,9 @@ export function toProductDetail(
     affiliateButtonLabel: product.affiliate_button_label ?? null,
     affiliateDisclosure: product.affiliate_disclosure ?? null,
     stickers,
+    vatRate: (product as any).vat_rate ?? 19,
+    shippingType: (product as any).shipping_type ?? "freight",
+    shippingCents: (product as any).shipping_cents ?? null,
   };
 }
 

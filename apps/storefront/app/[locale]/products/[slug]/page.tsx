@@ -372,6 +372,46 @@ export default async function ProductDetailPage({ params }: Props) {
               <p className="text-xs text-brand-muted mb-6">{deliveryHint}</p>
             )}
 
+            {p.product_type !== "affiliate_external" && (
+              <div className="text-xs text-brand-muted mb-4 space-y-1">
+                {p.vatRate === 0 ? (
+                  <p>inkl. 0&#8239;% MwSt. (Nullsteuersatz §&#8239;12 Abs.&#8239;3 UStG)</p>
+                ) : p.vatRate === 7 ? (
+                  <p>inkl. 7&#8239;% MwSt.</p>
+                ) : p.priceDisplay.minCents != null ? (
+                  <p>
+                    inkl. 19&#8239;% MwSt. &ndash; Nettobetrag:{" "}
+                    {new Intl.NumberFormat("de-DE", {
+                      style: "currency",
+                      currency: p.priceDisplay.currencyCode,
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }).format(p.priceDisplay.minCents / 100 / 1.19)}
+                  </p>
+                ) : (
+                  <p>inkl. 19&#8239;% MwSt.</p>
+                )}
+                {p.shippingType === "free" ? (
+                  <p className="text-emerald-600 font-medium">&#10003; Kostenloser Versand</p>
+                ) : p.shippingType === "flat" && p.shippingCents != null ? (
+                  <p>
+                    zzgl.{" "}
+                    {new Intl.NumberFormat("de-DE", {
+                      style: "currency",
+                      currency: p.priceDisplay.currencyCode,
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }).format(p.shippingCents / 100)}{" "}
+                    Versandkosten
+                  </p>
+                ) : p.shippingType === "pickup" ? (
+                  <p>Nur Abholung &ndash; kein Versand</p>
+                ) : (
+                  <p>Versand per Spedition &ndash; Kosten auf Anfrage</p>
+                )}
+              </div>
+            )}
+
             <div className="border border-gray-100 rounded-2xl p-4 grid grid-cols-2 gap-3 mb-6">
               {trustBadges.map((text) => (
                 <div key={text} className="flex items-center gap-2">

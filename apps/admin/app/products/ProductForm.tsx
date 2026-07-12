@@ -67,6 +67,11 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   const [availabilityStatus, setAvailabilityStatus] = useState<string>(
     (product as any)?.availability_status ?? "in_stock"
   );
+  const [vatRate, setVatRate] = useState<number>((product as any)?.vat_rate ?? 19);
+  const [shippingType, setShippingType] = useState<string>((product as any)?.shipping_type ?? "freight");
+  const [shippingCents, setShippingCents] = useState<string>(
+    (product as any)?.shipping_cents != null ? String((product as any).shipping_cents / 100) : ""
+  );
   const [categoryId, setCategoryId] = useState(product?.category_id ?? "");
   const [paypalUrl, setPaypalUrl] = useState(product?.paypal_url ?? "");
   const [stripeUrl, setStripeUrl] = useState(product?.stripe_url ?? "");
@@ -186,6 +191,11 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
         product_type: productType,
         status,
         availability_status: availabilityStatus,
+        vat_rate: vatRate,
+        shipping_type: shippingType,
+        shipping_cents: shippingType === "flat" && shippingCents.trim()
+          ? Math.round(parseFloat(shippingCents.replace(",", ".")) * 100)
+          : null,
         category_id: categoryId || null,
         paypal_url: paypalUrl.trim() || null,
         stripe_url: stripeUrl.trim() || null,
@@ -573,6 +583,37 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
+          </div>
+        </div>
+
+        <div className="form-row form-row-3">
+          <div>
+            <label>Mehrwertsteuer</label>
+            <select value={vatRate} onChange={(e) => setVatRate(Number(e.target.value))}>
+              <option value={19}>19% MwSt. (Regelsteuersatz)</option>
+              <option value={0}>0% MwSt. (Nullsteuersatz §12 Abs. 3 UStG)</option>
+              <option value={7}>7% MwSt. (ermäßigt)</option>
+            </select>
+          </div>
+          <div>
+            <label>Versandart</label>
+            <select value={shippingType} onChange={(e) => setShippingType(e.target.value)}>
+              <option value="freight">Spedition – Kosten auf Anfrage</option>
+              <option value="free">Kostenloser Versand</option>
+              <option value="flat">Pauschalpreis</option>
+              <option value="pickup">Nur Abholung</option>
+            </select>
+          </div>
+          <div>
+            <label>Versandkosten <span className="opt">(nur bei Pauschale)</span></label>
+            <input
+              type="text"
+              value={shippingCents}
+              onChange={(e) => setShippingCents(e.target.value)}
+              placeholder="z.B. 9,90"
+              disabled={shippingType !== "flat"}
+              style={{ opacity: shippingType !== "flat" ? 0.4 : 1 }}
+            />
           </div>
         </div>
 

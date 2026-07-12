@@ -209,6 +209,38 @@ export function ProductCard({ product, showCategory = true, featureVisuals }: Pr
           )}
         </div>
 
+        {/* MwSt. & Versand */}
+        {product.product_type !== "affiliate_external" && (
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mb-3 text-xs text-brand-muted">
+            <span>
+              {product.vatRate === 0
+                ? "inkl. 0 % MwSt."
+                : product.vatRate === 7
+                ? "inkl. 7 % MwSt."
+                : "inkl. 19 % MwSt."}
+            </span>
+            <span>&middot;</span>
+            {product.shippingType === "free" ? (
+              <span className="text-emerald-600 font-medium">&#10003; Versandkostenfrei</span>
+            ) : product.shippingType === "flat" && product.shippingCents != null ? (
+              <span>
+                zzgl.{" "}
+                {new Intl.NumberFormat("de-DE", {
+                  style: "currency",
+                  currency: priceDisplay.currencyCode,
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }).format(product.shippingCents / 100)}{" "}
+                Versand
+              </span>
+            ) : product.shippingType === "pickup" ? (
+              <span>Nur Abholung</span>
+            ) : (
+              <span>Spedition auf Anfrage</span>
+            )}
+          </div>
+        )}
+
         {/* Countdown – nur wenn Angebot mit Ablaufdatum */}
         {priceDisplay.showCountdown && priceDisplay.saleEndsAt && (
           <OfferCountdown

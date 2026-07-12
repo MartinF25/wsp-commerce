@@ -134,6 +134,12 @@ export const ProductSummarySchema = z.object({
   features: z.array(z.string()),
   /** Aufgelöste Sticker für dieses Produkt (nach Regelauswertung, sortiert nach Priorität). */
   stickers: z.array(StickerDisplaySchema),
+  /** Mehrwertsteuersatz in Prozent: 0 (Nullsteuersatz) oder 19 (Regelsteuersatz) */
+  vatRate: z.number().int(),
+  /** Versandart: free | flat | freight | pickup */
+  shippingType: z.string(),
+  /** Versandkosten in Cent – nur bei shippingType="flat" gesetzt */
+  shippingCents: z.number().int().nullable(),
 });
 export type ProductSummary = z.infer<typeof ProductSummarySchema>;
 
@@ -187,6 +193,12 @@ export const ProductDetailSchema = z.object({
   affiliateDisclosure: z.string().nullable(),
   /** Aufgelöste Sticker für dieses Produkt (nach Regelauswertung, sortiert nach Priorität). */
   stickers: z.array(StickerDisplaySchema),
+  /** Mehrwertsteuersatz in Prozent: 0 (Nullsteuersatz) oder 19 (Regelsteuersatz) */
+  vatRate: z.number().int(),
+  /** Versandart: free | flat | freight | pickup */
+  shippingType: z.string(),
+  /** Versandkosten in Cent – nur bei shippingType="flat" gesetzt */
+  shippingCents: z.number().int().nullable(),
 });
 export type ProductDetail = z.infer<typeof ProductDetailSchema>;
 

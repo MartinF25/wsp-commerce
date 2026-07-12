@@ -539,6 +539,20 @@ adminRoutes.put("/products/:id", async (c) => {
       (productData as any).availability_status = b.availability_status;
     }
   }
+  if ("vat_rate" in b && (b.vat_rate === 0 || b.vat_rate === 19 || b.vat_rate === 7)) {
+    productData.vat_rate = b.vat_rate as number;
+  }
+  if ("shipping_type" in b) {
+    const validShipping = ["free", "flat", "freight", "pickup"];
+    if (typeof b.shipping_type === "string" && validShipping.includes(b.shipping_type)) {
+      productData.shipping_type = b.shipping_type;
+    }
+  }
+  if ("shipping_cents" in b) {
+    productData.shipping_cents = typeof b.shipping_cents === "number" && b.shipping_cents >= 0
+      ? Math.round(b.shipping_cents)
+      : null;
+  }
 
   // Translations upsert
   if (translations && typeof translations === "object") {

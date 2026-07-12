@@ -259,6 +259,13 @@ model Product {
   /// Countdown nur anzeigen wenn sale_ends_at gesetzt ist.
   show_countdown   Boolean   @default(false)
 
+  /// Mehrwertsteuer: 0 = Nullsteuersatz (§12 Abs. 3 UStG, Solarprodukte), 19 = Regelsteuersatz
+  vat_rate         Int       @default(19)
+  /// Versandart: free | flat | freight | pickup
+  shipping_type    String    @default("freight")
+  /// Versandkosten in Cent – nur relevant wenn shipping_type = "flat"
+  shipping_cents   Int?
+
   /// Affiliate-Konfiguration – nur relevant wenn product_type = affiliate_external.
   /// affiliate_url muss den korrekten Partner-Tag des Anbieters enthalten.
   /// Kein eigener Checkout, kein Warenkorb für Produkte dieses Typs.
