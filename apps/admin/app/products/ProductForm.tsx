@@ -1452,6 +1452,16 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
         <button type="button" className="btn btn-secondary" onClick={() => router.push("/products")}>
           Abbrechen
         </button>
+        {!isNew && product?.slug && (
+          <a
+            href={`https://webshop.wsp-solarenergie.de/products/${product.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+          >
+            🔗 Live ansehen
+          </a>
+        )}
         {!isNew && product?.status !== "archived" && (
           <button
             type="button"
