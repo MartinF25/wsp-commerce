@@ -168,6 +168,12 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
     setError(null);
     setSuccess(null);
 
+    // Offene Inline-Edits erst speichern bevor das Produkt gespeichert wird
+    if (editingStockId !== null) {
+      await handleUpdateVariantStock(editingStockId);
+      // handleUpdateVariantStock setzt editingStockId=null bei Erfolg oder error bei Fehler
+    }
+
     if (!translations.de.name.trim()) {
       setError("Name (DE) ist ein Pflichtfeld.");
       setSaving(false);
@@ -1151,7 +1157,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                               placeholder="z.B. 1299,00"
                               autoFocus
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") handleUpdateVariantPrice(v.id);
+                                if (e.key === "Enter") { e.preventDefault(); handleUpdateVariantPrice(v.id); }
                                 if (e.key === "Escape") setEditingVariantId(null);
                               }}
                             />
@@ -1185,7 +1191,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                               placeholder="leer = kein Angebot"
                               autoFocus
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") handleUpdateVariantSalePrice(v.id);
+                                if (e.key === "Enter") { e.preventDefault(); handleUpdateVariantSalePrice(v.id); }
                                 if (e.key === "Escape") setEditingSalePriceId(null);
                               }}
                             />
@@ -1223,7 +1229,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                               placeholder="0"
                               autoFocus
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") handleUpdateVariantStock(v.id);
+                                if (e.key === "Enter") { e.preventDefault(); handleUpdateVariantStock(v.id); }
                                 if (e.key === "Escape") setEditingStockId(null);
                               }}
                             />
