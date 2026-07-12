@@ -217,6 +217,29 @@ export default async function ProductDetailPage({ params }: Props) {
         </nav>
       </div>
 
+      {/* ── Verkauft-Banner ── */}
+      {p.availabilityStatus === "discontinued" && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4 flex items-start gap-4">
+            <span className="text-2xl mt-0.5">🏷️</span>
+            <div>
+              <p className="font-semibold text-amber-900 text-sm">
+                Dieses Produkt wurde verkauft und ist nicht mehr verfügbar.
+              </p>
+              <p className="text-amber-700 text-xs mt-1">
+                Sie können uns gerne kontaktieren – wir beraten Sie zu vergleichbaren Produkten oder Neulieferungen.
+              </p>
+              <Link
+                href="/kontakt"
+                className="inline-block mt-3 text-xs font-semibold text-white bg-brand-accent rounded-lg px-4 py-1.5 hover:bg-green-600 transition-colors duration-150"
+              >
+                Beratung anfragen →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
