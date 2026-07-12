@@ -1097,12 +1097,8 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                             type="button"
                             className="btn btn-danger btn-sm"
                             onClick={() => handleDeleteImage(img.id)}
-                            title="Bild entfernen"
-                            style={{ padding: "4px 8px", lineHeight: 1 }}
                           >
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M2 4h12M6 4V2h4v2M5 4v8a1 1 0 001 1h4a1 1 0 001-1V4H5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
+                            Löschen
                           </button>
                         </td>
                       </tr>
