@@ -10,12 +10,6 @@ const LOCALE_LABELS: Record<string, string> = {
   es: "ES",
 };
 
-const LOCALE_FLAGS: Record<string, string> = {
-  de: "🇩🇪",
-  en: "🇬🇧",
-  es: "🇪🇸",
-};
-
 export function LanguageSwitcher() {
   const locale = useLocale();
   const router = useRouter();
@@ -27,13 +21,10 @@ export function LanguageSwitcher() {
 
   return (
     <div className="relative flex items-center">
-      <span className="pointer-events-none absolute left-2 text-sm" aria-hidden>
-        {LOCALE_FLAGS[locale]}
-      </span>
       <select
         value={locale}
         onChange={handleChange}
-        className="appearance-none pl-7 pr-5 py-1 text-xs font-semibold text-brand-muted bg-transparent border border-gray-200 rounded-lg hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent cursor-pointer transition-colors duration-150"
+        className="appearance-none pl-3 pr-6 py-1 text-xs font-semibold text-brand-muted bg-transparent border border-gray-200 rounded-lg hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent cursor-pointer transition-colors duration-150"
         aria-label="Sprache wechseln"
       >
         {routing.locales.map((l) => (

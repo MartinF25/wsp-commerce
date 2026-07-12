@@ -1,5 +1,44 @@
 import type { FaqItem } from "@/components/FaqSection";
 
+export const SKYWIND_FAQ_ITEMS_DE: FaqItem[] = [
+  {
+    q: "Was ist die SkyWind NG?",
+    a: "Die SkyWind NG ist eine kompakte Kleinwindanlage für den Einsatz im Privat-, Gewerbe- und Agrarbereich. In zwei Modellen erhältlich – SkyWind NG 1kW und SkyWind NG 2kW – erzeugt sie sauberen Strom aus Wind ab 2,5 m/s Anlaufgeschwindigkeit. Das geräuscharme Design (≤45 dB bei 10 m) und der kompakte Rotor ermöglichen Dach-, Mast- und Fassadenmontage.",
+  },
+  {
+    q: "Kann die SkyWind NG im Inselbetrieb betrieben werden?",
+    a: "Ja. Die SkyWind NG ist vollständig mit Inselbetrieb-Batteriesystemen kompatibel. Sie wird über einen Laderegler mit 12V-, 24V- oder 48V-Akkus verbunden und ermöglicht so eine kontinuierliche Stromversorgung ohne Netzanschluss. Ideal für abgelegene Hütten, Höfe, energieautarke Häuser und Notstrominstallationen.",
+  },
+  {
+    q: "Kann ich die SkyWind NG mit Solarmodulen kombinieren?",
+    a: "Absolut – die Kombination der SkyWind NG mit Solarmodulen ist die empfohlene Konfiguration. Solar erzeugt den meisten Strom im Sommer bei Sonne; die SkyWind NG liefert vor allem im Winter, nachts und bei bewölktem Wetter. Ein hybrides Solar-Wind-System mit Batteriespeicher kann Eigenversorgungsquoten von über 70 % erreichen.",
+  },
+  {
+    q: "Ist die SkyWind NG für die Dachmontage geeignet?",
+    a: "Ja. Die SkyWind NG kann mit einem Flanschmast ab 3 m auf Dächern montiert werden. Das schwingungsgedämpfte und geräuscharme Design eignet sich ideal für gebäudemontierten Einsatz auf Sattel- und Flachdächern sowie Gewerbegebäuden. Vor der Dachmontage empfehlen wir eine statische Prüfung.",
+  },
+  {
+    q: "Wie viel Energie produziert eine Kleinwindanlage?",
+    a: "Der Jahresertrag hängt von den Windbedingungen am Standort ab. Die SkyWind NG 1kW erzeugt bei einer durchschnittlichen Windgeschwindigkeit von 5 m/s ca. 1.500–2.500 kWh/Jahr; das 2kW-Modell produziert 3.000–5.000 kWh/Jahr bei 5–6 m/s. Wir führen eine kostenlose Standortbewertung durch, um eine genaue Ertragsprognose für Ihren Standort zu erstellen.",
+  },
+  {
+    q: "Benötige ich einen Batteriespeicher?",
+    a: "Nicht zwingend. Die SkyWind NG funktioniert sowohl im netzgekoppelten als auch im Inselbetrieb. Im netzgekoppelten Betrieb speist sie Strom direkt ins Hausnetz oder öffentliche Netz ein. Für Insel- oder Hybridbetrieb wird ein Batteriespeicher empfohlen, um überschüssige Energie zu speichern und die Versorgung bei schwachem Wind sicherzustellen.",
+  },
+  {
+    q: "Ist weltweiter Versand möglich?",
+    a: "Ja. Wir liefern die SkyWind NG europaweit, innerhalb der EU in der Regel in 5–10 Werktagen. Für Ziele außerhalb der EU erstellen wir auf Anfrage Frachtangebote. Alle Einheiten umfassen CE-Zertifizierung, mehrsprachige Dokumentation (DE, EN, ES) und 2 Jahre Herstellergarantie.",
+  },
+  {
+    q: "Welche Windgeschwindigkeit wird für die SkyWind NG benötigt?",
+    a: "Die SkyWind NG beginnt bei ca. 2,5 m/s (etwa 9 km/h) mit der Stromerzeugung. Die Nennleistung wird bei 10–12 m/s erreicht. Standorte mit einer mittleren Jahreswindgeschwindigkeit von 4 m/s oder mehr sind grundsätzlich geeignet. Wir empfehlen den Global Wind Atlas oder unseren kostenlosen Standort-Check zur Beurteilung der Windbedingungen.",
+  },
+  {
+    q: "Ist die SkyWind NG für Wohnhäuser, Hütten und abgelegene Standorte geeignet?",
+    a: "Ja. Die SkyWind NG 1kW ist speziell für den privaten und netzfernen Einsatz konzipiert. Kleiner Platzbedarf, geringer Geräuschpegel und Inselbetrieb-Kompatibilität machen sie gleichermaßen geeignet für Hausgärten, abgelegene Berghütten, ländliche Anwesen und landwirtschaftliche Betriebe. Kontaktieren Sie uns für eine kostenlose Beratung zur Modellauswahl.",
+  },
+];
+
 export const SKYWIND_FAQ_ITEMS: FaqItem[] = [
   {
     q: "What is the SkyWind NG?",

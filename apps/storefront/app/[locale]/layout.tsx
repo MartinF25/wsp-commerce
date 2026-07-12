@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Sora, Inter } from "next/font/google";
+import Image from "next/image";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -47,6 +48,7 @@ export async function generateMetadata({
   const canonicalUrl = params.locale === "de" ? `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/` : `${process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://webshop.wsp-solarenergie.de"}/${params.locale}`;
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_STOREFRONT_URL ?? "http://localhost:3000"),
+    other: { google: "notranslate" },
     title: t("meta_title"),
     description: t("meta_description"),
     alternates: {
@@ -105,7 +107,7 @@ export default async function LocaleLayout({
   const t = await getTranslations({ locale, namespace: "nav" });
 
   return (
-    <html lang={locale} className={`${sora.variable} ${inter.variable}`}>
+    <html lang={locale} translate="no" className={`${sora.variable} ${inter.variable}`}>
       <body className="bg-white text-brand-text font-sans antialiased min-h-screen flex flex-col">
         <NextIntlClientProvider messages={messages}>
           <CartProvider>
@@ -118,9 +120,17 @@ export default async function LocaleLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
               <Link
                 href="/"
-                className="font-display font-semibold text-brand-text hover:text-brand-accent transition-colors duration-150"
+                className="flex items-center gap-2.5 shrink-0"
+                aria-label="WSP Solarenergie – Startseite"
               >
-                Solarzaun &amp; SkyWind
+                <Image
+                  src="/images/logo.png"
+                  alt="WSP Solarenergie Logo"
+                  width={120}
+                  height={36}
+                  className="h-8 w-auto object-contain"
+                  priority
+                />
               </Link>
 
               {/* Desktop-Navigation – ab lg sichtbar */}
@@ -130,9 +140,6 @@ export default async function LocaleLayout({
                 </Link>
                 <Link href="/skywind-ng" className="text-sm font-medium text-brand-muted hover:text-brand-text transition-colors duration-150">
                   SkyWind NG
-                </Link>
-                <Link href="/skywind" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150">
-                  {t("skywind")}
                 </Link>
                 <Link href="/kombiloesungen" className="text-sm text-brand-muted hover:text-brand-text transition-colors duration-150">
                   {t("kombiloesungen")}
@@ -158,7 +165,6 @@ export default async function LocaleLayout({
                 <MobileNav
                   labels={{
                     solarzaun: t("solarzaun"),
-                    skywind: t("skywind"),
                     kombiloesungen: t("kombiloesungen"),
                     products: t("products"),
                     blog: t("blog"),
