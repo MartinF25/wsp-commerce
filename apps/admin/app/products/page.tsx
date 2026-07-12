@@ -106,6 +106,7 @@ export default async function ProductsPage({
               <th>Status</th>
               <th>Kategorie</th>
               <th>Varianten</th>
+              <th>Lagerbestand</th>
               <th></th>
             </tr>
           </thead>
@@ -135,6 +136,11 @@ export default async function ProductsPage({
                   </td>
                   <td>{p.category?.name ?? <span style={{ color: "#9ca3af" }}>—</span>}</td>
                   <td>{p.variantCount}</td>
+                  <td>
+                    <span style={{ color: p.totalStock === 0 ? "#ef4444" : "#166534", fontWeight: 600 }}>
+                      {p.totalStock}
+                    </span>
+                  </td>
                   <td>
                     <Link href={`/products/${p.id}`} className="btn btn-secondary btn-sm">Bearbeiten</Link>
                   </td>

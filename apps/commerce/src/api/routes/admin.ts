@@ -369,6 +369,7 @@ adminRoutes.get("/products", async (c) => {
       category: true,
       translations: { where: { locale: "de" } },
       _count: { select: { variants: true } },
+      variants: { select: { stock_quantity: true } },
     },
     orderBy: { updated_at: "desc" },
   });
@@ -384,6 +385,7 @@ adminRoutes.get("/products", async (c) => {
         ? { id: p.category.id, slug: p.category.slug, name: p.category.name }
         : null,
       variantCount: p._count.variants,
+      totalStock: p.variants.reduce((sum, v) => sum + (v.stock_quantity ?? 0), 0),
       created_at: p.created_at.toISOString(),
       updated_at: p.updated_at.toISOString(),
     })),

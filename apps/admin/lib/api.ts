@@ -175,6 +175,7 @@ export interface ProductSummary {
   product_type: ProductType;
   category: { id: string; slug: string; name: string } | null;
   variantCount: number;
+  totalStock: number;
   created_at: string;
   updated_at: string;
 }
