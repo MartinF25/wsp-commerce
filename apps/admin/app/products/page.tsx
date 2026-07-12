@@ -23,7 +23,11 @@ const STATUS_ORDER: Record<ProductStatus, number> = {
   archived: 2,
 };
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: { status?: string };
+}) {
   let products: Awaited<ReturnType<typeof api.products.list>> = [];
   let error: string | null = null;
 
@@ -33,32 +37,62 @@ export default async function ProductsPage() {
     error = (e as Error).message;
   }
 
-  const sorted = [...products].sort(
+  const filterStatus = searchParams.status as ProductStatus | undefined;
+  const filtered = filterStatus
+    ? products.filter((p) => p.status === filterStatus)
+    : products;
+
+  const sorted = [...filtered].sort(
     (a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)
   );
 
   const onlineCount = products.filter((p) => p.status === "active").length;
+  const isFiltered = !!filterStatus;
 
   return (
     <>
       <div className="page-header">
         <h1>
-          Produkte
-          {onlineCount > 0 && (
-            <span style={{
-              marginLeft: 12,
-              fontSize: 13,
-              fontWeight: 500,
-              color: "#166534",
-              background: "#dcfce7",
-              borderRadius: 999,
-              padding: "2px 10px",
-            }}>
-              {onlineCount} online
-            </span>
+          {isFiltered ? (
+            <>
+              Online-Artikel
+              <span style={{
+                marginLeft: 12,
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#166534",
+                background: "#dcfce7",
+                borderRadius: 999,
+                padding: "2px 10px",
+              }}>
+                {sorted.length} online
+              </span>
+            </>
+          ) : (
+            <>
+              Produkte
+              {onlineCount > 0 && (
+                <span style={{
+                  marginLeft: 12,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#166534",
+                  background: "#dcfce7",
+                  borderRadius: 999,
+                  padding: "2px 10px",
+                }}>
+                  {onlineCount} online
+                </span>
+              )}
+            </>
           )}
         </h1>
-        <Link href="/products/new" className="btn btn-primary">+ Neues Produkt</Link>
+        <div style={{ display: "flex", gap: 8 }}>
+          {isFiltered && (
+            <Link href="/products" className="btn btn-secondary">Alle Produkte</Link>
+          )}
+          <Link href="/products/new" className="btn btn-primary">+ Neues Produkt</Link>
+        </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}

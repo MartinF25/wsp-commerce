@@ -140,6 +140,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/market/opportunities">Tageschancen</Link>
               <Link href="/market">Listings</Link>
               <Link href="/market/referenzpreise">Referenzpreise</Link>
+              <Link href="/products?status=active">Online-Artikel</Link>
               <div style={{ padding: "12px 16px 4px", fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>Widerruf</div>
               <Link href="/widerrufe">Anfragen</Link>
               <Link href="/settings/widerruf">Einstellungen</Link>
