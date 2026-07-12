@@ -461,7 +461,12 @@ adminRoutes.get("/products/:id", async (c) => {
 
   if (!product) throw new CatalogError("PRODUCT_NOT_FOUND", 404, `Produkt nicht gefunden: ${id}`);
 
-  return c.json({ data: product });
+  const sourceListing = await prisma.marketListing.findFirst({
+    where: { productDraftId: id },
+    select: { id: true, listing_url: true, title: true, source: true },
+  });
+
+  return c.json({ data: { ...product, sourceListing: sourceListing ?? null } });
 });
 
 adminRoutes.put("/products/:id", async (c) => {

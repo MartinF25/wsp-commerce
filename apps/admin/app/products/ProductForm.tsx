@@ -1468,6 +1468,16 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
             🔗 Live ansehen
           </a>
         )}
+        {!isNew && product?.sourceListing?.listing_url && (
+          <a
+            href={product.sourceListing.listing_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+          >
+            📋 Kleinanzeige
+          </a>
+        )}
         {!isNew && product?.status !== "archived" && (
           <button
             type="button"

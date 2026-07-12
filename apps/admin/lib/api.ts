@@ -203,6 +203,7 @@ export interface ProductDetail {
   variants: Variant[];
   images: ProductImage[];
   documents: ProductDocument[];
+  sourceListing: { id: string; listing_url: string | null; title: string; source: string } | null;
   created_at: string;
   updated_at: string;
 }
