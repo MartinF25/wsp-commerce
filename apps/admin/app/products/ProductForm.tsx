@@ -239,13 +239,19 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
 
   async function handleDelete() {
     if (!product) return;
-    if (!confirm(`Produkt "${product.slug}" wirklich löschen?`)) return;
+    if (!confirm(
+      `Produkt "${product.translations.find((t) => t.locale === "de")?.name ?? product.slug}" archivieren?\n\nDas Produkt wird aus dem Shop entfernt, bleibt aber in der Datenbank erhalten.`
+    )) return;
     setDeleting(true);
     setError(null);
 
     try {
-      const res = await fetch(`/api/admin-proxy/products/${product.id}`, { method: "DELETE" });
-      if (!res.ok && res.status !== 204) {
+      const res = await fetch(`/api/admin-proxy/products/${product.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "archived" }),
+      });
+      if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
       }
@@ -1385,7 +1391,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
         <button type="button" className="btn btn-secondary" onClick={() => router.push("/products")}>
           Abbrechen
         </button>
-        {!isNew && (
+        {!isNew && product?.status !== "archived" && (
           <button
             type="button"
             className="btn btn-danger"
@@ -1393,8 +1399,13 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
             onClick={handleDelete}
             disabled={deleting}
           >
-            {deleting ? "Löschen…" : "Produkt löschen"}
+            {deleting ? "Wird archiviert…" : "Archivieren"}
           </button>
+        )}
+        {!isNew && product?.status === "archived" && (
+          <span style={{ marginLeft: "auto", fontSize: 13, color: "#64748b", alignSelf: "center" }}>
+            ✓ Archiviert – nicht mehr im Shop sichtbar
+          </span>
         )}
       </div>
     </form>
