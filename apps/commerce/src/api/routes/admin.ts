@@ -399,19 +399,19 @@ adminRoutes.get("/products/needs-translation", async (c) => {
   const prisma = getPrismaClient();
 
   const products = await prisma.product.findMany({
-    where: { status: "published" },
+    where: { status: "active" },
     include: { translations: { orderBy: { locale: "asc" } } },
     orderBy: { updated_at: "desc" },
   });
 
   const result = products
     .filter((p) => {
-      const locales = p.translations.map((t) => t.locale as string);
+      const locales = (p as any).translations.map((t: any) => t.locale as string);
       return !locales.includes("en") || !locales.includes("es");
     })
     .map((p) => {
-      const de = p.translations.find((t) => t.locale === "de");
-      const locales = p.translations.map((t) => t.locale as string);
+      const de = (p as any).translations.find((t: any) => t.locale === "de");
+      const locales = (p as any).translations.map((t: any) => t.locale as string);
       return {
         id: p.id,
         slug: p.slug,
@@ -443,7 +443,7 @@ adminRoutes.get("/products/kleinanzeigen-links", async (c) => {
 
   const products = await prisma.product.findMany({
     where: {
-      status: "published",
+      status: "active",
       affiliate_url: { contains: "kleinanzeigen" },
     },
     select: {
