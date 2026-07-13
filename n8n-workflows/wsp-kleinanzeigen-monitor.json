@@ -1,0 +1,251 @@
+{
+  "name": "WSP Kleinanzeigen – Listing Monitor (2× täglich)",
+  "nodes": [
+    {
+      "id": "sched-ka-001",
+      "name": "2× täglich (08:30 + 20:30)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "30 8,20 * * *" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-ka-001",
+      "name": "Kleinanzeigen-Produkte laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [320, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "https://commerce-api-production-614e.up.railway.app/api/admin/products/kleinanzeigen-links",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Admin-Key", "value": "={{ $env.WSP_ADMIN_SECRET }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "check-ka-001",
+      "name": "Produkte mit KA-Link vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [540, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "cond-ka-001",
+              "leftValue": "={{ $json.total }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "split-ka-001",
+      "name": "Einzeln prüfen",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [760, 200],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "extract-ka-001",
+      "name": "Listing-Daten extrahieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 200],
+      "parameters": {
+        "jsCode": "const items = $input.first().json.data ?? $input.all().map(i => i.json);\nconst item = Array.isArray(items) ? items[0] : items;\nreturn [{ json: item }];"
+      }
+    },
+    {
+      "id": "scrape-ka-001",
+      "name": "Kleinanzeigen-Seite abrufen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.kleinanzeigenUrl }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "de-DE,de;q=0.9"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "redirect": { "redirect": { "followRedirects": true, "maxRedirects": 3 } },
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "fullResponse": true
+            }
+          },
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "parse-ka-001",
+      "name": "Listing-Status parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1420, 200],
+      "parameters": {
+        "jsCode": "const scrapeResult = $input.first().json;\nconst product = $('Listing-Daten extrahieren').first().json;\n\nconst statusCode = scrapeResult.statusCode ?? scrapeResult.status ?? 200;\nconst html = typeof scrapeResult.body === 'string' ? scrapeResult.body : (scrapeResult.data ?? '');\n\nlet detectedStatus = 'active';\nlet priceCents = product.priceCents;\nlet priceRaw = null;\nlet changeReason = null;\n\n// Gelöscht: HTTP-Fehler oder Redirect auf Homepage\nif (statusCode >= 400 || statusCode === 0) {\n  detectedStatus = 'deleted';\n  changeReason = `HTTP ${statusCode} – Anzeige nicht mehr erreichbar`;\n} else if (\n  html.includes('nicht mehr verfügbar') ||\n  html.includes('Anzeige wurde gelöscht') ||\n  html.includes('existiert nicht mehr') ||\n  html.includes('Ad not found') ||\n  html.length < 500\n) {\n  detectedStatus = 'deleted';\n  changeReason = 'Anzeige nicht mehr verfügbar (Seiteninhalt)';\n} else {\n  // Reserviert prüfen\n  if (\n    html.includes('>Reserviert<') ||\n    html.includes('\"Reserviert\"') ||\n    html.includes('badge-hint-reserved') ||\n    html.includes('is--reserviert') ||\n    html.includes('article--reserved') ||\n    html.toLowerCase().includes('reserviert')\n  ) {\n    detectedStatus = 'reserved';\n    changeReason = 'Anzeige als Reserviert markiert';\n  }\n\n  // Preis parsen – Kleinanzeigen nutzt itemprop=\"price\"\n  const priceMetaMatch = html.match(/itemprop=[\"']price[\"'][^>]*content=[\"']([^\"']+)[\"']/) ||\n                          html.match(/content=[\"']([^\"']+)[\"'][^>]*itemprop=[\"']price[\"']/);\n  if (priceMetaMatch) {\n    const val = parseFloat(priceMetaMatch[1].replace(',', '.'));\n    if (!isNaN(val) && val > 0) {\n      const parsed = Math.round(val * 100);\n      if (parsed !== product.priceCents) {\n        changeReason = changeReason ?? `Preis geändert: ${product.priceCents} → ${parsed} Cent`;\n        priceCents = parsed;\n      }\n    }\n  }\n\n  // Rohpreis-String für Logs\n  const rawMatch = html.match(/class=[\"'][^\"']*boxedarticle--price[^\"']*[\"'][^>]*>([^<]{1,30})/) ||\n                   html.match(/class=[\"'][^\"']*price[^\"']*[\"'][^>]*>\\s*([\\d.,\\s€]{3,20})/);\n  if (rawMatch) {\n    priceRaw = rawMatch[1].trim();\n  }\n}\n\n// Mapping detectedStatus → availabilityStatus\nconst statusMap = {\n  active:   'in_stock',\n  reserved: 'out_of_stock',\n  deleted:  'discontinued',\n};\nconst newAvailability = statusMap[detectedStatus];\n\n// Änderung nötig?\nconst availabilityChanged = newAvailability !== product.availabilityStatus;\nconst priceChanged = priceCents !== product.priceCents && priceCents !== null;\nconst needsUpdate = availabilityChanged || priceChanged;\n\nreturn [{\n  json: {\n    productId: product.id,\n    productName: product.name,\n    kleinanzeigenUrl: product.kleinanzeigenUrl,\n    detectedStatus,\n    currentAvailability: product.availabilityStatus,\n    newAvailability,\n    currentPriceCents: product.priceCents,\n    newPriceCents: priceCents,\n    priceRaw,\n    needsUpdate,\n    availabilityChanged,\n    priceChanged,\n    changeReason,\n  }\n}];"
+      }
+    },
+    {
+      "id": "check-update-001",
+      "name": "Änderung festgestellt?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1640, 200],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "cond-update-001",
+              "leftValue": "={{ $json.needsUpdate }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "build-update-001",
+      "name": "Update-Payload bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1860, 120],
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst payload = {};\n\nif (d.availabilityChanged) {\n  payload.availability_status = d.newAvailability;\n}\n\n// Preis nur updaten wenn Variante vorhanden und Preis valide\nif (d.priceChanged && d.newPriceCents > 0) {\n  // Preis-Update erfolgt über separate Varianten-Logik\n  // Hier nur als Notiz – Preis-Update via variants wäre ein eigener PATCH\n  payload._priceNote = `Preis auf Kleinanzeigen: ${d.newPriceCents} Cent (war: ${d.currentPriceCents})`;\n}\n\nconsole.log(`[KA Monitor] Update für \"${d.productName}\" (${d.productId}):`, JSON.stringify(payload));\nconsole.log(`Grund: ${d.changeReason}`);\n\nreturn [{ json: { productId: d.productId, productName: d.productName, payload, changeReason: d.changeReason } }];"
+      }
+    },
+    {
+      "id": "patch-status-001",
+      "name": "Status in WSP updaten",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2080, 120],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://commerce-api-production-614e.up.railway.app/api/admin/products/{{ $json.productId }}/status",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Admin-Key", "value": "={{ $env.WSP_ADMIN_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ availability_status: $('Listing-Status parsen').first().json.newAvailability }) }}"
+      }
+    },
+    {
+      "id": "log-change-001",
+      "name": "Änderung protokollieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2300, 120],
+      "parameters": {
+        "jsCode": "const d = $('Listing-Status parsen').first().json;\nconst result = $input.first().json;\nconsole.log(`✓ [KA Monitor] \"${d.productName}\" aktualisiert: ${d.currentAvailability} → ${d.newAvailability}. Grund: ${d.changeReason}`);\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "log-ok-001",
+      "name": "Keine Änderung (OK)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1860, 320],
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconsole.log(`✓ [KA Monitor] \"${d.productName}\" unverändert (${d.currentAvailability})`);\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "noop-ka-001",
+      "name": "Keine KA-Produkte",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, 420],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "2× täglich (08:30 + 20:30)": {
+      "main": [[{ "node": "Kleinanzeigen-Produkte laden", "type": "main", "index": 0 }]]
+    },
+    "Kleinanzeigen-Produkte laden": {
+      "main": [[{ "node": "Produkte mit KA-Link vorhanden?", "type": "main", "index": 0 }]]
+    },
+    "Produkte mit KA-Link vorhanden?": {
+      "main": [
+        [{ "node": "Einzeln prüfen", "type": "main", "index": 0 }],
+        [{ "node": "Keine KA-Produkte", "type": "main", "index": 0 }]
+      ]
+    },
+    "Einzeln prüfen": {
+      "main": [[{ "node": "Listing-Daten extrahieren", "type": "main", "index": 0 }]]
+    },
+    "Listing-Daten extrahieren": {
+      "main": [[{ "node": "Kleinanzeigen-Seite abrufen", "type": "main", "index": 0 }]]
+    },
+    "Kleinanzeigen-Seite abrufen": {
+      "main": [[{ "node": "Listing-Status parsen", "type": "main", "index": 0 }]]
+    },
+    "Listing-Status parsen": {
+      "main": [[{ "node": "Änderung festgestellt?", "type": "main", "index": 0 }]]
+    },
+    "Änderung festgestellt?": {
+      "main": [
+        [{ "node": "Update-Payload bauen", "type": "main", "index": 0 }],
+        [{ "node": "Keine Änderung (OK)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Update-Payload bauen": {
+      "main": [[{ "node": "Status in WSP updaten", "type": "main", "index": 0 }]]
+    },
+    "Status in WSP updaten": {
+      "main": [[{ "node": "Änderung protokollieren", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["wsp", "products", "kleinanzeigen", "monitor", "agent"],
+  "notes": "Läuft 2× täglich um 08:30 und 20:30 (30 Min nach dem Übersetzungs-Agent). Prüft alle published Produkte mit Kleinanzeigen-URL. Erkennt: gelöscht (→ discontinued), reserviert (→ out_of_stock), Preis geändert (→ logged). Benötigt: WSP_ADMIN_SECRET als n8n-Umgebungsvariable. PATCH /status Endpoint muss availability_status als Body-Feld akzeptieren."
+}

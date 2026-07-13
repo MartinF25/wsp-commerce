@@ -392,6 +392,89 @@ adminRoutes.get("/products", async (c) => {
   });
 });
 
+// ─── GET /products/needs-translation ─────────────────────────────────────────
+// Gibt alle published Produkte zurück, denen EN oder ES Übersetzung fehlt.
+// Enthält den vollen DE-Text für den Claude-Übersetzungsaufruf.
+adminRoutes.get("/products/needs-translation", async (c) => {
+  const prisma = getPrismaClient();
+
+  const products = await prisma.product.findMany({
+    where: { status: "published" },
+    include: { translations: { orderBy: { locale: "asc" } } },
+    orderBy: { updated_at: "desc" },
+  });
+
+  const result = products
+    .filter((p) => {
+      const locales = p.translations.map((t) => t.locale as string);
+      return !locales.includes("en") || !locales.includes("es");
+    })
+    .map((p) => {
+      const de = p.translations.find((t) => t.locale === "de");
+      const locales = p.translations.map((t) => t.locale as string);
+      return {
+        id: p.id,
+        slug: p.slug,
+        missingLocales: (["en", "es"] as const).filter((l) => !locales.includes(l)),
+        de: de
+          ? {
+              name: de.name,
+              short_description: de.short_description ?? null,
+              description: de.description ?? null,
+              features: de.features,
+              meta_title: de.meta_title ?? null,
+              meta_description: de.meta_description ?? null,
+              delivery_note: de.delivery_note ?? null,
+              mounting_note: de.mounting_note ?? null,
+              project_note: de.project_note ?? null,
+            }
+          : null,
+      };
+    });
+
+  return c.json({ data: result, total: result.length });
+});
+
+// ─── GET /products/kleinanzeigen-links ───────────────────────────────────────
+// Gibt alle published Produkte mit einer Kleinanzeigen-URL zurück.
+// Wird vom Monitoring-Agenten genutzt um Listings 2× täglich zu prüfen.
+adminRoutes.get("/products/kleinanzeigen-links", async (c) => {
+  const prisma = getPrismaClient();
+
+  const products = await prisma.product.findMany({
+    where: {
+      status: "published",
+      affiliate_url: { contains: "kleinanzeigen" },
+    },
+    select: {
+      id: true,
+      slug: true,
+      affiliate_url: true,
+      availability_status: true,
+      translations: { where: { locale: "de" }, select: { name: true } },
+      variants: {
+        where: { is_active: true },
+        select: { price_cents: true },
+        orderBy: { price_cents: "asc" },
+        take: 1,
+      },
+    },
+    orderBy: { updated_at: "desc" },
+  });
+
+  return c.json({
+    data: products.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.translations[0]?.name ?? p.slug,
+      kleinanzeigenUrl: p.affiliate_url,
+      availabilityStatus: p.availability_status,
+      priceCents: p.variants[0]?.price_cents ?? null,
+    })),
+    total: products.length,
+  });
+});
+
 adminRoutes.post("/products", async (c) => {
   let body: unknown;
   try {
@@ -781,13 +864,30 @@ adminRoutes.patch("/products/:id/status", async (c) => {
     throw new CatalogError("INVALID_BODY", 422, "Body muss gültiges JSON sein.");
   }
 
-  const raw = (body as Record<string, unknown>)?.status;
+  const b = body as Record<string, unknown>;
+  const raw = b?.status;
+  const rawAvailability = b?.availability_status;
 
-  if (!isValidStatus(raw)) {
+  const VALID_AVAILABILITY = ["in_stock", "out_of_stock", "preorder", "discontinued", "on_request"];
+
+  // Mindestens eines der beiden Felder muss gesetzt sein
+  if (raw === undefined && rawAvailability === undefined) {
+    throw new CatalogError("INVALID_BODY", 422, "status oder availability_status erforderlich.");
+  }
+
+  if (raw !== undefined && !isValidStatus(raw)) {
     throw new CatalogError(
       "INVALID_STATUS",
       422,
-      `Ungültiger Status: "${raw}". Erlaubt: draft | active | archived.`
+      `Ungültiger Status: "${raw}". Erlaubt: draft | published | archived.`
+    );
+  }
+
+  if (rawAvailability !== undefined && !VALID_AVAILABILITY.includes(rawAvailability as string)) {
+    throw new CatalogError(
+      "INVALID_AVAILABILITY",
+      422,
+      `Ungültige availability_status: "${rawAvailability}". Erlaubt: ${VALID_AVAILABILITY.join(" | ")}.`
     );
   }
 
@@ -799,6 +899,7 @@ adminRoutes.patch("/products/:id/status", async (c) => {
       id: true,
       slug: true,
       status: true,
+      availability_status: true,
       translations: { where: { locale: "de" }, select: { name: true } },
     },
   });
@@ -807,21 +908,29 @@ adminRoutes.patch("/products/:id/status", async (c) => {
     throw new CatalogError("PRODUCT_NOT_FOUND", 404, `Produkt nicht gefunden: ${id}`);
   }
 
+  const updateData: Record<string, unknown> = {};
+  if (raw !== undefined) updateData.status = raw;
+  if (rawAvailability !== undefined) updateData.availability_status = rawAvailability;
+
   const updated = await prisma.product.update({
     where: { id },
-    data: { status: raw },
+    data: updateData,
     select: {
       id: true,
       slug: true,
       status: true,
+      availability_status: true,
       updated_at: true,
       translations: { where: { locale: "de" }, select: { name: true } },
     },
   });
 
-  console.info(
-    `[admin] Produkt-Status geändert: ${updated.slug} ${existing.status} → ${updated.status}`
-  );
+  if (raw !== undefined) {
+    console.info(`[admin] Produkt-Status: ${updated.slug} ${existing.status} → ${updated.status}`);
+  }
+  if (rawAvailability !== undefined) {
+    console.info(`[admin] Produkt-Verfügbarkeit: ${updated.slug} ${existing.availability_status} → ${updated.availability_status}`);
+  }
 
   return c.json({
     data: {
@@ -829,6 +938,7 @@ adminRoutes.patch("/products/:id/status", async (c) => {
       slug: updated.slug,
       name: updated.translations[0]?.name ?? updated.slug,
       status: updated.status,
+      availability_status: updated.availability_status,
       updated_at: updated.updated_at.toISOString(),
     },
   });

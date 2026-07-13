@@ -1,0 +1,187 @@
+{
+  "name": "WSP Product – Übersetzungs-Agent (EN/ES)",
+  "nodes": [
+    {
+      "id": "sched-trans-001",
+      "name": "2× täglich (08:00 + 20:00)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 8,20 * * *" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-gaps-001",
+      "name": "Produkte ohne Übersetzung laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [320, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "https://commerce-api-production-614e.up.railway.app/api/admin/products/needs-translation",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Admin-Key", "value": "={{ $env.WSP_ADMIN_SECRET }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "check-any-001",
+      "name": "Produkte vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [540, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "cond-any-001",
+              "leftValue": "={{ $json.total }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "split-001",
+      "name": "Einzeln verarbeiten",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [760, 200],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "extract-001",
+      "name": "Produkt-Daten extrahieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 200],
+      "parameters": {
+        "jsCode": "const items = $input.first().json.data ?? $input.all().map(i => i.json);\nconst item = Array.isArray(items) ? items[0] : items;\nreturn [{ json: item }];"
+      }
+    },
+    {
+      "id": "claude-trans-001",
+      "name": "Claude – Übersetzen + SEO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.ANTHROPIC_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'claude-haiku-4-5-20251001',\n  max_tokens: 4096,\n  messages: [{\n    role: 'user',\n    content: `Du bist ein professioneller Übersetzer und SEO-Experte für Solarenergie-Produkte.\\n\\nÜbersetze folgende deutsche Produkttexte in die fehlenden Sprachen: ${JSON.stringify($json.missingLocales)}\\n\\nOriginal (Deutsch):\\n${JSON.stringify($json.de, null, 2)}\\n\\nRegeln:\\n- Übersetze natürlich und fachkompetent (kein wörtliches Übersetzen)\\n- meta_title: max 60 Zeichen, SEO-optimiert\\n- meta_description: max 155 Zeichen, mit Handlungsaufforderung\\n- features: als JSON-Array übersetzen\\n- Wenn ein Feld null ist, lasse es null\\n\\nAntworte NUR mit validem JSON in diesem Format (ein Objekt pro Sprache):\\n{\\n  \\"en\\": { \\"name\\": \\"...\\" , \\"short_description\\": \\"...\\", \\"description\\": \\"...\\", \\"features\\": [], \\"meta_title\\": \\"...\\", \\"meta_description\\": \\"...\\", \\"delivery_note\\": null, \\"mounting_note\\": null, \\"project_note\\": null },\\n  \\"es\\": { ... }\\n}\\nNur die fehlenden Sprachen ausgeben.`\n  }]\n}) }}"
+      }
+    },
+    {
+      "id": "parse-trans-001",
+      "name": "Übersetzungen parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1420, 200],
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.content?.[0]?.text ?? '';\n\nlet translations = {};\ntry {\n  // JSON aus der Antwort extrahieren (Claude gibt manchmal Markdown zurück)\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    translations = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  throw new Error('Claude-Antwort konnte nicht geparst werden: ' + text.slice(0, 200));\n}\n\nconst productId = $('Produkt-Daten extrahieren').first().json.id;\n\nreturn [{ json: { productId, translations } }];"
+      }
+    },
+    {
+      "id": "put-trans-001",
+      "name": "Übersetzungen speichern",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, 200],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://commerce-api-production-614e.up.railway.app/api/admin/products/{{ $json.productId }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Admin-Key", "value": "={{ $env.WSP_ADMIN_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ translations: $json.translations }) }}"
+      }
+    },
+    {
+      "id": "log-trans-001",
+      "name": "Ergebnis loggen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1860, 200],
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nconsole.log(`Übersetzt: ${result.data?.id ?? result.id ?? 'unbekannt'}`);\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "noop-trans-001",
+      "name": "Keine Übersetzungen nötig",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, 420],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "2× täglich (08:00 + 20:00)": {
+      "main": [[{ "node": "Produkte ohne Übersetzung laden", "type": "main", "index": 0 }]]
+    },
+    "Produkte ohne Übersetzung laden": {
+      "main": [[{ "node": "Produkte vorhanden?", "type": "main", "index": 0 }]]
+    },
+    "Produkte vorhanden?": {
+      "main": [
+        [{ "node": "Einzeln verarbeiten", "type": "main", "index": 0 }],
+        [{ "node": "Keine Übersetzungen nötig", "type": "main", "index": 0 }]
+      ]
+    },
+    "Einzeln verarbeiten": {
+      "main": [[{ "node": "Produkt-Daten extrahieren", "type": "main", "index": 0 }]]
+    },
+    "Produkt-Daten extrahieren": {
+      "main": [[{ "node": "Claude – Übersetzen + SEO", "type": "main", "index": 0 }]]
+    },
+    "Claude – Übersetzen + SEO": {
+      "main": [[{ "node": "Übersetzungen parsen", "type": "main", "index": 0 }]]
+    },
+    "Übersetzungen parsen": {
+      "main": [[{ "node": "Übersetzungen speichern", "type": "main", "index": 0 }]]
+    },
+    "Übersetzungen speichern": {
+      "main": [[{ "node": "Ergebnis loggen", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["wsp", "products", "translation", "agent"],
+  "notes": "Läuft 2× täglich um 08:00 und 20:00. Übersetzt nur Produkte mit status=published, die noch keine EN oder ES Übersetzung haben. Nutzt Claude Haiku für kostengünstige Übersetzungen. Benötigt Umgebungsvariablen: WSP_ADMIN_SECRET, ANTHROPIC_API_KEY."
+}
