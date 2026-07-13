@@ -25,8 +25,10 @@ export default function MediaPage() {
       .catch((e) => { setError(e.message); setLoading(false); });
   }, []);
 
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
   async function handleDelete(imgId: string) {
-    if (!confirm("Bild aus dem Produkt entfernen?")) return;
+    setConfirmId(null);
     setDeletingId(imgId);
     try {
       const res = await fetch(`/api/admin-proxy/images/${imgId}`, { method: "DELETE" });
@@ -97,25 +99,45 @@ export default function MediaPage() {
                   >
                     {image.url}
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(image.id)}
-                    disabled={deletingId === image.id}
-                    style={{
-                      marginTop: 8,
-                      width: "100%",
-                      padding: "5px 0",
-                      background: deletingId === image.id ? "#fca5a5" : "#fee2e2",
-                      color: "#991b1b",
-                      border: "1px solid #fca5a5",
-                      borderRadius: 5,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: deletingId === image.id ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {deletingId === image.id ? "Wird gelöscht…" : "Entfernen"}
-                  </button>
+                  {confirmId === image.id ? (
+                    <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(image.id)}
+                        disabled={deletingId === image.id}
+                        style={{ flex: 1, padding: "5px 0", background: "#ef4444", color: "#fff", border: "none", borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                      >
+                        Ja, löschen
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmId(null)}
+                        style={{ flex: 1, padding: "5px 0", background: "#e2e8f0", color: "#334155", border: "none", borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                      >
+                        Abbrechen
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmId(image.id)}
+                      disabled={deletingId === image.id}
+                      style={{
+                        marginTop: 8,
+                        width: "100%",
+                        padding: "5px 0",
+                        background: deletingId === image.id ? "#fca5a5" : "#fee2e2",
+                        color: "#991b1b",
+                        border: "1px solid #fca5a5",
+                        borderRadius: 5,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: deletingId === image.id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {deletingId === image.id ? "Wird gelöscht…" : "Entfernen"}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
