@@ -299,6 +299,18 @@ export default async function ProductDetailPage({ params }: Props) {
               <p className="text-brand-muted text-base leading-relaxed mb-5">{p.short_description}</p>
             )}
 
+            {p.condition !== "new" && (
+              <div className="mb-4">
+                <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${
+                  p.condition === "like_new"
+                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                    : "bg-amber-50 text-amber-700 border border-amber-200"
+                }`}>
+                  {p.condition === "like_new" ? "Neuwertig" : "Gebraucht"}
+                </span>
+              </div>
+            )}
+
             {p.priceDisplay.isOnSale && (
               <div className="flex items-center gap-2 mb-4">
                 <span className="inline-block text-sm font-semibold text-white bg-orange-500 px-3 py-1 rounded-full">

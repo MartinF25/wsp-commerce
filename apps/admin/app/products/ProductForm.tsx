@@ -67,6 +67,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   const [availabilityStatus, setAvailabilityStatus] = useState<string>(
     (product as any)?.availability_status ?? "in_stock"
   );
+  const [condition, setCondition] = useState<string>((product as any)?.condition ?? "new");
   const [vatRate, setVatRate] = useState<number>((product as any)?.vat_rate ?? 19);
   const [shippingType, setShippingType] = useState<string>((product as any)?.shipping_type ?? "freight");
   const [shippingCents, setShippingCents] = useState<string>(
@@ -191,6 +192,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
         product_type: productType,
         status,
         availability_status: availabilityStatus,
+        condition,
         vat_rate: vatRate,
         shipping_type: shippingType,
         shipping_cents: shippingType === "flat" && shippingCents.trim()
@@ -582,6 +584,17 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="form-row" style={{ maxWidth: 280 }}>
+          <div>
+            <label>Produktzustand</label>
+            <select value={condition} onChange={(e) => setCondition(e.target.value)}>
+              <option value="new">Neu</option>
+              <option value="like_new">Neuwertig</option>
+              <option value="used">Gebraucht</option>
             </select>
           </div>
         </div>

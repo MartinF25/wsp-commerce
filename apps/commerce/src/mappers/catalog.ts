@@ -75,6 +75,7 @@ export function toProductSummary(
     vatRate: (product as any).vat_rate ?? 19,
     shippingType: (product as any).shipping_type ?? "freight",
     shippingCents: (product as any).shipping_cents ?? null,
+    condition: (product as any).condition ?? "new",
   };
 }
 
@@ -178,6 +179,7 @@ export function toProductDetail(
     vatRate: (product as any).vat_rate ?? 19,
     shippingType: (product as any).shipping_type ?? "freight",
     shippingCents: (product as any).shipping_cents ?? null,
+    condition: (product as any).condition ?? "new",
   };
 }
 

@@ -260,6 +260,8 @@ model Product {
   show_countdown   Boolean   @default(false)
 
   /// Mehrwertsteuer: 0 = Nullsteuersatz (§12 Abs. 3 UStG, Solarprodukte), 19 = Regelsteuersatz
+  /// Produktzustand: new | like_new | used
+  condition        String    @default("new")
   vat_rate         Int       @default(19)
   /// Versandart: free | flat | freight | pickup
   shipping_type    String    @default("freight")

@@ -140,6 +140,8 @@ export const ProductSummarySchema = z.object({
   shippingType: z.string(),
   /** Versandkosten in Cent – nur bei shippingType="flat" gesetzt */
   shippingCents: z.number().int().nullable(),
+  /** Produktzustand: new | like_new | used */
+  condition: z.string(),
 });
 export type ProductSummary = z.infer<typeof ProductSummarySchema>;
 
@@ -199,6 +201,8 @@ export const ProductDetailSchema = z.object({
   shippingType: z.string(),
   /** Versandkosten in Cent – nur bei shippingType="flat" gesetzt */
   shippingCents: z.number().int().nullable(),
+  /** Produktzustand: new | like_new | used */
+  condition: z.string(),
 });
 export type ProductDetail = z.infer<typeof ProductDetailSchema>;
 

@@ -539,6 +539,12 @@ adminRoutes.put("/products/:id", async (c) => {
       (productData as any).availability_status = b.availability_status;
     }
   }
+  if ("condition" in b) {
+    const validConditions = ["new", "like_new", "used"];
+    if (typeof b.condition === "string" && validConditions.includes(b.condition)) {
+      productData.condition = b.condition;
+    }
+  }
   if ("vat_rate" in b && (b.vat_rate === 0 || b.vat_rate === 19 || b.vat_rate === 7)) {
     productData.vat_rate = b.vat_rate as number;
   }
