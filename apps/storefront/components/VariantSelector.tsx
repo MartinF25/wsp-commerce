@@ -10,6 +10,7 @@ type Props = {
   variants: Variant[];
   productType: ProductType;
   productPriceDisplay: PriceDisplay;
+  vatRate?: number;
   waitlistEligible?: boolean;
   productId?: string;
   productSlug?: string;
@@ -30,6 +31,7 @@ export function VariantSelector({
   variants,
   productType,
   productPriceDisplay,
+  vatRate = 19,
   waitlistEligible = false,
   productId = "",
   productSlug = "",
@@ -55,7 +57,10 @@ export function VariantSelector({
 
   const priceHint = (() => {
     switch (productType) {
-      case "direct_purchase":  return t("price_hint_direct");
+      case "direct_purchase":
+        if (vatRate === 0) return "inkl. 0 % MwSt. (Nullsteuersatz §12 Abs. 3 UStG)";
+        if (vatRate === 7) return "inkl. 7 % MwSt.";
+        return t("price_hint_direct");
       case "configurable":     return t("price_hint_configurable");
       case "inquiry_only":     return t("price_hint_inquiry");
     }

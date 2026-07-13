@@ -341,6 +341,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 variants={p.variants}
                 productType={p.product_type}
                 productPriceDisplay={p.priceDisplay}
+                vatRate={p.vatRate}
                 waitlistEligible={p.waitlistEligible}
                 productId={p.id}
                 productSlug={p.slug}
@@ -373,24 +374,7 @@ export default async function ProductDetailPage({ params }: Props) {
             )}
 
             {p.product_type !== "affiliate_external" && (
-              <div className="text-xs text-brand-muted mb-4 space-y-1">
-                {p.vatRate === 0 ? (
-                  <p>inkl. 0&#8239;% MwSt. (Nullsteuersatz §&#8239;12 Abs.&#8239;3 UStG)</p>
-                ) : p.vatRate === 7 ? (
-                  <p>inkl. 7&#8239;% MwSt.</p>
-                ) : p.priceDisplay.minCents != null ? (
-                  <p>
-                    inkl. 19&#8239;% MwSt. &ndash; Nettobetrag:{" "}
-                    {new Intl.NumberFormat("de-DE", {
-                      style: "currency",
-                      currency: p.priceDisplay.currencyCode,
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(p.priceDisplay.minCents / 100 / 1.19)}
-                  </p>
-                ) : (
-                  <p>inkl. 19&#8239;% MwSt.</p>
-                )}
+              <div className="text-xs text-brand-muted mb-4">
                 {p.shippingType === "free" ? (
                   <p className="text-emerald-600 font-medium">&#10003; Kostenloser Versand</p>
                 ) : p.shippingType === "flat" && p.shippingCents != null ? (

@@ -6,6 +6,7 @@ type Props = {
   variants: Variant[];
   productType: ProductType;
   productPriceDisplay: PriceDisplay;
+  vatRate?: number;
   locale: string;
 };
 
@@ -18,7 +19,7 @@ function formatPrice(cents: number, currency: string): string {
   }).format(cents / 100);
 }
 
-export async function VariantList({ variants, productType, productPriceDisplay, locale }: Props) {
+export async function VariantList({ variants, productType, productPriceDisplay, vatRate = 19, locale }: Props) {
   const t = await getTranslations({ locale, namespace: "product" });
 
   const primary = variants[0] ?? null;
@@ -30,7 +31,10 @@ export async function VariantList({ variants, productType, productPriceDisplay, 
 
   const priceHint = (() => {
     switch (productType) {
-      case "direct_purchase": return t("price_hint_direct");
+      case "direct_purchase":
+        if (vatRate === 0) return "inkl. 0 % MwSt. (Nullsteuersatz §12 Abs. 3 UStG)";
+        if (vatRate === 7) return "inkl. 7 % MwSt.";
+        return t("price_hint_direct");
       case "configurable":    return t("price_hint_configurable");
       case "inquiry_only":    return t("price_hint_inquiry");
     }
