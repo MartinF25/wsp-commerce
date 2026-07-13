@@ -300,7 +300,7 @@ export default async function ProductDetailPage({ params }: Props) {
             )}
 
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${
+              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full ${
                 p.condition === "like_new"
                   ? "bg-blue-50 text-blue-700 border border-blue-200"
                   : p.condition === "used"
@@ -309,6 +309,30 @@ export default async function ProductDetailPage({ params }: Props) {
               }`}>
                 {p.condition === "like_new" ? "Neuwertig" : p.condition === "used" ? "Gebraucht" : "Neu"}
               </span>
+              {p.availabilityStatus === "in_stock" && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                  Auf Lager
+                </span>
+              )}
+              {p.availabilityStatus === "out_of_stock" && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+                  Nicht auf Lager
+                </span>
+              )}
+              {p.availabilityStatus === "preorder" && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                  Vorbestellung
+                </span>
+              )}
+              {p.availabilityStatus === "on_request" && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-gray-50 text-gray-600 border border-gray-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0" />
+                  Auf Anfrage
+                </span>
+              )}
               {(p as any).warrantyNote && (
                 <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
                   {(p as any).warrantyNote}
