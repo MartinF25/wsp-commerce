@@ -134,6 +134,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   const [newDocument, setNewDocument] = useState({ name: "", url: "", type: "datasheet", sort_order: "0" });
 
   // ── UI-State
+  const [imageError, setImageError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -439,16 +440,18 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   async function handleDeleteImage(imgId: string) {
     setDeletingImageId(imgId);
     setConfirmDeleteImageId(null);
-    setError(null);
+    setImageError(null);
     try {
       const res = await fetch(`/api/admin-proxy/images/${imgId}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(json.error?.message ?? json.error ?? `HTTP ${res.status}`);
+        const text = await res.text().catch(() => "");
+        let msg = `HTTP ${res.status}`;
+        try { const j = JSON.parse(text); msg = j.error?.message ?? j.error ?? msg; } catch {}
+        throw new Error(msg);
       }
       setImages((prev) => prev.filter((i) => i.id !== imgId));
     } catch (e) {
-      setError((e as Error).message);
+      setImageError((e as Error).message);
     } finally {
       setDeletingImageId(null);
     }
@@ -1024,6 +1027,12 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
       {/* ── Bilder ── */}
       <div className="form-card" style={{ marginBottom: 16 }}>
         <div className="section-title" style={{ marginTop: 0 }}>Bilder</div>
+
+        {imageError && (
+          <div className="alert alert-error" style={{ marginBottom: 12 }}>
+            Fehler beim Löschen: {imageError}
+          </div>
+        )}
 
         {isNew ? (
           <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
