@@ -1046,10 +1046,10 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                   <thead>
                     <tr>
                       <th style={{ width: 56 }}>Vorschau</th>
+                      <th style={{ width: 110 }}></th>
                       <th>URL</th>
                       <th>Alt-Text</th>
-                      <th>Reihenfolge</th>
-                      <th></th>
+                      <th style={{ width: 90 }}>Reihenfolge</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1063,10 +1063,39 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                           />
                         </td>
+                        <td style={{ whiteSpace: "nowrap" }}>
+                          {confirmDeleteImageId === img.id ? (
+                            <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-sm"
+                                disabled={deletingImageId === img.id}
+                                onClick={() => handleDeleteImage(img.id)}
+                              >
+                                {deletingImageId === img.id ? "…" : "Ja, löschen"}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => setConfirmDeleteImageId(null)}
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-danger btn-sm"
+                              onClick={() => setConfirmDeleteImageId(img.id)}
+                            >
+                              Löschen
+                            </button>
+                          )}
+                        </td>
                         <td>
                           <a href={img.url} target="_blank" rel="noreferrer"
                              style={{ fontFamily: "monospace", fontSize: 12 }}>
-                            {img.url.length > 55 ? img.url.slice(0, 55) + "…" : img.url}
+                            {img.url.length > 45 ? img.url.slice(0, 45) + "…" : img.url}
                           </a>
                         </td>
                         <td>
@@ -1121,36 +1150,6 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                               style={{ padding: "2px 6px" }}
                             >↓</button>
                           </div>
-                        </td>
-                        <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                          {confirmDeleteImageId === img.id ? (
-                            <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
-                              <span style={{ fontSize: 12, color: "#ef4444", marginRight: 4 }}>Sicher?</span>
-                              <button
-                                type="button"
-                                className="btn btn-danger btn-sm"
-                                disabled={deletingImageId === img.id}
-                                onClick={() => handleDeleteImage(img.id)}
-                              >
-                                {deletingImageId === img.id ? "…" : "Ja, löschen"}
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-secondary btn-sm"
-                                onClick={() => setConfirmDeleteImageId(null)}
-                              >
-                                Abbrechen
-                              </button>
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="btn btn-danger btn-sm"
-                              onClick={() => setConfirmDeleteImageId(img.id)}
-                            >
-                              Löschen
-                            </button>
-                          )}
                         </td>
                       </tr>
                     ))}
