@@ -189,8 +189,9 @@ textarea { min-height: 80px; resize: vertical; }
 }
 
 /* ── Sub-tables (variants/images) ── */
-.sub-table-wrapper { border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.sub-table-wrapper { border: 1px solid #e2e8f0; border-radius: 6px; overflow-x: auto; overflow-y: hidden; margin-bottom: 8px; }
 .sub-table-wrapper table th { background: #f8fafc; }
+.sub-table-wrapper table td:last-child { white-space: nowrap; }
 
 /* ── Alerts ── */
 .alert {
