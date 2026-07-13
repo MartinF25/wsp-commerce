@@ -124,6 +124,10 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   const [newImage, setNewImage] = useState({ url: "", alt: "", sort_order: "0" });
   const [editingAltId, setEditingAltId] = useState<string | null>(null);
   const [editingAltValue, setEditingAltValue] = useState("");
+  const [confirmDeleteImageId, setConfirmDeleteImageId] = useState<string | null>(null);
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [confirmDeleteVariantId, setConfirmDeleteVariantId] = useState<string | null>(null);
+  const [confirmDeleteDocId, setConfirmDeleteDocId] = useState<string | null>(null);
 
   // ── Dokumente
   const [documents, setDocuments] = useState<ProductDocument[]>(product?.documents ?? []);
@@ -391,7 +395,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   }
 
   async function handleDeleteVariant(varId: string) {
-    if (!confirm("Variante löschen?")) return;
+    setConfirmDeleteVariantId(null);
     try {
       const res = await fetch(`/api/admin-proxy/variants/${varId}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) {
@@ -433,7 +437,9 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   }
 
   async function handleDeleteImage(imgId: string) {
-    if (!confirm("Bild entfernen?")) return;
+    setDeletingImageId(imgId);
+    setConfirmDeleteImageId(null);
+    setError(null);
     try {
       const res = await fetch(`/api/admin-proxy/images/${imgId}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) {
@@ -443,6 +449,8 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
       setImages((prev) => prev.filter((i) => i.id !== imgId));
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setDeletingImageId(null);
     }
   }
 
@@ -523,7 +531,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
   }
 
   async function handleDeleteDocument(docId: string) {
-    if (!confirm("Dokument entfernen?")) return;
+    setConfirmDeleteDocId(null);
     try {
       const res = await fetch(`/api/admin-proxy/documents/${docId}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) {
@@ -1105,14 +1113,35 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                             >↓</button>
                           </div>
                         </td>
-                        <td style={{ textAlign: "center" }}>
-                          <button
-                            type="button"
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleDeleteImage(img.id)}
-                          >
-                            Löschen
-                          </button>
+                        <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                          {confirmDeleteImageId === img.id ? (
+                            <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+                              <span style={{ fontSize: 12, color: "#ef4444", marginRight: 4 }}>Sicher?</span>
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-sm"
+                                disabled={deletingImageId === img.id}
+                                onClick={() => handleDeleteImage(img.id)}
+                              >
+                                {deletingImageId === img.id ? "…" : "Ja, löschen"}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => setConfirmDeleteImageId(null)}
+                              >
+                                Abbrechen
+                              </button>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-danger btn-sm"
+                              onClick={() => setConfirmDeleteImageId(img.id)}
+                            >
+                              Löschen
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -1309,14 +1338,16 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                           {v.is_active ? "Ja" : "Nein"}
                         </span>
                       </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDeleteVariant(v.id)}
-                        >
-                          Löschen
-                        </button>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {confirmDeleteVariantId === v.id ? (
+                          <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+                            <span style={{ fontSize: 12, color: "#ef4444", marginRight: 4 }}>Sicher?</span>
+                            <button type="button" className="btn btn-danger btn-sm" onClick={() => handleDeleteVariant(v.id)}>Ja</button>
+                            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setConfirmDeleteVariantId(null)}>Nein</button>
+                          </span>
+                        ) : (
+                          <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirmDeleteVariantId(v.id)}>Löschen</button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1422,14 +1453,16 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
                         </a>
                       </td>
                       <td>{doc.sort_order}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDeleteDocument(doc.id)}
-                        >
-                          Entfernen
-                        </button>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {confirmDeleteDocId === doc.id ? (
+                          <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+                            <span style={{ fontSize: 12, color: "#ef4444", marginRight: 4 }}>Sicher?</span>
+                            <button type="button" className="btn btn-danger btn-sm" onClick={() => handleDeleteDocument(doc.id)}>Ja</button>
+                            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setConfirmDeleteDocId(null)}>Nein</button>
+                          </span>
+                        ) : (
+                          <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirmDeleteDocId(doc.id)}>Entfernen</button>
+                        )}
                       </td>
                     </tr>
                   ))}
