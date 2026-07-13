@@ -833,11 +833,11 @@ packages:
     resolution: {integrity: sha512-FxIY+U81R3LGKCxaHHFRQ5+g6/iRgGLmeHWdp2Amj4ljQRrEIWHmZyDfDYBRZlpyqA7qKxtS9DD1dhk8RnRIVQ==}
 
   '@wsp/contracts@file:apps/commerce/wsp-contracts-0.0.1.tgz':
-    resolution: {integrity: sha512-ikT40cZjr8M8h0zXlMTDjTelKQKOHpH7vtZWk4EaX2RJZ4vVnSrsD1V3aCr9domnWUyn/8XfJyKiwK8+fZbtDA==, tarball: file:apps/commerce/wsp-contracts-0.0.1.tgz}
+    resolution: {integrity: sha512-M39e4Q8nTos/K/RxKRxClIftrMYnrvuxZzPT54SppLXnOlhSqdG2L5ygxfrsbl/vNKFrLWg6ubZC/p2e48EKmQ==, tarball: file:apps/commerce/wsp-contracts-0.0.1.tgz}
     version: 0.0.1
 
   '@wsp/contracts@file:packages/contracts/wsp-contracts-0.0.1.tgz':
-    resolution: {integrity: sha512-ikT40cZjr8M8h0zXlMTDjTelKQKOHpH7vtZWk4EaX2RJZ4vVnSrsD1V3aCr9domnWUyn/8XfJyKiwK8+fZbtDA==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
+    resolution: {integrity: sha512-M39e4Q8nTos/K/RxKRxClIftrMYnrvuxZzPT54SppLXnOlhSqdG2L5ygxfrsbl/vNKFrLWg6ubZC/p2e48EKmQ==, tarball: file:packages/contracts/wsp-contracts-0.0.1.tgz}
     version: 0.0.1
 
   '@wsp/types@file:packages/types/wsp-types-0.0.1.tgz':

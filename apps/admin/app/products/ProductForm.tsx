@@ -68,6 +68,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
     (product as any)?.availability_status ?? "in_stock"
   );
   const [condition, setCondition] = useState<string>((product as any)?.condition ?? "new");
+  const [warrantyNote, setWarrantyNote] = useState<string>((product as any)?.warrantyNote ?? "");
   const [vatRate, setVatRate] = useState<number>((product as any)?.vat_rate ?? 19);
   const [shippingType, setShippingType] = useState<string>((product as any)?.shipping_type ?? "freight");
   const [shippingCents, setShippingCents] = useState<string>(
@@ -198,6 +199,7 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
         status,
         availability_status: availabilityStatus,
         condition,
+        warranty_note: warrantyNote.trim() || null,
         vat_rate: vatRate,
         shipping_type: shippingType,
         shipping_cents: shippingType === "flat" && shippingCents.trim()
@@ -599,14 +601,23 @@ export default function ProductForm({ product, categories, affiliateStats }: Pro
           </div>
         </div>
 
-        <div className="form-row" style={{ maxWidth: 280 }}>
-          <div>
+        <div className="form-row" style={{ gap: 16 }}>
+          <div style={{ maxWidth: 280 }}>
             <label>Produktzustand</label>
             <select value={condition} onChange={(e) => setCondition(e.target.value)}>
               <option value="new">Neu</option>
               <option value="like_new">Neuwertig</option>
               <option value="used">Gebraucht</option>
             </select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label>Garantie (optional)</label>
+            <input
+              type="text"
+              value={warrantyNote}
+              onChange={(e) => setWarrantyNote(e.target.value)}
+              placeholder="z.B. 2 Jahre Herstellergarantie"
+            />
           </div>
         </div>
 

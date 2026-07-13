@@ -545,6 +545,11 @@ adminRoutes.put("/products/:id", async (c) => {
       productData.condition = b.condition;
     }
   }
+  if ("warranty_note" in b) {
+    (productData as any).warranty_note = typeof b.warranty_note === "string" && b.warranty_note.trim()
+      ? b.warranty_note.trim()
+      : null;
+  }
   if ("vat_rate" in b && (b.vat_rate === 0 || b.vat_rate === 19 || b.vat_rate === 7)) {
     productData.vat_rate = b.vat_rate as number;
   }

@@ -142,6 +142,8 @@ export const ProductSummarySchema = z.object({
   shippingCents: z.number().int().nullable(),
   /** Produktzustand: new | like_new | used */
   condition: z.string().default("new"),
+  /** Garantiehinweis, z.B. "2 Jahre Garantie" oder null wenn keine Angabe */
+  warrantyNote: z.string().nullable().default(null),
 });
 export type ProductSummary = z.infer<typeof ProductSummarySchema>;
 
@@ -203,6 +205,8 @@ export const ProductDetailSchema = z.object({
   shippingCents: z.number().int().nullable(),
   /** Produktzustand: new | like_new | used */
   condition: z.string().default("new"),
+  /** Garantiehinweis, z.B. "2 Jahre Garantie" oder null wenn keine Angabe */
+  warrantyNote: z.string().nullable().default(null),
 });
 export type ProductDetail = z.infer<typeof ProductDetailSchema>;
 

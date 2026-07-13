@@ -76,6 +76,7 @@ export function toProductSummary(
     shippingType: (product as any).shipping_type ?? "freight",
     shippingCents: (product as any).shipping_cents ?? null,
     condition: (product as any).condition ?? "new",
+    warrantyNote: (product as any).warranty_note ?? null,
   };
 }
 
@@ -180,6 +181,7 @@ export function toProductDetail(
     shippingType: (product as any).shipping_type ?? "freight",
     shippingCents: (product as any).shipping_cents ?? null,
     condition: (product as any).condition ?? "new",
+    warrantyNote: (product as any).warranty_note ?? null,
   };
 }
 

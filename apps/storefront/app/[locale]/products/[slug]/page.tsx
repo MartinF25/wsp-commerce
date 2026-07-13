@@ -299,17 +299,22 @@ export default async function ProductDetailPage({ params }: Props) {
               <p className="text-brand-muted text-base leading-relaxed mb-5">{p.short_description}</p>
             )}
 
-            {p.condition !== "new" && (
-              <div className="mb-4">
-                <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${
-                  p.condition === "like_new"
-                    ? "bg-blue-50 text-blue-700 border border-blue-200"
-                    : "bg-amber-50 text-amber-700 border border-amber-200"
-                }`}>
-                  {p.condition === "like_new" ? "Neuwertig" : "Gebraucht"}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${
+                p.condition === "like_new"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                  : p.condition === "used"
+                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                  : "bg-green-50 text-green-700 border border-green-200"
+              }`}>
+                {p.condition === "like_new" ? "Neuwertig" : p.condition === "used" ? "Gebraucht" : "Neu"}
+              </span>
+              {(p as any).warrantyNote && (
+                <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                  {(p as any).warrantyNote}
                 </span>
-              </div>
-            )}
+              )}
+            </div>
 
             {p.priceDisplay.isOnSale && (
               <div className="flex items-center gap-2 mb-4">

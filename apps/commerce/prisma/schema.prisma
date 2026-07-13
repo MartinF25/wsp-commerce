@@ -262,6 +262,8 @@ model Product {
   /// Mehrwertsteuer: 0 = Nullsteuersatz (§12 Abs. 3 UStG, Solarprodukte), 19 = Regelsteuersatz
   /// Produktzustand: new | like_new | used
   condition        String    @default("new")
+  /// Garantiehinweis, z.B. "2 Jahre Garantie" oder "Garantie abgelaufen"
+  warranty_note    String?
   vat_rate         Int       @default(19)
   /// Versandart: free | flat | freight | pickup
   shipping_type    String    @default("freight")
