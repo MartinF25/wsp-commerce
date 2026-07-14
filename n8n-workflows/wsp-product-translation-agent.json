@@ -24,14 +24,14 @@
       "parameters": {
         "method": "GET",
         "url": "https://commerce-api-production-614e.up.railway.app/api/admin/products/needs-translation",
-        "authentication": "none",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "X-Admin-Key", "value": "={{ $env.WSP_ADMIN_SECRET }}" }
-          ]
-        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "options": { "timeout": 30000 }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "WSP Admin Key"
+        }
       }
     },
     {
@@ -79,23 +79,34 @@
     {
       "id": "openai-trans-001",
       "name": "OpenAI – Übersetzen + SEO",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.8,
       "position": [1200, 200],
       "parameters": {
-        "method": "POST",
-        "url": "https://api.openai.com/v1/chat/completions",
-        "authentication": "none",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{ $env.OPENAI_API_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" }
+        "resource": "text",
+        "operation": "message",
+        "modelId": { "__rl": true, "value": "gpt-4o-mini", "mode": "list" },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Du bist ein professioneller Übersetzer und SEO-Experte für Solarenergie-Produkte. Antworte NUR mit validem JSON."
+            },
+            {
+              "role": "user",
+              "content": "=Übersetze folgende deutsche Produkttexte in die fehlenden Sprachen: {{ JSON.stringify($json.missingLocales) }}\n\nOriginal (Deutsch):\n{{ JSON.stringify($json.de, null, 2) }}\n\nRegeln:\n- Übersetze natürlich und fachkompetent\n- meta_title: max 60 Zeichen, SEO-optimiert\n- meta_description: max 155 Zeichen, mit Handlungsaufforderung\n- features: als JSON-Array übersetzen\n- Wenn ein Feld null ist, lasse es null\n\nFormat (nur fehlende Sprachen ausgeben):\n{\"en\": {\"name\": \"...\", \"short_description\": \"...\", \"description\": \"...\", \"features\": [], \"meta_title\": \"...\", \"meta_description\": \"...\", \"delivery_note\": null, \"mounting_note\": null, \"project_note\": null}, \"es\": {...}}"
+            }
           ]
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  model: 'gpt-4o-mini',\n  max_tokens: 4096,\n  response_format: { type: 'json_object' },\n  messages: [\n    {\n      role: 'system',\n      content: 'Du bist ein professioneller Übersetzer und SEO-Experte für Solarenergie-Produkte. Antworte NUR mit validem JSON.'\n    },\n    {\n      role: 'user',\n      content: 'Übersetze folgende deutsche Produkttexte in die fehlenden Sprachen: ' + JSON.stringify($json.missingLocales) + '\\n\\nOriginal (Deutsch):\\n' + JSON.stringify($json.de, null, 2) + '\\n\\nRegeln:\\n- Übersetze natürlich und fachkompetent\\n- meta_title: max 60 Zeichen, SEO-optimiert\\n- meta_description: max 155 Zeichen, mit Handlungsaufforderung\\n- features: als JSON-Array übersetzen\\n- Wenn ein Feld null ist, lasse es null\\n\\nFormat (nur fehlende Sprachen ausgeben):\\n{\"en\": {\"name\": \"...\", \"short_description\": \"...\", \"description\": \"...\", \"features\": [], \"meta_title\": \"...\", \"meta_description\": \"...\", \"delivery_note\": null, \"mounting_note\": null, \"project_note\": null}, \"es\": {...}}'\n    }\n  ]\n}) }}"
+        "options": {
+          "maxTokens": 4096,
+          "responseFormat": "json_object"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "name": "WSP OpenAI"
+        }
       }
     },
     {
@@ -105,7 +116,7 @@
       "typeVersion": 2,
       "position": [1420, 200],
       "parameters": {
-        "jsCode": "const response = $input.first().json;\nconst text = response.choices?.[0]?.message?.content ?? '';\n\nlet translations = {};\ntry {\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    translations = JSON.parse(jsonMatch[0]);\n  } else {\n    translations = JSON.parse(text);\n  }\n} catch (e) {\n  throw new Error('OpenAI-Antwort konnte nicht geparst werden: ' + text.slice(0, 200));\n}\n\nconst productId = $('Produkt-Daten extrahieren').first().json.id;\nconst productName = $('Produkt-Daten extrahieren').first().json.de?.name ?? productId;\n\nreturn [{ json: { productId, productName, translations } }];"
+        "jsCode": "const response = $input.first().json;\n// n8n OpenAI-Node gibt message.content direkt zurück\nconst text = response.message?.content ?? response.choices?.[0]?.message?.content ?? '';\n\nlet translations = {};\ntry {\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    translations = JSON.parse(jsonMatch[0]);\n  } else {\n    translations = JSON.parse(text);\n  }\n} catch (e) {\n  throw new Error('OpenAI-Antwort konnte nicht geparst werden: ' + text.slice(0, 200));\n}\n\nconst productId = $('Produkt-Daten extrahieren').first().json.id;\nconst productName = $('Produkt-Daten extrahieren').first().json.de?.name ?? productId;\n\nreturn [{ json: { productId, productName, translations } }];"
       }
     },
     {
@@ -117,17 +128,17 @@
       "parameters": {
         "method": "PUT",
         "url": "=https://commerce-api-production-614e.up.railway.app/api/admin/products/{{ $json.productId }}",
-        "authentication": "none",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "X-Admin-Key", "value": "={{ $env.WSP_ADMIN_SECRET }}" },
-            { "name": "Content-Type", "value": "application/json" }
-          ]
-        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ translations: $json.translations }) }}"
+        "jsonBody": "={{ JSON.stringify({ translations: $json.translations }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "WSP Admin Key"
+        }
       }
     },
     {
@@ -137,7 +148,7 @@
       "typeVersion": 2,
       "position": [1860, 200],
       "parameters": {
-        "jsCode": "const payload = $('Übersetzungen parsen').first().json;\nconsole.log(`Übersetzt: \"${payload.productName}\" (${payload.productId}) – Sprachen: ${Object.keys(payload.translations).join(', ')}`);\nreturn $input.all();"
+        "jsCode": "const payload = $('Übersetzungen parsen').first().json;\nconsole.log(`✓ Übersetzt: \"${payload.productName}\" (${payload.productId}) – Sprachen: ${Object.keys(payload.translations).join(', ')}`);\nreturn $input.all();"
       }
     },
     {
@@ -178,9 +189,7 @@
       "main": [[{ "node": "Ergebnis loggen", "type": "main", "index": 0 }]]
     }
   },
-  "settings": {
-    "executionOrder": "v1"
-  },
+  "settings": { "executionOrder": "v1" },
   "tags": ["wsp", "products", "translation", "agent"],
-  "notes": "Läuft 2× täglich um 08:00 und 20:00. Übersetzt nur Produkte mit status=published ohne EN oder ES Übersetzung. Nutzt OpenAI gpt-4o-mini. Benötigt n8n Umgebungsvariablen: WSP_ADMIN_SECRET, OPENAI_API_KEY."
+  "notes": "Benötigt 2 Credentials in n8n: 'WSP Admin Key' (Header Auth, X-Admin-Key) und 'WSP OpenAI' (OpenAI API). Läuft 2× täglich 08:00+20:00."
 }

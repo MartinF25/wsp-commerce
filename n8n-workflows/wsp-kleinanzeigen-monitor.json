@@ -24,14 +24,14 @@
       "parameters": {
         "method": "GET",
         "url": "https://commerce-api-production-614e.up.railway.app/api/admin/products/kleinanzeigen-links",
-        "authentication": "none",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "X-Admin-Key", "value": "={{ $env.WSP_ADMIN_SECRET }}" }
-          ]
-        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "options": { "timeout": 30000 }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "WSP Admin Key"
+        }
       }
     },
     {
@@ -107,8 +107,7 @@
               "responseFormat": "text",
               "fullResponse": true
             }
-          },
-          "allowUnauthorizedCerts": false
+          }
         }
       },
       "continueOnFail": true
@@ -120,7 +119,7 @@
       "typeVersion": 2,
       "position": [1420, 200],
       "parameters": {
-        "jsCode": "const scrapeResult = $input.first().json;\nconst product = $('Listing-Daten extrahieren').first().json;\n\nconst statusCode = scrapeResult.statusCode ?? scrapeResult.status ?? 200;\nconst html = typeof scrapeResult.body === 'string' ? scrapeResult.body : (scrapeResult.data ?? '');\n\nlet detectedStatus = 'active';\nlet priceCents = product.priceCents;\nlet priceRaw = null;\nlet changeReason = null;\n\n// Gelöscht: HTTP-Fehler oder Redirect auf Homepage\nif (statusCode >= 400 || statusCode === 0) {\n  detectedStatus = 'deleted';\n  changeReason = `HTTP ${statusCode} – Anzeige nicht mehr erreichbar`;\n} else if (\n  html.includes('nicht mehr verfügbar') ||\n  html.includes('Anzeige wurde gelöscht') ||\n  html.includes('existiert nicht mehr') ||\n  html.includes('Ad not found') ||\n  html.length < 500\n) {\n  detectedStatus = 'deleted';\n  changeReason = 'Anzeige nicht mehr verfügbar (Seiteninhalt)';\n} else {\n  // Reserviert prüfen\n  if (\n    html.includes('>Reserviert<') ||\n    html.includes('\"Reserviert\"') ||\n    html.includes('badge-hint-reserved') ||\n    html.includes('is--reserviert') ||\n    html.includes('article--reserved') ||\n    html.toLowerCase().includes('reserviert')\n  ) {\n    detectedStatus = 'reserved';\n    changeReason = 'Anzeige als Reserviert markiert';\n  }\n\n  // Preis parsen – Kleinanzeigen nutzt itemprop=\"price\"\n  const priceMetaMatch = html.match(/itemprop=[\"']price[\"'][^>]*content=[\"']([^\"']+)[\"']/) ||\n                          html.match(/content=[\"']([^\"']+)[\"'][^>]*itemprop=[\"']price[\"']/);\n  if (priceMetaMatch) {\n    const val = parseFloat(priceMetaMatch[1].replace(',', '.'));\n    if (!isNaN(val) && val > 0) {\n      const parsed = Math.round(val * 100);\n      if (parsed !== product.priceCents) {\n        changeReason = changeReason ?? `Preis geändert: ${product.priceCents} → ${parsed} Cent`;\n        priceCents = parsed;\n      }\n    }\n  }\n\n  // Rohpreis-String für Logs\n  const rawMatch = html.match(/class=[\"'][^\"']*boxedarticle--price[^\"']*[\"'][^>]*>([^<]{1,30})/) ||\n                   html.match(/class=[\"'][^\"']*price[^\"']*[\"'][^>]*>\\s*([\\d.,\\s€]{3,20})/);\n  if (rawMatch) {\n    priceRaw = rawMatch[1].trim();\n  }\n}\n\n// Mapping detectedStatus → availabilityStatus\nconst statusMap = {\n  active:   'in_stock',\n  reserved: 'out_of_stock',\n  deleted:  'discontinued',\n};\nconst newAvailability = statusMap[detectedStatus];\n\n// Änderung nötig?\nconst availabilityChanged = newAvailability !== product.availabilityStatus;\nconst priceChanged = priceCents !== product.priceCents && priceCents !== null;\nconst needsUpdate = availabilityChanged || priceChanged;\n\nreturn [{\n  json: {\n    productId: product.id,\n    productName: product.name,\n    kleinanzeigenUrl: product.kleinanzeigenUrl,\n    detectedStatus,\n    currentAvailability: product.availabilityStatus,\n    newAvailability,\n    currentPriceCents: product.priceCents,\n    newPriceCents: priceCents,\n    priceRaw,\n    needsUpdate,\n    availabilityChanged,\n    priceChanged,\n    changeReason,\n  }\n}];"
+        "jsCode": "const scrapeResult = $input.first().json;\nconst product = $('Listing-Daten extrahieren').first().json;\n\nconst statusCode = scrapeResult.statusCode ?? scrapeResult.status ?? 200;\nconst html = typeof scrapeResult.body === 'string' ? scrapeResult.body : (scrapeResult.data ?? '');\n\nlet detectedStatus = 'active';\nlet priceCents = product.priceCents;\nlet changeReason = null;\n\nif (statusCode >= 400 || statusCode === 0) {\n  detectedStatus = 'deleted';\n  changeReason = `HTTP ${statusCode} – Anzeige nicht mehr erreichbar`;\n} else if (\n  html.includes('nicht mehr verfügbar') ||\n  html.includes('Anzeige wurde gelöscht') ||\n  html.includes('existiert nicht mehr') ||\n  html.length < 500\n) {\n  detectedStatus = 'deleted';\n  changeReason = 'Anzeige nicht mehr verfügbar';\n} else {\n  if (\n    html.includes('>Reserviert<') ||\n    html.includes('badge-hint-reserved') ||\n    html.toLowerCase().includes('reserviert')\n  ) {\n    detectedStatus = 'reserved';\n    changeReason = 'Anzeige als Reserviert markiert';\n  }\n\n  const priceMetaMatch = html.match(/itemprop=[\"']price[\"'][^>]*content=[\"']([^\"']+)[\"']/) ||\n                          html.match(/content=[\"']([^\"']+)[\"'][^>]*itemprop=[\"']price[\"']/);\n  if (priceMetaMatch) {\n    const val = parseFloat(priceMetaMatch[1].replace(',', '.'));\n    if (!isNaN(val) && val > 0) {\n      const parsed = Math.round(val * 100);\n      if (parsed !== product.priceCents) {\n        changeReason = changeReason ?? `Preis geändert: ${product.priceCents} → ${parsed} Cent`;\n        priceCents = parsed;\n      }\n    }\n  }\n}\n\nconst statusMap = { active: 'in_stock', reserved: 'out_of_stock', deleted: 'discontinued' };\nconst newAvailability = statusMap[detectedStatus];\nconst availabilityChanged = newAvailability !== product.availabilityStatus;\nconst priceChanged = priceCents !== product.priceCents && priceCents !== null;\nconst needsUpdate = availabilityChanged || priceChanged;\n\nreturn [{\n  json: {\n    productId: product.id,\n    productName: product.name,\n    kleinanzeigenUrl: product.kleinanzeigenUrl,\n    detectedStatus,\n    currentAvailability: product.availabilityStatus,\n    newAvailability,\n    needsUpdate,\n    availabilityChanged,\n    priceChanged,\n    newPriceCents: priceCents,\n    changeReason,\n  }\n}];"
       }
     },
     {
@@ -145,35 +144,25 @@
       }
     },
     {
-      "id": "build-update-001",
-      "name": "Update-Payload bauen",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1860, 120],
-      "parameters": {
-        "jsCode": "const d = $input.first().json;\nconst payload = {};\n\nif (d.availabilityChanged) {\n  payload.availability_status = d.newAvailability;\n}\n\n// Preis nur updaten wenn Variante vorhanden und Preis valide\nif (d.priceChanged && d.newPriceCents > 0) {\n  // Preis-Update erfolgt über separate Varianten-Logik\n  // Hier nur als Notiz – Preis-Update via variants wäre ein eigener PATCH\n  payload._priceNote = `Preis auf Kleinanzeigen: ${d.newPriceCents} Cent (war: ${d.currentPriceCents})`;\n}\n\nconsole.log(`[KA Monitor] Update für \"${d.productName}\" (${d.productId}):`, JSON.stringify(payload));\nconsole.log(`Grund: ${d.changeReason}`);\n\nreturn [{ json: { productId: d.productId, productName: d.productName, payload, changeReason: d.changeReason } }];"
-      }
-    },
-    {
       "id": "patch-status-001",
       "name": "Status in WSP updaten",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2080, 120],
+      "position": [1860, 120],
       "parameters": {
         "method": "PATCH",
         "url": "=https://commerce-api-production-614e.up.railway.app/api/admin/products/{{ $json.productId }}/status",
-        "authentication": "none",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "X-Admin-Key", "value": "={{ $env.WSP_ADMIN_SECRET }}" },
-            { "name": "Content-Type", "value": "application/json" }
-          ]
-        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ availability_status: $('Listing-Status parsen').first().json.newAvailability }) }}"
+        "jsonBody": "={{ JSON.stringify({ availability_status: $json.newAvailability }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "WSP Admin Key"
+        }
       }
     },
     {
@@ -181,9 +170,9 @@
       "name": "Änderung protokollieren",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2300, 120],
+      "position": [2080, 120],
       "parameters": {
-        "jsCode": "const d = $('Listing-Status parsen').first().json;\nconst result = $input.first().json;\nconsole.log(`✓ [KA Monitor] \"${d.productName}\" aktualisiert: ${d.currentAvailability} → ${d.newAvailability}. Grund: ${d.changeReason}`);\nreturn $input.all();"
+        "jsCode": "const d = $('Listing-Status parsen').first().json;\nconsole.log(`✓ [KA Monitor] \"${d.productName}\" aktualisiert: ${d.currentAvailability} → ${d.newAvailability}. Grund: ${d.changeReason}`);\nreturn $input.all();"
       }
     },
     {
@@ -232,20 +221,15 @@
     },
     "Änderung festgestellt?": {
       "main": [
-        [{ "node": "Update-Payload bauen", "type": "main", "index": 0 }],
+        [{ "node": "Status in WSP updaten", "type": "main", "index": 0 }],
         [{ "node": "Keine Änderung (OK)", "type": "main", "index": 0 }]
       ]
-    },
-    "Update-Payload bauen": {
-      "main": [[{ "node": "Status in WSP updaten", "type": "main", "index": 0 }]]
     },
     "Status in WSP updaten": {
       "main": [[{ "node": "Änderung protokollieren", "type": "main", "index": 0 }]]
     }
   },
-  "settings": {
-    "executionOrder": "v1"
-  },
+  "settings": { "executionOrder": "v1" },
   "tags": ["wsp", "products", "kleinanzeigen", "monitor", "agent"],
-  "notes": "Läuft 2× täglich um 08:30 und 20:30 (30 Min nach dem Übersetzungs-Agent). Prüft alle published Produkte mit Kleinanzeigen-URL. Erkennt: gelöscht (→ discontinued), reserviert (→ out_of_stock), Preis geändert (→ logged). Benötigt: WSP_ADMIN_SECRET als n8n-Umgebungsvariable. PATCH /status Endpoint muss availability_status als Body-Feld akzeptieren."
+  "notes": "Benötigt Credential 'WSP Admin Key' (Header Auth, X-Admin-Key). Läuft 2× täglich 08:30+20:30."
 }
