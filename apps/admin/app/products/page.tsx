@@ -91,6 +91,7 @@ export default async function ProductsPage({
           {isFiltered && (
             <Link href="/products" className="btn btn-secondary">Alle Produkte</Link>
           )}
+          <Link href="/products/cleanup" className="btn btn-secondary">Bereinigung</Link>
           <Link href="/products/new" className="btn btn-primary">+ Neues Produkt</Link>
         </div>
       </div>
