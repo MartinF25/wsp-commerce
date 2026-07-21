@@ -926,6 +926,14 @@ adminRoutes.patch("/products/:id/status", async (c) => {
     },
   });
 
+  if (rawAvailability === "discontinued") {
+    await prisma.productVariant.updateMany({
+      where: { product_id: id },
+      data: { stock_quantity: 0 },
+    });
+    console.info(`[admin] Lagerbestand auf 0 gesetzt (discontinued): ${updated.slug}`);
+  }
+
   if (raw !== undefined) {
     console.info(`[admin] Produkt-Status: ${updated.slug} ${existing.status} → ${updated.status}`);
   }
