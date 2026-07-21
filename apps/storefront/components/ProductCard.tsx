@@ -157,16 +157,27 @@ export function ProductCard({ product, showCategory = true, featureVisuals }: Pr
             <ProductImagePlaceholder categorySlug={product.category?.slug ?? null} />
           )}
 
+          {/* Verkauft-Overlay */}
+          {product.availabilityStatus === "discontinued" && (
+            <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
+              <span className="text-white text-sm font-bold tracking-widest uppercase bg-red-600 px-4 py-1.5 rounded-full shadow-lg">
+                Verkauft
+              </span>
+            </div>
+          )}
+
           {/* Affiliate-Badge — schließt sich mit Angebots-Badge aus */}
-          {product.product_type === "affiliate_external" ? (
-            <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full shadow-sm">
-              {t("affiliate_badge")}
-            </span>
-          ) : priceDisplay.isOnSale ? (
-            <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-white bg-orange-500 px-2.5 py-1 rounded-full shadow-sm">
-              {priceDisplay.saleLabel ?? "Angebot"}
-            </span>
-          ) : null}
+          {product.availabilityStatus !== "discontinued" && (
+            product.product_type === "affiliate_external" ? (
+              <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full shadow-sm">
+                {t("affiliate_badge")}
+              </span>
+            ) : priceDisplay.isOnSale ? (
+              <span className="absolute top-3 left-3 inline-block text-xs font-semibold text-white bg-orange-500 px-2.5 py-1 rounded-full shadow-sm">
+                {priceDisplay.saleLabel ?? "Angebot"}
+              </span>
+            ) : null
+          )}
         </StickerOverlay>
       </Link>
 
@@ -266,25 +277,31 @@ export function ProductCard({ product, showCategory = true, featureVisuals }: Pr
 
         {/* Footer: Badge links + CTA rechts */}
         <div className="mt-auto flex items-center justify-between gap-3">
-          <span
-            className={
-              product.product_type === "affiliate_external"
-                ? "inline-block text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full whitespace-nowrap"
+          {product.availabilityStatus === "discontinued" ? (
+            <span className="inline-block text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full whitespace-nowrap">
+              Verkauft
+            </span>
+          ) : (
+            <span
+              className={
+                product.product_type === "affiliate_external"
+                  ? "inline-block text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full whitespace-nowrap"
+                  : product.waitlistEligible
+                  ? "inline-block text-xs font-medium text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-full whitespace-nowrap"
+                  : product.purchasable
+                  ? "inline-block text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full whitespace-nowrap"
+                  : "inline-block text-xs font-medium text-brand-muted bg-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap"
+              }
+            >
+              {product.product_type === "affiliate_external"
+                ? t("affiliate_badge")
                 : product.waitlistEligible
-                ? "inline-block text-xs font-medium text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-full whitespace-nowrap"
+                ? t("out_of_stock")
                 : product.purchasable
-                ? "inline-block text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full whitespace-nowrap"
-                : "inline-block text-xs font-medium text-brand-muted bg-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap"
-            }
-          >
-            {product.product_type === "affiliate_external"
-              ? t("affiliate_badge")
-              : product.waitlistEligible
-              ? t("out_of_stock")
-              : product.purchasable
-              ? t("available")
-              : t("on_request")}
-          </span>
+                ? t("available")
+                : t("on_request")}
+            </span>
+          )}
 
           <Link
             href={`/products/${product.slug}`}
