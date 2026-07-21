@@ -364,7 +364,24 @@ adminRoutes.delete("/categories/:id/translations/:locale", async (c) => {
 adminRoutes.get("/products", async (c) => {
   const prisma = getPrismaClient();
 
+  const q = c.req.query("q")?.trim();
+  const statusFilter = c.req.query("status");
+  const availabilityFilter = c.req.query("availability");
+  const categoryFilter = c.req.query("category");
+
+  const where: Record<string, unknown> = {};
+  if (statusFilter) where.status = statusFilter;
+  if (availabilityFilter) where.availability_status = availabilityFilter;
+  if (categoryFilter) where.category_id = categoryFilter;
+  if (q) {
+    where.OR = [
+      { slug: { contains: q, mode: "insensitive" } },
+      { translations: { some: { locale: "de", name: { contains: q, mode: "insensitive" } } } },
+    ];
+  }
+
   const products = await prisma.product.findMany({
+    where,
     include: {
       category: true,
       translations: { where: { locale: "de" } },
@@ -381,6 +398,7 @@ adminRoutes.get("/products", async (c) => {
       name: p.translations[0]?.name ?? p.slug,
       status: p.status,
       product_type: p.product_type,
+      condition: p.condition,
       category: p.category
         ? { id: p.category.id, slug: p.category.slug, name: p.category.name }
         : null,
@@ -444,7 +462,6 @@ adminRoutes.get("/products/kleinanzeigen-links", async (c) => {
 
   const products = await prisma.product.findMany({
     where: {
-      status: "active",
       affiliate_url: { contains: "kleinanzeigen" },
     },
     select: {
@@ -452,6 +469,10 @@ adminRoutes.get("/products/kleinanzeigen-links", async (c) => {
       slug: true,
       affiliate_url: true,
       availability_status: true,
+      condition: true,
+      affiliate_last_checked_at: true,
+      affiliate_health_message: true,
+      created_at: true,
       translations: { where: { locale: "de" }, select: { name: true } },
       variants: {
         where: { is_active: true },
@@ -470,7 +491,11 @@ adminRoutes.get("/products/kleinanzeigen-links", async (c) => {
       name: p.translations[0]?.name ?? p.slug,
       kleinanzeigenUrl: p.affiliate_url,
       availabilityStatus: p.availability_status,
+      condition: p.condition,
       priceCents: p.variants[0]?.price_cents ?? null,
+      createdAt: p.created_at.toISOString(),
+      lastCheckedAt: (p as any).affiliate_last_checked_at?.toISOString() ?? null,
+      healthMessage: (p as any).affiliate_health_message ?? null,
     })),
     total: products.length,
   });

@@ -176,6 +176,7 @@ export interface ProductSummary {
   status: ProductStatus;
   product_type: ProductType;
   availability_status: AvailabilityStatus;
+  condition: string;
   category: { id: string; slug: string; name: string } | null;
   variantCount: number;
   totalStock: number;
@@ -923,7 +924,15 @@ export const api = {
   },
 
   products: {
-    list: () => request<ProductSummary[]>("/products"),
+    list: (params?: { q?: string; status?: string; availability?: string; category?: string }) => {
+      const qs = new URLSearchParams();
+      if (params?.q) qs.set("q", params.q);
+      if (params?.status) qs.set("status", params.status);
+      if (params?.availability) qs.set("availability", params.availability);
+      if (params?.category) qs.set("category", params.category);
+      const s = qs.toString();
+      return request<ProductSummary[]>(`/products${s ? `?${s}` : ""}`);
+    },
     get: (id: string) => request<ProductDetail>(`/products/${id}`),
     create: (data: {
       slug?: string;
