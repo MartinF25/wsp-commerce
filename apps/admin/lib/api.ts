@@ -167,12 +167,15 @@ export interface ProductDocument {
   sort_order: number;
 }
 
+export type AvailabilityStatus = "in_stock" | "out_of_stock" | "preorder" | "discontinued" | "on_request";
+
 export interface ProductSummary {
   id: string;
   slug: string;
   name: string;
   status: ProductStatus;
   product_type: ProductType;
+  availability_status: AvailabilityStatus;
   category: { id: string; slug: string; name: string } | null;
   variantCount: number;
   totalStock: number;

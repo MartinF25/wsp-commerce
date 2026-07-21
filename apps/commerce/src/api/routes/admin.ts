@@ -386,6 +386,7 @@ adminRoutes.get("/products", async (c) => {
         : null,
       variantCount: p._count.variants,
       totalStock: p.variants.reduce((sum, v) => sum + (v.stock_quantity ?? 0), 0),
+      availability_status: p.availability_status,
       created_at: p.created_at.toISOString(),
       updated_at: p.updated_at.toISOString(),
     })),

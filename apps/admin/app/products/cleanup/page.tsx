@@ -8,6 +8,7 @@ interface Product {
   name: string;
   slug: string;
   status: string;
+  availability_status: string;
   created_at: string;
   updated_at: string;
   variantCount: number;

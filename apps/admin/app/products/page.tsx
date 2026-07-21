@@ -133,7 +133,29 @@ export default async function ProductsPage({
                   </td>
                   <td><span className="badge badge-type">{TYPE_LABELS[p.product_type]}</span></td>
                   <td>
-                    <span className={`badge badge-${p.status}`}>{STATUS_LABELS[p.status]}</span>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                      <span className={`badge badge-${p.status}`}>{STATUS_LABELS[p.status]}</span>
+                      {p.availability_status === "discontinued" && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: "2px 8px",
+                          borderRadius: 999, background: "#fef2f2",
+                          color: "#dc2626", border: "1px solid #fecaca",
+                          whiteSpace: "nowrap",
+                        }}>
+                          🏷 Verkauft
+                        </span>
+                      )}
+                      {p.availability_status === "out_of_stock" && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 600, padding: "2px 8px",
+                          borderRadius: 999, background: "#fff7ed",
+                          color: "#c2410c", border: "1px solid #fed7aa",
+                          whiteSpace: "nowrap",
+                        }}>
+                          Reserviert
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td>{p.category?.name ?? <span style={{ color: "#9ca3af" }}>—</span>}</td>
                   <td>{p.variantCount}</td>
