@@ -40,7 +40,10 @@ export default function CleanupPage() {
       const json = await res.json();
       const all: Product[] = json.data ?? [];
       const old = all.filter(
-        (p) => p.status === "active" && daysSince(p.created_at) >= DAYS
+        (p) =>
+          p.status === "active" &&
+          p.availability_status !== "discontinued" &&
+          daysSince(p.created_at) >= DAYS
       );
       setProducts(old);
       setSelected(new Set(old.map((p) => p.id)));
